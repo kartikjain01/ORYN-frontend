@@ -1,5 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 
+const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR;
+
 export default function VoiceEditorPage() {
   const [mode, setMode] = useState("upload");
   const [file, setFile] = useState(null);
@@ -38,7 +40,7 @@ export default function VoiceEditorPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("http://localhost:8002/process-audio", {
+      const response = await fetch(`${API_BASE}/process-audio`, {
         method: "POST",
         body: formData,
       });

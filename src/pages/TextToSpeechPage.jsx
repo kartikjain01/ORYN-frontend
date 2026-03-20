@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 
+const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION;
+
 export default function TextToSpeechPage() {
   const [text, setText] = useState("");
   const [speed, setSpeed] = useState(50);
@@ -16,7 +18,7 @@ export default function TextToSpeechPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8003/generate", {
+      const response = await fetch(`${API_BASE}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

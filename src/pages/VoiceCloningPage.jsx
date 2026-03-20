@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 
-const API_BASE = "http://127.0.0.1:8001";
+const API_BASE = import.meta.env.VITE_API_VOICE_CLONE;
 
 export default function VoiceCloningPage() {
   const [mode, setMode] = useState("upload");
