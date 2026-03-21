@@ -35,7 +35,7 @@ export default function TextToSpeechPage() {
       setAudioUrl(url);
     } catch (error) {
       console.error("Connection failed:", error);
-      alert("Make sure your Python server is running on port 8000!");
+      alert("Backend connection failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
