@@ -43,7 +43,8 @@ function App() {
       <Route 
         path="/register" 
         element={!session ? <RegisterPage /> : <Navigate to="/voice-clone" replace />} 
-      />
+        />  
+      
       
       {/* Group Protected Routes */}
       <Route element={session ? <AppLayout /> : <Navigate to="/register" replace />}>

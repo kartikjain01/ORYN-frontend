@@ -1,3 +1,4 @@
+import { supabase } from "../supabaseClient";
 import {
     ArrowLeft,
     CreditCard,
@@ -16,9 +17,12 @@ import {
     );
   }
   
-  function SmallButton({ children }) {
+  function SmallButton({ children, onClick, className = "" }) {
     return (
-      <button className="rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/10">
+      <button 
+      onClick={onClick}
+      className={`rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/10 ${className}`}
+      >
         {children}
       </button>
     );
@@ -155,7 +159,12 @@ import {
               <SectionCard title="Security">
                 <div className="space-y-3">
                   <SmallButton>Change Password</SmallButton>
-                  <SmallButton>Logout All Devices</SmallButton>
+                  <SmallButton
+                  onClick={async () => {
+                    await supabase.auth.signOut({ scope: "global" });
+                    window.location.href = "/login";
+                  }}
+                  >Logout All Devices</SmallButton>
                 </div>
               </SectionCard>
             </div>

@@ -1,29 +1,27 @@
-import React, { useMemo, useState } from "react";
+import { useState } from "react";
+import { Plus, Mic, Paperclip } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION;
+const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION; // ✅ added
 
-export default function TextToSpeechPage() {
-  const [text, setText] = useState("");
-  const [speed, setSpeed] = useState(50);
-  const [stability, setStability] = useState(50);
-  const [similarity, setSimilarity] = useState(50);
-  const [style, setStyle] = useState(50);
-  const [isLoading, setIsLoading] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
+export default function GlowBackgroundPlayground() {
+  const [showAudio, setShowAudio] = useState(false);
+  const [text, setText] = useState(""); // ✅ added
+  const [audioUrl, setAudioUrl] = useState(""); // ✅ updated
+  const [isLoading, setIsLoading] = useState(false); // ✅ added
 
-  const canGenerate = useMemo(() => text.trim().length > 0, [text]);
-
-  const handleGenerate = async () => {
-    if (!canGenerate) return;
+  const handleGenerate = async () => { // ✅ added
+    if (!text.trim()) return;
 
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE}/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           text: text.replace(/\n/g, " "),
-          speed: speed / 50,
+          speed: 1,
           voice: "af_bella",
         }),
       });
@@ -32,7 +30,9 @@ export default function TextToSpeechPage() {
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
+
       setAudioUrl(url);
+      setShowAudio(true); // ✅ show player after success
     } catch (error) {
       console.error("Connection failed:", error);
       alert("Backend connection failed. Please try again.");
@@ -42,77 +42,141 @@ export default function TextToSpeechPage() {
   };
 
   return (
-    <>
-      <section className="hero-section">
-        <h1 className="hero-title">Text to Speech</h1>
-        <p className="hero-subtitle">
-          Turn text into lifelike speech with adjustable voice controls and instant playback.
+    <div className="relative h-screen w-full overflow-hidden isolate text-white" style={{ background: "#050010" }}>
+
+      {/* Background Gradient */}
+      <div
+        className="absolute inset-0 -z-20"
+        style={{
+          background:
+            "radial-gradient(circle at 85% 15%, rgba(235,0,225,0.25), rgba(120,0,150,0.15), rgba(10,0,20,0.95))",
+        }}
+      />
+
+      {/* Glow Ellipse */}
+      <div
+        className="absolute -z-10 pointer-events-none rounded-full"
+        style={{
+          top: "-150px",
+          right: "-150px",
+          width: 500,
+          height: 500,
+          filter: "blur(80px)",
+          background:
+            "radial-gradient(circle at 60% 40%, #EB00E1 0%, rgba(255,255,255,0.6) 100%)",
+        }}
+      />
+
+      {/* Header */}
+      <div className="relative z-10 pt-16 text-center">
+        <h1 className="text-6xl font-semibold">Text to Speech</h1>
+        <p className="mt-4 text-lg text-gray-300">
+          Your voice-powered automation hub plan, create and execute smarter with AI.
         </p>
-      </section>
+      </div>
 
-      <section className="editor-section">
-        <div className="tts-grid">
-          <div className="tts-card">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Start typing here or paste any text you want to turn into life like speech..."
-              className="tts-textarea"
-            />
+      {/* Main Section */}
+      <div className="relative z-10 mt-12 px-32 pr-[380px]">
 
-            <div className="generate-btn-wrap left">
+        {/* Input Box */}
+        <div className="flex h-[470px] max-w-4xl overflow-hidden flex-col justify-between rounded-2xl bg-white/90 p-6 text-black">
+          <textarea
+            value={text} // ✅ added
+            onChange={(e) => setText(e.target.value)} // ✅ added
+            className="h-full w-full resize-none bg-transparent text-gray-700 outline-none"
+            placeholder="Start typing here or paste any text you want to turn into life like speech..."
+          />
+
+          {/* Audio Player (Appears after click) */}
+          {showAudio && (
+            <div className="mt-4">
+              <div className="h-2 w-full bg-gray-300 rounded-full overflow-hidden">
+                <div className="h-full w-1/3 bg-purple-500"></div>
+              </div>
+              <audio controls className="mt-2 w-full h-8">
+                <source src={audioUrl} type="audio/mpeg" />
+                <source src="" type="audio/mpeg" />
+                Your browser does not support audio.
+              </audio>
+
+              {/* Download Button */}
               <button
-                onClick={handleGenerate}
-                disabled={!canGenerate || isLoading}
-                className="generate-btn"
-                type="button"
+                className="mt-2 w-full rounded-lg bg-purple-600 text-white py-1.5 text-sm"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = audioUrl;
+                  link.download = 'speech.mp3';
+                  link.click();
+                }}
               >
-                {isLoading ? "Processing..." : "Generate Speech"}
+                Download Audio
               </button>
             </div>
+          )}
 
-            {audioUrl && (
-              <div className="audio-preview">
-                <audio controls src={audioUrl} className="audio-player" />
-                <a href={audioUrl} download="vevia_audio.wav" className="download-link">
-                  Download File
-                </a>
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-3 text-gray-500">
+              <div className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400">
+                <Plus size={16} />
               </div>
-            )}
-          </div>
-
-          <div className="tool-panel">
-            <h3 className="tool-panel-title">Model Controls</h3>
-
-            <SliderRow title="Speed" left="Slow" right="Fast" value={speed} onChange={setSpeed} />
-            <SliderRow title="Stability" left="Variable" right="Stable" value={stability} onChange={setStability} />
-            <SliderRow title="Similarity" left="Low" right="High" value={similarity} onChange={setSimilarity} />
-            <SliderRow title="Style Exaggeration" left="None" right="Exaggerated" value={style} onChange={setStyle} />
+              <div className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400">
+                <Mic size={16} />
+              </div>
+              <div className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400">
+                <Paperclip size={16} />
+              </div>
+              <span>Data source</span>
+            </div>
+            <button
+              onClick={handleGenerate} // ✅ replaced
+              className="rounded-full bg-gray-400 px-4 py-2 text-white"
+            >
+              {isLoading ? "Processing..." : "Generate Speech"} {/* ✅ added */}
+            </button>
           </div>
         </div>
-      </section>
-    </>
-  );
-}
 
-function SliderRow({ title, left, right, value, onChange }) {
-  return (
-    <div className="slider-row">
-      <div className="slider-head">
-        <span>{title}</span>
+        {/* Right Tool Panel */}
+        <div className="absolute top-1/2 right-4 -translate-y-1/2 z-10 w-[340px] h-[470px] rounded-2xl bg-white/90 p-5 text-black overflow-auto">
+          <h2 className="mb-4 font-semibold">Tool</h2>
+
+          <div className="space-y-4">
+
+            <div>
+              <p className="mb-1 text-sm">Voice</p>
+              <div className="rounded-lg bg-gray-100 p-2">Model Voice</div>
+            </div>
+
+            <div>
+              <p className="mb-1 text-sm">Language</p>
+              <div className="rounded-lg bg-gray-100 p-2">English</div>
+            </div>
+
+            <div>
+              <p className="mb-1 text-sm">Speed</p>
+              <input type="range" className="w-full" />
+            </div>
+
+            <div>
+              <p className="mb-1 text-sm">Stability</p>
+              <input type="range" className="w-full" />
+            </div>
+
+            <div>
+              <p className="mb-1 text-sm">Similarity</p>
+              <input type="range" className="w-full" />
+            </div>
+
+            <div>
+              <p className="mb-1 text-sm">Style Exaggeration</p>
+              <input type="range" className="w-full" />
+            </div>
+
+          </div>
+        </div>
+
       </div>
-      <div className="slider-labels">
-        <span>{left}</span>
-        <span>{right}</span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="slider-input"
-      />
+
     </div>
   );
 }
