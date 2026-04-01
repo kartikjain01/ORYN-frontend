@@ -7,7 +7,7 @@ import {
     Waves,
   } from "lucide-react";
   import { useNavigate } from "react-router-dom";
-  
+
   function SectionCard({ title, children }) {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6">
@@ -16,18 +16,18 @@ import {
       </div>
     );
   }
-  
+
   function SmallButton({ children, onClick, className = "" }) {
     return (
-      <button 
-      onClick={onClick}
-      className={`rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/10 ${className}`}
+      <button
+        onClick={onClick}
+        className={`rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/10 ${className}`}
       >
         {children}
       </button>
     );
   }
-  
+
   function ProgressRow({ label, current, total, width }) {
     return (
       <div>
@@ -46,15 +46,15 @@ import {
       </div>
     );
   }
-  
+
   export default function SettingsPage() {
     const navigate = useNavigate();
-  
+
     return (
       <div className="min-h-screen text-white bg-[#020008] relative overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.5),rgba(168,85,247,0.3),transparent_50%),linear-gradient(180deg,#010004,#050012,#020008)]" />
-  
+
         <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-6">
           {/* Top Bar */}
           <div className="flex justify-between items-center">
@@ -65,12 +65,12 @@ import {
               <ArrowLeft size={16} />
               Back
             </button>
-  
+
             <button className="bg-gradient-to-r from-pink-500 to-purple-500 px-4 py-2 rounded-xl">
               Save Changes
             </button>
           </div>
-  
+
           {/* Title */}
           <div>
             <h1 className="text-3xl font-semibold">Settings</h1>
@@ -78,7 +78,7 @@ import {
               Manage your account and preferences
             </p>
           </div>
-  
+
           {/* Grid */}
           <div className="grid lg:grid-cols-3 gap-6">
             {/* LEFT */}
@@ -92,10 +92,10 @@ import {
                       techlearn3220@gmail.com
                     </p>
                   </div>
-  
+
                   <SmallButton>Edit</SmallButton>
                 </div>
-  
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <input
                     className="bg-white/5 border border-white/10 rounded-xl p-3"
@@ -107,29 +107,29 @@ import {
                   />
                 </div>
               </SectionCard>
-  
+
               {/* Voice Defaults */}
               <SectionCard title="Voice Defaults">
                 <div className="grid md:grid-cols-2 gap-4">
                   <select className="bg-white/5 border border-white/10 rounded-xl p-3">
                     <option>Default Voice</option>
                   </select>
-  
+
                   <select className="bg-white/5 border border-white/10 rounded-xl p-3">
                     <option>MP3</option>
                     <option>WAV</option>
                   </select>
-  
+
                   <select className="bg-white/5 border border-white/10 rounded-xl p-3">
                     <option>English</option>
                     <option>Hindi</option>
                   </select>
-  
+
                   <input type="range" className="col-span-2" />
                 </div>
               </SectionCard>
             </div>
-  
+
             {/* RIGHT */}
             <div className="space-y-6">
               {/* Usage */}
@@ -138,7 +138,7 @@ import {
                   <span>Free Plan</span>
                   <SmallButton>Upgrade</SmallButton>
                 </div>
-  
+
                 <div className="space-y-4">
                   <ProgressRow
                     label="Voice Clones"
@@ -154,7 +154,7 @@ import {
                   />
                 </div>
               </SectionCard>
-  
+
               {/* Security */}
               <SectionCard title="Security">
                 <div className="space-y-3">
@@ -162,7 +162,7 @@ import {
                   <SmallButton
                   onClick={async () => {
                     await supabase.auth.signOut({ scope: "global" });
-                    window.location.href = "/login";
+                    window.location.href = '/';
                   }}
                   >Logout All Devices</SmallButton>
                 </div>
