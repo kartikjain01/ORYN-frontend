@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR;
+console.log('VOICE EDITOR API:', API_BASE);
 
 export default function VoiceEditorPage() {
   const [mode, setMode] = useState("upload");
