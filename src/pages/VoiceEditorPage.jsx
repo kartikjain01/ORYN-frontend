@@ -4,59 +4,84 @@ const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR;
 console.log('VOICE EDITOR API:', API_BASE);
 
 export default function VoiceEditorPage() {
-  const [mode, setMode] = useState("upload");
+  const [mode, setMode] = useState('upload');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [processedAudio, setProcessedAudio] = useState(null);
   const [removeNoise, setRemoveNoise] = useState(true);
 
   const inputRef = useRef(null);
-  const accepted = useMemo(() => ".mp3,.wav,audio/mpeg,audio/wav", []);
+  const accepted = useMemo(() => '.mp3,.wav,audio/mpeg,audio/wav', []);
 
   const onPickFile = () => inputRef.current?.click();
 
-  const onFileChange = (e) => {
+  const onFileChange = e => {
     const f = e.target.files?.[0];
     if (!f) return;
     setFile(f);
   };
 
-  const onDrop = (e) => {
+  const onDrop = e => {
     e.preventDefault();
     const f = e.dataTransfer.files?.[0];
     if (!f) return;
     setFile(f);
   };
 
-  const onDragOver = (e) => e.preventDefault();
+  const onDragOver = e => e.preventDefault();
 
+  // 🔥 FIXED FUNCTION
   const processAudio = async () => {
     if (!file) {
-      alert("Please upload an audio file first");
+      alert('Please upload an audio file first');
       return;
     }
 
     try {
       setLoading(true);
+      setProcessedAudio(null);
 
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("remove_noise", removeNoise);
+      formData.append('file', file);
 
+      // ✅ Step 1: Start processing
       const response = await fetch(`${API_BASE}/process-audio`, {
-        method: "POST",
+        method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Processing failed");
+      if (!response.ok) throw new Error('Processing failed');
 
-      const blob = await response.blob();
-      const audioURL = URL.createObjectURL(blob);
+      const data = await response.json();
+      const fileId = data.file_id;
 
-      setProcessedAudio(audioURL);
+      console.log('Processing started:', fileId);
+
+      // ✅ Step 2: Poll status
+      let status = 'processing';
+
+      while (status === 'processing') {
+        await new Promise(r => setTimeout(r, 2000));
+
+        const statusRes = await fetch(`${API_BASE}/status/${fileId}`);
+
+        const statusData = await statusRes.json();
+        status = statusData.status;
+
+        console.log('Status:', status);
+
+        if (status === 'completed') {
+          const filename = statusData.filename;
+
+          const audioUrl = `${API_BASE}/download/${filename}`;
+
+          setProcessedAudio(audioUrl);
+          break;
+        }
+      }
     } catch (error) {
       console.error(error);
-      alert("Error processing audio");
+      alert('Error processing audio');
     } finally {
       setLoading(false);
     }
@@ -64,22 +89,21 @@ export default function VoiceEditorPage() {
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden text-white">
-
-      {/* 🔮 Background */}
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#140014] via-[#2b0030] to-[#ff6ad5]" />
 
-      {/* 🌟 Glow */}
+      {/* Glow */}
       <div
         className="absolute w-[750px] h-[750px] rounded-full blur-[220px] opacity-40"
         style={{
           background:
-            "radial-gradient(circle at 60% 40%, #EB00E1 0%, #FFFFFF 100%)",
-          top: "-500px",
-          right: "-450px",
+            'radial-gradient(circle at 60% 40%, #EB00E1 0%, #FFFFFF 100%)',
+          top: '-500px',
+          right: '-450px',
         }}
       />
 
-      {/* 👤 Avatar */}
+      {/* Avatar */}
       <div className="absolute top-6 right-8 z-20">
         <img
           src="https://i.pravatar.cc/100"
@@ -92,26 +116,31 @@ export default function VoiceEditorPage() {
         <div className="w-20" />
 
         <div className="flex-1 flex flex-col items-center pt-24 px-10">
-
-          {/* 🔥 Heading */}
           <h1 className="text-7xl font-semibold text-center">
             AI Voice Editing
           </h1>
 
           <p className="mt-4 text-white/70 text-center max-w-2xl text-lg">
-            Create, refine, and produce smarter with intelligent voice technology.
+            Create, refine, and produce smarter with intelligent voice
+            technology.
           </p>
 
-          {/* 🔘 Mode */}
+          {/* Mode */}
           <div className="mt-10 w-full max-w-4xl flex gap-6">
-            <button onClick={() => setMode("upload")} className="flex items-center gap-2 text-sm">
-              <span className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                mode==="upload" ? "bg-pink-400" : "border border-white/40"}`} />
+            <button
+              onClick={() => setMode('upload')}
+              className="flex items-center gap-2 text-sm"
+            >
+              <span
+                className={`w-3 h-3 rounded-full ${
+                  mode === 'upload' ? 'bg-pink-400' : 'border border-white/40'
+                }`}
+              />
               Upload your Audio
             </button>
           </div>
 
-          {/* 📦 Upload Box */}
+          {/* Upload Box */}
           <div
             onClick={onPickFile}
             onDrop={onDrop}
@@ -129,7 +158,7 @@ export default function VoiceEditorPage() {
             <div className="text-4xl mb-4">☁️</div>
 
             <p className="text-lg font-medium">
-              {file ? file.name : "Upload MP3 or WAV file"}
+              {file ? file.name : 'Upload MP3 or WAV file'}
             </p>
 
             <p className="text-sm text-gray-600 mt-2 text-center">
@@ -137,31 +166,35 @@ export default function VoiceEditorPage() {
             </p>
           </div>
 
-          {/* 🔊 Noise Toggle */}
+          {/* Noise Toggle */}
           <div className="mt-6 w-full max-w-4xl flex items-center gap-3">
             <span>Remove Background Noise</span>
             <button
               onClick={() => setRemoveNoise(!removeNoise)}
-              className={`w-12 h-6 flex items-center rounded-full p-1 ${removeNoise ? "bg-pink-500" : "bg-white/30"}`}
+              className={`w-12 h-6 flex items-center rounded-full p-1 ${
+                removeNoise ? 'bg-pink-500' : 'bg-white/30'
+              }`}
             >
               <div
-                className={`w-4 h-4 bg-white rounded-full transform ${removeNoise ? "translate-x-6" : ""}`}
+                className={`w-4 h-4 bg-white rounded-full transform ${
+                  removeNoise ? 'translate-x-6' : ''
+                }`}
               />
             </button>
           </div>
 
-          {/* ▶️ Button */}
+          {/* Generate Button */}
           <div className="mt-8 w-full max-w-4xl">
             <button
               onClick={processAudio}
               disabled={loading}
               className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500"
             >
-              {loading ? "Processing..." : "Generate Voice"}
+              {loading ? 'Processing...' : 'Generate Voice'}
             </button>
           </div>
 
-          {/* 🎧 Output */}
+          {/* Output */}
           {processedAudio && (
             <div className="mt-6 w-full max-w-4xl text-center">
               <p className="mb-2">Processed Audio</p>
@@ -175,7 +208,6 @@ export default function VoiceEditorPage() {
               </a>
             </div>
           )}
-
         </div>
       </div>
     </div>
