@@ -145,7 +145,41 @@ useEffect(() => {
         }`}
       >
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-5 md:py-6 lg:px-6 relative">
+        
+        {/* LOGO */}
+        <div className="flex items-center justify-start min-w-[180px] pr-2 overflow-visible">
+  <span
+    onClick={() => navigate("/")}
+    className="cursor-pointer whitespace-nowrap"
+    style={{
+      fontFamily: "'Sora', sans-serif",
+      fontSize: "clamp(22px,2.2vw,26px)",
+      letterSpacing: "0px",
+      color: "#ffffff",
+      fontStyle: "italic",
+      paddingRight: "2px", // ✅ gives breathing space to 'e'
+      display: "inline-block",
+    }}
+  >
+    <span style={{ fontWeight: 700 }}>ORYN</span>
 
+    <span
+      style={{
+        fontWeight: 900,
+        marginLeft: "6px",
+        background: "linear-gradient(90deg, #8b3dff, #7cecff)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        display: "inline-block",
+        paddingRight: "2px",
+      }}
+    >
+      Engine
+    </span>
+  </span>
+</div>
+
+          {/* CENTER MENU */}
           <div className="w-[clamp(60px,6vw,96px)]" />
 
           <ul
