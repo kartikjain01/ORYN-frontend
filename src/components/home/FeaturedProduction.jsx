@@ -1,3 +1,4 @@
+
 const featureRows = [
   {
     id: "01 / Feature",
@@ -59,34 +60,111 @@ function UploadCard({ title, subtitle }) {
     </div>
   );
 }
+import { useState, useRef } from "react";
 
 function TTSCard() {
+  const [text, setText] = useState(
+    "Welcome to ORYN Engine. Experience AI-powered voice generation instantly."
+  );
+  const [loading, setLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+
+  const audioRef = useRef(null);
+
+  const handleGenerate = async () => {
+    if (!text.trim()) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      setAudioUrl(url);
+
+      setTimeout(() => {
+        audioRef.current?.play();
+      }, 200);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setLoading(false);
+  };
+
+  const handleStop = () => {
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+  };
+
   return (
     <div className="w-full max-w-md rounded-2xl border border-violet-400/20 bg-white/[0.04] p-6 shadow-lg backdrop-blur-md">
+      <div className="bg-white/[0.02] rounded-xl px-3 py-1">
 
-      <div className="rounded-xl border border-violet-400/30 bg-white/[0.03] p-5">
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={3}
+          className="w-full h-[150px] rounded-lg border border-violet-400/25 bg-white/[0.02] px-3 py-3 text-sm text-white outline-none resize-none"
+          placeholder="Type or paste the text you want to convert to speech..."
+        />
 
-        <div className="flex h-[130px] items-start rounded-lg border border-violet-400/25 bg-white/[0.02] px-4 py-3 text-sm text-white/40">
-          Type or paste the text you want to convert to speech...
-        </div>
-
-        <div className="mt-4 flex items-end justify-between gap-4">
+        {/* TOP SECTION */}
+        <div className="mt-4 flex items-end justify-between gap-6">
           <div>
-            <h4 className="text-xl sm:text-2xl font-medium text-white">
+            <h4 className="text-xl sm:text-1xl font-medium text-white">
               Voice Generation
             </h4>
-            <p className="mt-1 text-sm text-white/35">
+            <p className="mt-0.5 text-sm text-white/35">
               Transform text into lifelike speech instantly
             </p>
           </div>
 
-          <button className="rounded-full border border-violet-400/25 bg-white/[0.04] px-5 py-2 text-sm font-medium text-white shadow-md">
-            ✦ Generate
+          {/* ✅ BUTTON ALWAYS VISIBLE */}
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="rounded-full border border-violet-400/25 bg-white/[0.04] px-6 py-2.5 text-sm font-medium text-white shadow-md"
+          >
+            {loading ? "Generating..." : "Generate"}
           </button>
         </div>
 
-      </div>
+        {/* ✅ AUDIO PLAYER BELOW */}
+        {audioUrl && (
+          <div className="mt-4 flex items-center gap-3 rounded-full bg-white/[0.05] px-4 py-2 animate-fadeIn">
 
+            <button
+              onClick={() => {
+                if (audioRef.current.paused) {
+                  audioRef.current.play();
+                } else {
+                  audioRef.current.pause();
+                }
+              }}
+              className="text-white/80 hover:text-white text-sm"
+            >
+              ▶
+            </button>
+
+            <div className="flex-1 h-[3px] bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-white/70"></div>
+            </div>
+
+            <audio ref={audioRef} src={audioUrl} />
+
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
