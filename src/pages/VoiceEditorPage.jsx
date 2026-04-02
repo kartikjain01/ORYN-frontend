@@ -30,7 +30,7 @@ export default function VoiceEditorPage() {
 
   const onDragOver = e => e.preventDefault();
 
-  // 🔥 FIXED FUNCTION
+  // ✅ FIXED FUNCTION (SYNC API SUPPORT)
   const processAudio = async () => {
     if (!file) {
       alert('Please upload an audio file first');
@@ -44,7 +44,6 @@ export default function VoiceEditorPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      // ✅ Step 1: Start processing
       const response = await fetch(`${API_BASE}/process-audio`, {
         method: 'POST',
         body: formData,
@@ -52,33 +51,12 @@ export default function VoiceEditorPage() {
 
       if (!response.ok) throw new Error('Processing failed');
 
-      const data = await response.json();
-      const fileId = data.file_id;
+      // 🔥 IMPORTANT: GET BLOB INSTEAD OF JSON
+      const blob = await response.blob();
 
-      console.log('Processing started:', fileId);
+      const audioUrl = URL.createObjectURL(blob);
 
-      // ✅ Step 2: Poll status
-      let status = 'processing';
-
-      while (status === 'processing') {
-        await new Promise(r => setTimeout(r, 2000));
-
-        const statusRes = await fetch(`${API_BASE}/status/${fileId}`);
-
-        const statusData = await statusRes.json();
-        status = statusData.status;
-
-        console.log('Status:', status);
-
-        if (status === 'completed') {
-          const filename = statusData.filename;
-
-          const audioUrl = `${API_BASE}/download/${filename}`;
-
-          setProcessedAudio(audioUrl);
-          break;
-        }
-      }
+      setProcessedAudio(audioUrl);
     } catch (error) {
       console.error(error);
       alert('Error processing audio');
