@@ -1,37 +1,27 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR;
-console.log('VOICE EDITOR API:', API_BASE);
+const API_BASE = import.meta.env.VITE_API_VOICE_CLONE;
 
-export default function VoiceEditorPage() {
+export default function VoiceCloningPage() {
   const [mode, setMode] = useState('upload');
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [processedAudio, setProcessedAudio] = useState(null);
   const [removeNoise, setRemoveNoise] = useState(true);
+  const [file, setFile] = useState(null);
+
+  const [voiceId, setVoiceId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
+
+  const [previewText, setPreviewText] = useState('');
+  const [audioUrl, setAudioUrl] = useState(null);
 
   const inputRef = useRef(null);
   const accepted = useMemo(() => '.mp3,.wav,audio/mpeg,audio/wav', []);
 
-  const onPickFile = () => inputRef.current?.click();
+  const [fileName, setFileName] = useState('');
+  const [showTextBox, setShowTextBox] = useState(false);
+  const [textValue, setTextValue] = useState('');
 
-  const onFileChange = e => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-  };
-
-  const onDrop = e => {
-    e.preventDefault();
-    const f = e.dataTransfer.files?.[0];
-    if (!f) return;
-    setFile(f);
-  };
-
-  const onDragOver = e => e.preventDefault();
-
-  // ✅ FIXED FUNCTION (SYNC API SUPPORT)
-  const processAudio = async () => {
+  const uploadVoice = async () => {
     if (!file) {
       alert('Please upload an audio file first');
       return;
@@ -39,155 +29,141 @@ export default function VoiceEditorPage() {
 
     try {
       setLoading(true);
-      setProcessedAudio(null);
+      setStatusMsg('Uploading voice...');
 
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_BASE}/process-audio`, {
+      // ✅ FIXED (removed /v1)
+      const response = await fetch(`${API_BASE}/voices`, {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Processing failed');
+      const data = await response.json();
+      const id = data.voice_id;
 
-      // 🔥 IMPORTANT: GET BLOB INSTEAD OF JSON
-      const blob = await response.blob();
+      setVoiceId(id);
+      setStatusMsg('Building voice profile...');
 
-      const audioUrl = URL.createObjectURL(blob);
+      await fetch(`${API_BASE}/voices/${id}/build`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ remove_noise: removeNoise }),
+      });
 
-      setProcessedAudio(audioUrl);
-    } catch (error) {
-      console.error(error);
-      alert('Error processing audio');
+      setStatusMsg('Voice cloned successfully!');
+    } catch (err) {
+      console.error(err);
+      setStatusMsg('Error cloning voice');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="relative w-full h-screen bg-black overflow-hidden text-white">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#140014] via-[#2b0030] to-[#ff6ad5]" />
+  const generatePreview = async () => {
+    if (!voiceId) {
+      alert('Please clone voice first');
+      return;
+    }
 
-      {/* Glow */}
-      <div
-        className="absolute w-[750px] h-[750px] rounded-full blur-[220px] opacity-40"
-        style={{
-          background:
-            'radial-gradient(circle at 60% 40%, #EB00E1 0%, #FFFFFF 100%)',
-          top: '-500px',
-          right: '-450px',
+    if (!previewText) {
+      alert('Enter preview text');
+      return;
+    }
+
+    try {
+      // ✅ FIXED (removed /v1)
+      const response = await fetch(`${API_BASE}/tts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          voice_id: voiceId,
+          text: previewText,
+          language: 'en',
+          output_format: 'wav',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.job_id) {
+        throw new Error('No job_id returned from server');
+      }
+
+      checkJobStatus(data.job_id);
+    } catch (err) {
+      console.error('TTS ERROR:', err);
+      setStatusMsg('TTS generation failed');
+    }
+  };
+
+  const checkJobStatus = async jobId => {
+    if (!jobId) return;
+
+    const interval = setInterval(async () => {
+      const res = await fetch(`${API_BASE}/tts/${jobId}`);
+      const data = await res.json();
+
+      if (data.status === 'done') {
+        clearInterval(interval);
+        setAudioUrl(`${API_BASE}/tts/${jobId}/download`);
+        setStatusMsg('Preview ready!');
+      }
+    }, 2000);
+  };
+
+  return (
+    <div className="relative w-full h-screen bg-black text-white flex flex-col items-center justify-center px-4">
+      <h1 className="text-4xl mb-4">Voice Cloning</h1>
+
+      <input
+        type="file"
+        accept={accepted}
+        ref={inputRef}
+        onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) {
+            setFile(f);
+            setFileName(f.name);
+          }
         }}
+        className="mb-4"
       />
 
-      {/* Avatar */}
-      <div className="absolute top-6 right-8 z-20">
-        <img
-          src="https://i.pravatar.cc/100"
-          alt="profile"
-          className="w-12 h-12 rounded-full border border-white/30"
-        />
-      </div>
+      <p className="mb-2">{fileName}</p>
 
-      <div className="relative z-10 flex h-full">
-        <div className="w-20" />
+      <button
+        onClick={uploadVoice}
+        className="bg-pink-500 px-4 py-2 rounded mb-4"
+      >
+        {loading ? 'Processing...' : 'Clone Voice'}
+      </button>
 
-        <div className="flex-1 flex flex-col items-center pt-24 px-10">
-          <h1 className="text-7xl font-semibold text-center">
-            AI Voice Editing
-          </h1>
+      <textarea
+        placeholder="Enter text"
+        value={textValue}
+        onChange={e => setTextValue(e.target.value)}
+        className="text-black p-2 mb-4 w-full max-w-md"
+      />
 
-          <p className="mt-4 text-white/70 text-center max-w-2xl text-lg">
-            Create, refine, and produce smarter with intelligent voice
-            technology.
-          </p>
+      <button
+        onClick={() => {
+          setPreviewText(textValue);
+          generatePreview();
+        }}
+        className="bg-purple-500 px-4 py-2 rounded mb-4"
+      >
+        Generate Preview
+      </button>
 
-          {/* Mode */}
-          <div className="mt-10 w-full max-w-4xl flex gap-6">
-            <button
-              onClick={() => setMode('upload')}
-              className="flex items-center gap-2 text-sm"
-            >
-              <span
-                className={`w-3 h-3 rounded-full ${
-                  mode === 'upload' ? 'bg-pink-400' : 'border border-white/40'
-                }`}
-              />
-              Upload your Audio
-            </button>
-          </div>
+      {audioUrl && <audio controls src={audioUrl} className="mt-4" />}
 
-          {/* Upload Box */}
-          <div
-            onClick={onPickFile}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            className="mt-6 w-full max-w-4xl bg-[#e5e5e5] text-black rounded-2xl p-10 flex flex-col items-center cursor-pointer"
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept={accepted}
-              className="hidden"
-              onChange={onFileChange}
-            />
-
-            <div className="text-4xl mb-4">☁️</div>
-
-            <p className="text-lg font-medium">
-              {file ? file.name : 'Upload MP3 or WAV file'}
-            </p>
-
-            <p className="text-sm text-gray-600 mt-2 text-center">
-              1–10 min, max 100MB, clean audio
-            </p>
-          </div>
-
-          {/* Noise Toggle */}
-          <div className="mt-6 w-full max-w-4xl flex items-center gap-3">
-            <span>Remove Background Noise</span>
-            <button
-              onClick={() => setRemoveNoise(!removeNoise)}
-              className={`w-12 h-6 flex items-center rounded-full p-1 ${
-                removeNoise ? 'bg-pink-500' : 'bg-white/30'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 bg-white rounded-full transform ${
-                  removeNoise ? 'translate-x-6' : ''
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* Generate Button */}
-          <div className="mt-8 w-full max-w-4xl">
-            <button
-              onClick={processAudio}
-              disabled={loading}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500"
-            >
-              {loading ? 'Processing...' : 'Generate Voice'}
-            </button>
-          </div>
-
-          {/* Output */}
-          {processedAudio && (
-            <div className="mt-6 w-full max-w-4xl text-center">
-              <p className="mb-2">Processed Audio</p>
-              <audio controls src={processedAudio} className="w-full" />
-              <a
-                href={processedAudio}
-                download="processed.wav"
-                className="block mt-3 text-pink-400"
-              >
-                Download Audio
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
+      <p className="mt-4">{statusMsg}</p>
     </div>
   );
 }
