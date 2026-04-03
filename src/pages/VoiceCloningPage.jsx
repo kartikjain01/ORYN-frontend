@@ -52,7 +52,7 @@ export default function VoiceCloningPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`${API_BASE}/voices`, {
+      const response = await fetch(`${API_BASE}/v1/voices`, {
         method: 'POST',
         body: formData,
       });
@@ -63,7 +63,7 @@ export default function VoiceCloningPage() {
       setVoiceId(id);
       setStatusMsg("Building voice profile...");
 
-      await fetch(`${API_BASE}/voices/${id}/build`, {
+      await fetch(`${API_BASE}/v1/voices/${id}/build`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export default function VoiceCloningPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/tts`, {
+      const response = await fetch(`${API_BASE}/v1/tts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,12 +122,12 @@ export default function VoiceCloningPage() {
     if (!jobId) return;
 
     const interval = setInterval(async () => {
-      const res = await fetch(`${API_BASE}/tts/${jobId}`);
+      const res = await fetch(`${API_BASE}/v1/tts/${jobId}`);
       const data = await res.json();
 
       if (data.status === "done") {
         clearInterval(interval);
-        setAudioUrl(`${API_BASE}/tts/${jobId}/download`);
+        setAudioUrl(`${API_BASE}/v1/tts/${jobId}/download`);
         setStatusMsg("Preview ready!");
       }
     }, 2000);
