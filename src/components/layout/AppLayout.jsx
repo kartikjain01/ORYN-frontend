@@ -25,19 +25,17 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#020817]"> {/* Added a dark background base if needed */}
-      
+    <div className="flex min-h-screen bg-[#020817]">
+      {' '}
+      {/* Added a dark background base if needed */}
       {/* Sidebar */}
       <Sidebar />
-
       {/* Page content */}
-      <main className="flex-1 flex flex-col">
-        
+      <main className="flex-1 flex flex-col min-h-0">
         {/* Dynamic Page Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto">
           <Outlet />
         </div>
-        
       </main>
     </div>
   );
