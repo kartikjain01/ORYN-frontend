@@ -1,217 +1,442 @@
-import { useRef, useState } from "react";
-import { EyeOff, MailCheck } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye } from "lucide-react";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from '../supabaseClient';
 
-function SocialButton({ icon, text, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-[52px] w-full items-center justify-center gap-4 rounded-[6px] border border-black/70 bg-white text-[18px] font-medium text-black transition hover:bg-black/[0.03]"
-    >
-      <span className="flex w-[22px] items-center justify-center text-[22px]">
-        {icon}
-      </span>
-      <span>{text}</span>
-    </button>
-  );
-}
-
-export default function RegisterPage() {
-  const emailRef = useRef();
-  const passRef = useRef();
-  const confirmRef = useRef();
-
+export default function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const navigate = useNavigate();
+  // 🔥 REGISTER
+const handleRegister = async () => {
+  if (loading) return;
 
-  const handleNext = async () => {
-    const email = emailRef.current.value;
-    const password = passRef.current.value;
-    const confirm = confirmRef.current.value;
+  const cleanEmail = email.trim();
 
-    if (!email || !password) return alert('Please fill in all fields');
-    if (password !== confirm) return alert('Passwords do not match!');
+  if (!cleanEmail || !password || !confirmPassword) {
+    return alert("Please fill all fields");
+  }
 
+  if (password !== confirmPassword) {
+    return alert("Passwords do not match");
+  }
+
+  try {
     setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
     });
 
     if (error) {
       alert(error.message);
-      setLoading(false);
       return;
     }
 
-    // 🔥 If email confirmation OFF → user is already logged in
-    if (data.session) {
-      navigate('/voice-clone');
+    if (data?.session) {
+      navigate("/voice-clone");
     } else {
-      // Email confirmation ON
-      setIsEmailSent(true);
+      alert("Check your email to verify account");
     }
 
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong. Try again.");
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
-  const handleSocial = async provider => {
+
+// 🔥 LOGIN
+const handleLogin = async () => {
+  if (loading) return;
+
+  const cleanEmail = email.trim();
+
+  if (!cleanEmail || !password) {
+    return alert("Please fill all fields");
+  }
+
+  try {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    navigate("/voice-clone");
+
+  } catch (err) {
+    console.error(err);
+    alert("Login failed. Try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+// 🔥 SOCIAL LOGIN
+const handleSocialLogin = async (provider) => {
+  try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: window.location.origin, // ✅ FIX
+        redirectTo: window.location.origin,
       },
     });
 
-    if (error) alert(error.message);
-  };
-
-  // ✅ EMAIL VERIFICATION UI
-  if (isEmailSent) {
-    return (
-      <div className="relative min-h-screen bg-[#efefef] px-6 py-10 text-black flex items-center justify-center">
-        <div className="w-full max-w-[520px] text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-[#8b3dff]/10 text-[#8b3dff]">
-            <MailCheck size={48} />
-          </div>
-
-          <h1 className="text-[48px] font-extrabold leading-tight tracking-tight text-black">
-            Verify your <span className="text-[#8b3dff]">Email</span>
-          </h1>
-
-          <p className="mt-4 text-[22px] font-medium text-[#7c7c7c]">
-            We've sent a link to{' '}
-            <span className="text-black font-bold">
-              {emailRef.current?.value}
-            </span>
-            . Please check your inbox and click the link to continue.
-          </p>
-
-          <div className="mt-10 flex flex-col gap-4">
-            <button
-              onClick={() => window.location.reload()}
-              className="text-[18px] font-bold text-[#8b3dff] hover:underline"
-            >
-              Back to Sign In
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    if (error) {
+      alert(error.message);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Social login failed");
   }
+};
+// 🔥 INPUT HANDLERS (connect UI with state)
+const handleEmailChange = (e) => setEmail(e.target.value);
+const handlePasswordChange = (e) => setPassword(e.target.value);
+const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
 
-  // ✅ MAIN REGISTER UI
+// 🔥 BUTTON CLICK HANDLERS
+const onLoginClick = () => {
+  handleLogin();
+};
+
+const onRegisterClick = () => {
+  handleRegister();
+};
+
+// 🔥 SOCIAL CLICK HANDLER (clean version)
+const onSocialClick = (provider) => {
+  handleSocialLogin(provider);
+};
+
   return (
-    <div className="relative min-h-screen bg-[#efefef] px-6 py-10 text-black">
-      <div className="mx-auto flex min-h-[85vh] max-w-[520px] items-center justify-center">
-        <div className="w-full">
-          <h1 className="text-center text-[54px] font-extrabold leading-none tracking-[-0.03em] text-black">
-            Create a free{' '}
-            <span className="bg-gradient-to-r from-[#8b3dff] to-[#7cecff] bg-clip-text text-transparent">
-              Account
-            </span>
-          </h1>
+    <div className="min-h-screen relative flex items-center justify-center p-6 bg-gray-50 overflow-hidden">
 
-          <p className="mt-3 text-center text-[24px] font-medium text-[#7c7c7c]">
-            Provide your Email and choose Password
-          </p>
-
-          <form className="mt-8 space-y-5" onSubmit={e => e.preventDefault()}>
-            <div>
-              <label className="mb-2 block text-[18px] font-semibold">
-                Email*
-              </label>
-              <input
-                ref={emailRef}
-                type="email"
-                placeholder="Enter Your Email"
-                className="h-[52px] w-full rounded-[6px] border border-black/75 bg-white px-4 text-[18px] outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[18px] font-semibold">
-                Create Password*
-              </label>
-              <div className="relative">
-                <input
-                  ref={passRef}
-                  type="password"
-                  placeholder="Create a strong password"
-                  className="h-[52px] w-full rounded-[6px] border border-black/75 bg-white px-4 pr-12 text-[18px] outline-none"
-                />
-                <EyeOff
-                  size={22}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[18px] font-semibold">
-                Confirm Password*
-              </label>
-              <div className="relative">
-                <input
-                  ref={confirmRef}
-                  type="password"
-                  placeholder="Re-try Password"
-                  className="h-[52px] w-full rounded-[6px] border border-black/75 bg-white px-4 pr-12 text-[18px] outline-none"
-                />
-                <EyeOff
-                  size={22}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 py-2">
-              <div className="h-px flex-1 bg-black/40" />
-              <span className="text-[20px] font-semibold text-black/60">
-                or
-              </span>
-              <div className="h-px flex-1 bg-black/40" />
-            </div>
-
-            <div className="space-y-4">
-              <SocialButton
-                icon="🅖"
-                text="Sign up with Google"
-                onClick={() => handleSocial('google')}
-              />
-              <SocialButton
-                icon=""
-                text="Sign up with Apple ID"
-                onClick={() => handleSocial('apple')}
-              />
-            </div>
-          </form>
-        </div>
+      {/* PREMIUM BACKGROUND */}
+      <div className="absolute inset-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-orange-200/40 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
       </div>
 
-      {/* Sign In Button */}
-      <Link
-        to="/"
-        className="absolute bottom-10 left-10 flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#8a5cff] to-[#56d8ef] px-8 text-[22px] font-bold text-white shadow-[0_10px_25px_rgba(120,140,255,0.45)] transition hover:scale-105"
-      >
-        Sign In
-      </Link>
+      <div className="relative w-full h-[95vh] max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
 
-      {/* Next Button */}
-      <button
-        type="button"
-        onClick={handleNext}
-        disabled={loading}
-        className="absolute bottom-10 right-10 flex h-[50px] items-center justify-center rounded-[18px] bg-gradient-to-r from-[#8a5cff] to-[#56d8ef] px-8 text-[22px] font-bold text-white shadow-[0_10px_25px_rgba(120,140,255,0.45)] transition hover:scale-105"
-      >
-        {loading ? '...' : 'Next'}
-        <span className="text-[26px] ml-2">→</span>
-      </button>
+        {/* LEFT - LOGIN */}
+        <div className="relative">
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-white border border-gray-200 rounded-3xl p-10 shadow-lg h-full flex flex-col justify-center"
+          >
+            <div className="mb-8">
+            <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">ORYNEngine</div>
+              <h1 className="text-4xl font-bold text-black">Welcome back</h1>
+              <p className="text-black/70 mt-2">
+                Sign in to continue managing your tasks, notes, and projects.
+              </p>
+            </div>
+
+            <div className="space-y-5">
+
+              {/* Email */}
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                />
+                <Eye className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer hover:text-black" />
+              </div>
+
+              <div className="text-right text-sm text-gray-500 hover:text-black cursor-pointer">
+                Forgot password?
+              </div>
+
+              {/* Button */}
+              <button className="w-full py-3 rounded-xl bg-gradient-to-r from-black to-gray-900 text-white font-semibold shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition">
+                Sign in
+              </button>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex-1 h-px bg-gray-200" />
+                or continue with
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Social */}
+              <div className="flex gap-3">
+  {[
+    {
+      name: "Google",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.2 0 6 1.1 8.2 3.2l6.1-6.1C34.5 2.3 29.7 0 24 0 14.7 0 6.7 5.5 2.7 13.4l7.5 5.8C12.2 13.3 17.6 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-2.7-.4-3.9H24v7.4h12.7c-.3 2.1-1.8 5.3-5.1 7.5l7.9 6.1c4.6-4.2 7-10.3 7-17.1z"/>
+          <path fill="#FBBC05" d="M10.2 28.2c-.6-1.7-.9-3.5-.9-5.2s.3-3.5.9-5.2l-7.5-5.8C1 15.7 0 19.7 0 24s1 8.3 2.7 11.9l7.5-5.7z"/>
+          <path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.7l-7.9-6.1c-2.1 1.5-5 2.6-8.1 2.6-6.4 0-11.8-3.8-13.8-9.2l-7.5 5.7C6.7 42.5 14.7 48 24 48z"/>
+        </svg>
+      ),
+    },
+    {
+      name: "GitHub",
+      icon: (
+        <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 .5C5.7.5.9 5.3.9 11.6c0 5 3.2 9.2 7.7 10.7.6.1.8-.2.8-.6v-2.2c-3.1.7-3.8-1.5-3.8-1.5-.5-1.2-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 .1.8 1.7 2.6 1.2.1-.7.4-1.2.7-1.5-2.5-.3-5.2-1.3-5.2-5.7 0-1.2.4-2.1 1.2-2.9-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.7.8 1.2 1.7 1.2 2.9 0 4.4-2.7 5.4-5.2 5.7.4.3.8 1 .8 2.1v3.1c0 .4.2.7.8.6 4.5-1.5 7.7-5.7 7.7-10.7C23.1 5.3 18.3.5 12 .5z"/>
+        </svg>
+      ),
+    },
+    {
+      name: "Apple",
+      icon: (
+        <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16.7 13.2c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.9-1.8-3.5-1.8-1.5-.1-2.9.9-3.7.9s-2-.9-3.3-.9c-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.3.9 1.3 2 2.8 3.5 2.7 1.4-.1 1.9-.9 3.5-.9s2.1.9 3.5.9c1.5 0 2.5-1.4 3.4-2.7 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-3.6zM14.9 5.6c.7-.9 1.2-2.1 1.1-3.3-1 .1-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.6 3-1.5z"/>
+        </svg>
+      ),
+    },
+  ].map((item) => (
+    <button
+      key={item.name}
+      onClick={() => {
+        if (item.name === "Google") {
+          console.log("Google login");
+        }
+        if (item.name === "GitHub") {
+          console.log("GitHub login");
+        }
+        if (item.name === "Apple") {
+          console.log("Apple login");
+        }
+      }}
+      className="flex items-center justify-center gap-2 flex-1 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-100 active:scale-[0.97] transition cursor-pointer"
+    >
+      {item.icon}
+      {item.name}
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-sm text-gray-600 text-center">
+                Don’t have an account?{' '}
+                <span onClick={() => setIsLogin(false)} className="text-orange-500 cursor-pointer hover:underline">Register →</span>
+              </p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* RIGHT - REGISTER */}
+        <div className="relative">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-white border border-gray-200 rounded-3xl p-10 shadow-lg h-full flex flex-col justify-center"
+          >
+            <div className="mb-8">
+              <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">ORYNEngine</div>
+              <h1 className="text-4xl font-bold text-black">Create an account</h1>
+              <p className="text-black/70 mt-2">
+                Access your tasks, notes, and projects anytime, anywhere.
+              </p>
+            </div>
+
+            <div className="space-y-5">
+
+              {/* Email */}
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  placeholder="Create password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                />
+                <Eye className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer hover:text-black" />
+              </div>
+
+              {/* Confirm Password */}
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                />
+                <Eye className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer hover:text-black" />
+              </div>
+
+              {/* Button */}
+              <button className="w-full py-3 rounded-xl bg-gradient-to-r from-black to-gray-900 text-white font-semibold shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition">
+                Create account
+              </button>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex-1 h-px bg-gray-200" />
+                or continue with
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Social */}
+              <div className="flex gap-3">
+  {[
+    {
+      name: "Google",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.2 0 6 1.1 8.2 3.2l6.1-6.1C34.5 2.3 29.7 0 24 0 14.7 0 6.7 5.5 2.7 13.4l7.5 5.8C12.2 13.3 17.6 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-2.7-.4-3.9H24v7.4h12.7c-.3 2.1-1.8 5.3-5.1 7.5l7.9 6.1c4.6-4.2 7-10.3 7-17.1z"/>
+          <path fill="#FBBC05" d="M10.2 28.2c-.6-1.7-.9-3.5-.9-5.2s.3-3.5.9-5.2l-7.5-5.8C1 15.7 0 19.7 0 24s1 8.3 2.7 11.9l7.5-5.7z"/>
+          <path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.7l-7.9-6.1c-2.1 1.5-5 2.6-8.1 2.6-6.4 0-11.8-3.8-13.8-9.2l-7.5 5.7C6.7 42.5 14.7 48 24 48z"/>
+        </svg>
+      ),
+    },
+    {
+      name: "GitHub",
+      icon: (
+        <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 .5C5.7.5.9 5.3.9 11.6c0 5 3.2 9.2 7.7 10.7.6.1.8-.2.8-.6v-2.2c-3.1.7-3.8-1.5-3.8-1.5-.5-1.2-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 .1.8 1.7 2.6 1.2.1-.7.4-1.2.7-1.5-2.5-.3-5.2-1.3-5.2-5.7 0-1.2.4-2.1 1.2-2.9-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.7.8 1.2 1.7 1.2 2.9 0 4.4-2.7 5.4-5.2 5.7.4.3.8 1 .8 2.1v3.1c0 .4.2.7.8.6 4.5-1.5 7.7-5.7 7.7-10.7C23.1 5.3 18.3.5 12 .5z"/>
+        </svg>
+      ),
+    },
+    {
+      name: "Apple",
+      icon: (
+        <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16.7 13.2c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.9-1.8-3.5-1.8-1.5-.1-2.9.9-3.7.9s-2-.9-3.3-.9c-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.3.9 1.3 2 2.8 3.5 2.7 1.4-.1 1.9-.9 3.5-.9s2.1.9 3.5.9c1.5 0 2.5-1.4 3.4-2.7 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-3.6zM14.9 5.6c.7-.9 1.2-2.1 1.1-3.3-1 .1-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.6 3-1.5z"/>
+        </svg>
+      ),
+    },
+  ].map((item) => (
+    <button
+      key={item.name}
+      onClick={() => {
+        if (item.name === "Google") {
+          console.log("Google login");
+        }
+        if (item.name === "GitHub") {
+          console.log("GitHub login");
+        }
+        if (item.name === "Apple") {
+          console.log("Apple login");
+        }
+      }}
+      className="flex items-center justify-center gap-2 flex-1 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-100 active:scale-[0.97] transition cursor-pointer"
+    >
+      {item.icon}
+      {item.name}
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-sm text-gray-600 text-center">
+                Already have an account?{' '}
+                <span onClick={() => setIsLogin(true)} className="text-orange-500 cursor-pointer hover:underline">Log in →</span>
+              </p>
+            </div>
+          </motion.div>
+          
+        </div>
+        {/* SLIDING CONTAINER */}
+<div className="absolute inset-0 flex w-full overflow-hidden">
+  <div
+    className="flex w-[200%] h-full transition-transform duration-700 ease-in-out"
+    style={{
+      transform: isLogin ? "translateX(0%)" : "translateX(-50%)",
+    }}
+  >
+    
+    {/* LOGIN */}
+    <div className="w-1/2 flex items-center justify-center">
+      {/* Your Login JSX here */}
+    </div>
+
+    {/* REGISTER */}
+    <div className="w-1/2 flex items-center justify-center">
+      {/* Your Register JSX here */}
+    </div>
+
+  </div>
+</div>
+        
+
+        {/* GLASS OVERLAY */}
+        <motion.div
+          animate={{ x: isLogin ? "0%" : "100%" }}
+          transition={{ type: "spring", stiffness: 90, damping: 18 }}
+          className="absolute top-0 left-0 w-1/2 h-full backdrop-blur-2xl bg-white/30 border border-white/50 shadow-2xl flex items-center justify-center rounded-3xl pointer-events-none"
+        >
+          <div className="text-center p-10 pointer-events-auto">
+            {isLogin ? (
+              <>
+                <h2 className="text-6xl font-bold mb-5 text-gray-900">Welcome Back!</h2>
+                <p className="mb-8 text-gray-900">To keep connected with us please login with your personal info</p>
+                <button onClick={() => setIsLogin(false)} className="bg-black text-white px-6 py-2 rounded-xl">
+                  Sign In
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-6xl font-bold mb-5 text-gray-900">Hello Friend!</h2>
+                <p className="mb-8 text-gray-900 ">Enter your personal details and start your journey with us </p>
+                
+                <button onClick={() => setIsLogin(true)} className="bg-black text-white px-6 py-2 rounded-xl">
+                  Sign Up
+                </button>
+              </>
+            )}
+          </div>
+        </motion.div>
+
+      </div>
+      
     </div>
   );
 }
