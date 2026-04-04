@@ -163,9 +163,12 @@ export default function AuthPage() {
               </button>
             </div>
 
-            <div className="text-right text-sm text-gray-500 hover:text-black cursor-pointer">
+            <div
+              onClick={() => navigate("/forgot-password")}
+              className="text-right text-sm text-gray-500 hover:text-black cursor-pointer hover:underline transition"
+              >
               Forgot password?
-            </div>
+              </div>
 
             {/* Button */}
             <button

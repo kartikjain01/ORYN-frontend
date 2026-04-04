@@ -6,10 +6,12 @@ import AppLayout from "./components/layout/AppLayout";
 // Pages
 import HomePage from "./pages/HomePage"; // Create or import your Home Page
 import RegisterPage from "./pages/RegisterPage";
+import ForgetPassword from "./pages/Forgetpassword";
 import VoiceCloningPage from "./pages/VoiceCloningPage";
 import TextToSpeechPage from "./pages/TextToSpeechPage";
 import VoiceEditorPage from "./pages/VoiceEditorPage";
 import SettingsPage from "./pages/SettingsPage";
+
 
 function App() {
   const [session, setSession] = useState(null);
@@ -49,6 +51,8 @@ function App() {
         path="/register"
         element={!session ? <RegisterPage /> : <Navigate to="/" replace />}
       />
+       {/* ✅ Public Forgot Password Route */}
+  <Route path="/forgot-password" element={<ForgetPassword />} />
 
       {/* 3. PROTECTED ROUTES
           Requires login. If no session, redirect to /register.
