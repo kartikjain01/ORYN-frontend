@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-// Correct this path if you moved the file!
-import { supabase } from "./supabaseClient"; 
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from './supabaseClient';
 import AppLayout from "./components/layout/AppLayout";
 
-// Page Imports
-import HomePage from "./pages/HomePage";
+// Pages
+import HomePage from "./pages/HomePage"; // Create or import your Home Page
 import RegisterPage from "./pages/RegisterPage";
 import VoiceCloningPage from "./pages/VoiceCloningPage";
 import TextToSpeechPage from "./pages/TextToSpeechPage";
@@ -17,19 +16,18 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Check current session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const getSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setSession(session);
       setLoading(false);
     };
 
-    checkSession();
+    getSession();
 
-    // 2. Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -39,21 +37,32 @@ function App() {
 
   return (
     <Routes>
+      {/* 1. PUBLIC HOME PAGE
+          This is always the first page. No redirect here.
+      */}
       <Route path="/" element={<HomePage />} />
-      <Route 
-        path="/register" 
-        element={!session ? <RegisterPage /> : <Navigate to="/voice-clone" replace />} 
-        />  
-      
-      
-      {/* Group Protected Routes */}
-      <Route element={session ? <AppLayout /> : <Navigate to="/register" replace />}>
+
+      {/* 2. AUTH PAGE
+          If logged in, send them to Home. If not, show Register/Login.
+      */}
+      <Route
+        path="/register"
+        element={!session ? <RegisterPage /> : <Navigate to="/" replace />}
+      />
+
+      {/* 3. PROTECTED ROUTES
+          Requires login. If no session, redirect to /register.
+      */}
+      <Route
+        element={session ? <AppLayout /> : <Navigate to="/register" replace />}
+      >
         <Route path="/voice-clone" element={<VoiceCloningPage />} />
         <Route path="/text-to-speech" element={<TextToSpeechPage />} />
         <Route path="/voice-editor" element={<VoiceEditorPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
-      
+
+      {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
