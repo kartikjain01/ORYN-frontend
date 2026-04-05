@@ -1,11 +1,11 @@
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,6 +14,23 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
+
+  // ✅ 🔥 EMAIL VERIFICATION HANDLER (ADDED - DO NOT TOUCH)
+  useEffect(() => {
+    const hash = window.location.hash;
+
+    if (hash && hash.includes('access_token')) {
+      alert('Email verified successfully!');
+
+      // clean URL
+      window.history.replaceState({}, document.title, '/login');
+
+      // force login view
+      setIsLogin(true);
+
+      navigate('/login');
+    }
+  }, []);
 
   // 🔥 REGISTER
   const handleRegister = async () => {
@@ -35,6 +52,10 @@ export default function AuthPage() {
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
+        options: {
+          // ✅ 🔥 FIXED (dynamic redirect)
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
       });
 
       if (error) {

@@ -54,6 +54,11 @@ function App() {
        {/* ✅ Public Forgot Password Route */}
   <Route path="/forgot-password" element={<ForgetPassword />} />
 
+      <Route
+        path="/login"
+        element={!session ? <RegisterPage /> : <Navigate to="/" replace />}
+      />
+
       {/* 3. PROTECTED ROUTES
           Requires login. If no session, redirect to /register.
       */}
