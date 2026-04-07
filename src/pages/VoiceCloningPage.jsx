@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
 
-
 const API_BASE = import.meta.env.VITE_API_VOICE_CLONE;
 
 export default function VoiceCloningPage() {
@@ -125,10 +124,16 @@ export default function VoiceCloningPage() {
       const res = await fetch(`${API_BASE}/v1/tts/${jobId}`);
       const data = await res.json();
 
-      if (data.status === "done") {
+      if (data.status === 'done') {
         clearInterval(interval);
-        setAudioUrl(`${API_BASE}/v1/tts/${jobId}/download`);
-        setStatusMsg("Preview ready!");
+
+        if (!data.audio_url) {
+          setStatusMsg('Error: No audio URL returned');
+          return;
+        }
+
+        setAudioUrl(data.audio_url);
+        setStatusMsg('Preview ready!');
       }
     }, 2000);
   };
