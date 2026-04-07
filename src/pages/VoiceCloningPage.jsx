@@ -91,6 +91,7 @@ export default function VoiceCloningPage() {
     }
 
     try {
+      const fullName = 'kartik_jain';
       const response = await fetch(`${API_BASE}/v1/tts`, {
         method: 'POST',
         headers: {
@@ -101,6 +102,7 @@ export default function VoiceCloningPage() {
           text: previewText,
           language: 'en',
           output_format: 'wav',
+          user_id: fullName,
         }),
       });
 
@@ -340,9 +342,20 @@ export default function VoiceCloningPage() {
 
           {/* 🎧 Audio Player */}
           {audioUrl && (
-            <div className="mt-6 w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4">
+            <div className="mt-6 w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 text-center">
               <p className="text-sm text-white/70 mb-2">Preview</p>
+
+              {/* 🎧 Audio Player */}
               <audio controls src={audioUrl} className="w-full" />
+
+              {/* ⬇️ Download Button */}
+              <a
+                href={audioUrl}
+                download="generated.wav"
+                className="block mt-3 text-pink-400 hover:underline"
+              >
+                Download Audio
+              </a>
             </div>
           )}
         </div>
