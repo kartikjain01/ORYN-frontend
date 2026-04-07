@@ -1,8 +1,12 @@
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function ForgetPassword() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [step, setStep] = useState(1);
 
   const [email, setEmail] = useState("");
@@ -14,6 +18,8 @@ export default function ForgetPassword() {
 
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
+  const isFromSettings = location?.state?.fromSettings ?? false;
+  
 
   // ⏱️ OTP TIMER
   useEffect(() => {
@@ -90,7 +96,25 @@ export default function ForgetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f6f7fb] px-4">
+    
+    <div className="min-h-screen flex items-center justify-center bg-[#f6f7fb] px-4 relative">
+      {/* 🔙 BACK BUTTON */}
+      <button
+        onClick={() => {
+          if (isFromSettings) {
+            navigate("/settings"); // go back to settings
+          } else if (window.history.length > 1) {
+            navigate(-1); // normal back
+          } else {
+            navigate("/"); // fallback
+          }
+        }}
+        className="absolute top-6 left-6 text-sm text-gray-600 hover:text-black flex items-center gap-1"
+      >
+        ← Back
+      </button>
+
+
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -102,6 +126,10 @@ export default function ForgetPassword() {
           className="w-full max-w-md bg-white rounded-3xl p-8
           shadow-[0_20px_60px_rgba(0,0,0,0.08)]"
         >
+                {/* PAGE CONTENT */}
+      <h2 className="text-xl font-bold text-center text-gray-800 mb-4">
+        {isFromSettings ? "Change Password" : "Forgot Password"}
+      </h2>
 
           {/* SUCCESS SCREEN */}
           {status === "done" ? (

@@ -1,4 +1,3 @@
-import { supabase } from "../../supabaseClient";
 import { useEffect, useRef, useState } from "react";
 import {
   Bell,
@@ -10,10 +9,9 @@ import {
   Waves,
   SlidersHorizontal,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ContactSupportSection from "../home/ContactSupportSection";
-import { div } from "framer-motion/client";
-
+import { useProfile } from "../../context/ProfileContext";
 
 const navItems = [
   { name: "Home", sectionId: "home", type: "scroll" },
@@ -46,20 +44,14 @@ const notifications = [
 export default function Navbar({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const notificationRef = useRef(null);
 
-  // ✅ Added
-  const getInitial = () => {
-    if (!user?.email) return "";
-    return user.email.charAt(0).toUpperCase();
-  };
+  const notificationRef = useRef(null);
+  const { setShowProfile, profile } = useProfile();
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -81,6 +73,7 @@ export default function Navbar({ user }) {
     }
   };
 
+  // ✅ CLOSE NOTIFICATIONS ON OUTSIDE CLICK
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -96,6 +89,7 @@ export default function Navbar({ user }) {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ✅ ESC KEY CLOSE
   useEffect(() => {
     function handleEsc(event) {
       if (event.key === "Escape") {
@@ -108,32 +102,16 @@ export default function Navbar({ user }) {
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
-// Profile outside click
-useEffect(() => {
-  function handleClickOutside(event) {
-    if (
-      profileRef.current &&
-      !profileRef.current.contains(event.target)
-    ) {
-      setShowProfile(false);
-    }
-  }
 
-  if (showProfile) {
-    document.addEventListener("mousedown", handleClickOutside);
-  }
+  // ✅ SCROLL EFFECT
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [showProfile]);
-useEffect(() => {
-  const handleScroll = () => {
-    setScrolled(window.scrollY > 20);
-  };
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
 
   return (
     <>
@@ -276,29 +254,37 @@ useEffect(() => {
               )}
             </div>
 
-            {/* ✅ UPDATED PROFILE */}
-            {user ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();   // ✅ stop parent click
-                  console.log("USER:", user);   // 👈 ADD THIS
-                  setShowProfile(true);
-                }}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-[#8b3dff] to-[#7cecff] text-sm font-bold text-white shadow-[0_0_15px_rgba(139,61,255,0.3)] transition hover:scale-110"
-              >
-                {getInitial()}               
-              </button>
-            ) : (
-              <button
-                onClick={(e) => { 
-                  e.stopPropagation();
-                  navigate("/register");
-                }}
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
-              >
-                <UserCircle2 size={22} strokeWidth={1.8} />
-              </button>
-            )}
+{/* ✅ PROFILE BUTTON */}
+  {user ? (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowProfile(true);
+      }}
+      className="flex items-center justify-center w-10 h-10 rounded-full 
+      bg-gradient-to-br from-[#8b3dff] to-[#7cecff] 
+      text-sm font-bold text-white 
+      shadow-[0_0_15px_rgba(139,61,255,0.3)] 
+      transition-all duration-300 
+      hover:scale-110 hover:shadow-[0_0_20px_rgba(139,61,255,0.6)]"
+    >
+      {profile?.avatar ? (
+        <img
+          src={profile.avatar}
+          className="w-full h-full rounded-full object-cover"
+        />
+      ) : (
+        profile?.email?.charAt(0).toUpperCase()
+      )}
+    </button>
+  ) : (
+    <button
+      onClick={() => navigate("/register")}
+      className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
+    >
+      <UserCircle2 size={22} strokeWidth={1.8} />
+    </button>
+  )}
 
             {/* ✅ LOGOUT */}
             {user && (

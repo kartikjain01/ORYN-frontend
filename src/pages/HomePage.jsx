@@ -64,9 +64,17 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main>
-        <HeroSection user={user} />
-        <FeatureCards />
-        <FeaturedProduction />
+      <section id="home" className="scroll-mt-32">
+          <HeroSection />
+        </section>
+
+        <section id="feature-cards">
+          <FeatureCards />
+        </section>
+
+        <section id="features" className="scroll-mt-32">
+          <FeaturedProduction />
+        </section>
         <WhyChooseUs />
       </main>
 

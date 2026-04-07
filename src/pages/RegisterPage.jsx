@@ -141,7 +141,7 @@ export default function AuthPage() {
           className={`p-10 flex flex-col justify-center transition-opacity duration-500 ${!isLogin ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}
         >
           <div className="mb-8">
-            <div className="text-orange-500 text-1xl mb-4">ORYNEngine</div>
+          <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">ORYNEngine</div>
             <h1 className="text-4xl font-bold text-black">Welcome back</h1>
             <p className="text-black/70 mt-2">
               Sign in to continue managing your tasks, notes, and projects.
@@ -210,7 +210,7 @@ export default function AuthPage() {
             {/* Social */}
             <SocialButtons onSocialClick={handleSocialLogin} />
 
-            <p className="text-sm text-gray-600 text-center md:hidden">
+            <p className="text-sm text-gray-600 text-center">
               Don’t have an account?{' '}
               <span
                 onClick={() => setIsLogin(false)}
@@ -227,7 +227,7 @@ export default function AuthPage() {
           className={`p-10 flex flex-col justify-center transition-opacity duration-500 ${isLogin ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}
         >
           <div className="mb-8">
-            <div className="text-orange-500 text-1xl mb-4">ORYNEngine</div>
+          <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">ORYNEngine</div>
             <h1 className="text-4xl font-bold text-black">Create an account</h1>
             <p className="text-black/70 mt-2">
               Access your tasks, notes, and projects anytime, anywhere.
@@ -312,7 +312,7 @@ export default function AuthPage() {
             {/* Social */}
             <SocialButtons onSocialClick={handleSocialLogin} />
 
-            <p className="text-sm text-gray-600 text-center md:hidden">
+            <p className="text-sm text-gray-600 text-center ">
               Already have an account?{' '}
               <span
                 onClick={() => setIsLogin(true)}
@@ -334,31 +334,31 @@ export default function AuthPage() {
             {isLogin ? (
               <>
                 <h2 className="text-6xl font-bold mb-5 text-gray-900">
-                  Welcome Back!
+                Hello Friend! 
                 </h2>
                 <p className="mb-8 text-gray-900">
-                  To keep connected with us please login with your personal info
+                Enter your personal details and start your journey with us 
                 </p>
                 <button
                   onClick={() => setIsLogin(false)}
                   className="bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition"
                 >
-                  Go to Register
+                  Sign Up
                 </button>
               </>
             ) : (
               <>
                 <h2 className="text-6xl font-bold mb-5 text-gray-900">
-                  Hello Friend!
+                Welcome Back! 
                 </h2>
                 <p className="mb-8 text-gray-900">
-                  Enter your personal details and start your journey with us
+                To keep connected with us please login with your personal info
                 </p>
                 <button
                   onClick={() => setIsLogin(true)}
                   className="bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition"
                 >
-                  Go to Login
+                  Sign In
                 </button>
               </>
             )}

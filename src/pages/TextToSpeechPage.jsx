@@ -148,7 +148,7 @@ export default function GlowBackgroundPlayground() {
 
         {/* Right Tool Panel */}
         <div className="absolute top-1/2 right-4 -translate-y-1/2 z-10 w-[340px] h-[470px] rounded-2xl bg-white/90 p-5 text-black overflow-auto">
-          <h2 className="mb-4 font-semibold">Tool</h2>
+          <h2 className="mb-4 font-semibold">Tool (coming soon)</h2>
 
           <div className="space-y-4">
 
