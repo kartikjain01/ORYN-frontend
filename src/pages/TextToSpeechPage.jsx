@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Mic, Paperclip } from "lucide-react";
+import { supabase } from '../supabaseClient';
 
 const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION; // ✅ added
 
@@ -14,24 +15,33 @@ export default function GlowBackgroundPlayground() {
 
     setIsLoading(true);
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const fullName =
+        user?.user_metadata?.full_name || user?.email || 'unknown_user';
+
       const response = await fetch(`${API_BASE}/generate`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: text.replace(/\n/g, " "),
+          text: text.replace(/\n/g, ' '),
           speed: 1,
-          voice: "af_bella",
+          voice: 'af_bella',
+          user_id: fullName, // ✅ ADD THIS
         }),
       });
 
-      if (!response.ok) throw new Error("Backend Error");
+      if (!response.ok) throw new Error('Backend Error');
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const data = await response.json();
+      setAudioUrl(data.audio_url);
+      setShowAudio(true);
 
-      setAudioUrl(url);
+      setAudioUrl(data.audio_url);
       setShowAudio(true); // ✅ show player after success
     } catch (error) {
       console.error("Connection failed:", error);
