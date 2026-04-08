@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
+import { supabase } from '../supabaseClient';
 
 const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR;
 console.log('VOICE EDITOR API:', API_BASE);
@@ -41,8 +42,17 @@ export default function VoiceEditorPage() {
       setLoading(true);
       setProcessedAudio(null);
 
+      // 🔥 GET USER FIRST
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const fullName =
+        user?.user_metadata?.full_name || user?.email || 'unknown_user';
+
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('user_id', fullName); // ✅ ADD BEFORE FETCH
 
       const response = await fetch(`${API_BASE}/process-audio`, {
         method: 'POST',
@@ -51,12 +61,10 @@ export default function VoiceEditorPage() {
 
       if (!response.ok) throw new Error('Processing failed');
 
-      // 🔥 IMPORTANT: GET BLOB INSTEAD OF JSON
-      const blob = await response.blob();
+      // ✅ GET JSON RESPONSE
+      const data = await response.json();
 
-      const audioUrl = URL.createObjectURL(blob);
-
-      setProcessedAudio(audioUrl);
+      setProcessedAudio(data.audio_url);
     } catch (error) {
       console.error(error);
       alert('Error processing audio');
