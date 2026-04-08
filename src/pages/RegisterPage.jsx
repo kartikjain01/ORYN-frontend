@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-
+import { User } from 'lucide-react';
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
