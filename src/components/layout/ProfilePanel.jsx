@@ -1,49 +1,48 @@
-import { useProfile } from "../../context/ProfileContext"; 
-import {
-  X,
-  Settings,
-  LogOut,
-  User,
-  Shield,
-  CreditCard
-} from "lucide-react";
+import { useProfile } from '../../context/ProfileContext';
+import { X, Settings, LogOut, User, Shield, CreditCard } from 'lucide-react';
 
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
-export default function ProfilePanel({ user }) {
+export default function ProfilePanel() {
   const { showProfile, setShowProfile, profile, setProfile } = useProfile();
   const navigate = useNavigate();
 
-  /* 🔥 ESC KEY HANDLER */
+  const [user, setUser] = useState(null);
+
+  /* ✅ GET CURRENT USER */
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") {
-        setShowProfile(false);
-      }
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user);
     };
-  
-    document.addEventListener("keydown", handleEsc);
-  
-    return () => {
-      document.removeEventListener("keydown", handleEsc);
-    };
+    getUser();
   }, []);
 
-  /* 🔥 FETCH PROFILE */
+  /* 🔥 ESC KEY */
+  useEffect(() => {
+    const handleEsc = e => {
+      if (e.key === 'Escape') setShowProfile(false);
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  /* ✅ FETCH PROFILE */
   useEffect(() => {
     if (!user) return;
 
     const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
         .single();
 
-      setProfile(data);
+      if (!error) setProfile(data);
     };
 
     fetchProfile();
@@ -51,18 +50,12 @@ export default function ProfilePanel({ user }) {
 
   if (!user) return null;
 
-  const handleLogoutAll = async () => {
-    await supabase.auth.signOut({ scope: "global" });
-    navigate("/");
-  };
-
   return (
     <AnimatePresence>
       {showProfile && (
         <>
           {/* OVERLAY */}
           <motion.div
-          
             onClick={() => setShowProfile(false)}
             className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"
             initial={{ opacity: 0 }}
@@ -72,13 +65,11 @@ export default function ProfilePanel({ user }) {
 
           {/* PANEL */}
           <motion.div
-              key="panel"
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            className="fixed top-5 right-6 w-[320px] bg-[#0b0616] p-5 z-50 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)] border border-white/10 backdrop-blur-xl"
+            onClick={e => e.stopPropagation()}
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="fixed top-5 right-6 w-[320px] bg-[#0b0616] p-5 z-50 rounded-2xl shadow-xl border border-white/10"
           >
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">
@@ -91,9 +82,9 @@ export default function ProfilePanel({ user }) {
 
             {/* USER INFO */}
             <div className="flex flex-col items-center text-center">
-              {profile?.avatar ? (
+              {profile?.avatar_url ? (
                 <img
-                  src={profile.avatar}
+                  src={profile.avatar_url}
                   className="w-20 h-20 rounded-full object-cover"
                 />
               ) : (
@@ -103,7 +94,7 @@ export default function ProfilePanel({ user }) {
               )}
 
               <p className="mt-4 text-white font-semibold">
-                {profile?.name || "User"}
+                {profile?.full_name || 'User'}
               </p>
 
               <p className="text-white/50 text-sm">{user?.email}</p>
@@ -115,21 +106,21 @@ export default function ProfilePanel({ user }) {
                 <strong>User ID:</strong> {user?.id}
               </p>
               <p className="text-white/70">
-                <strong>Plan:</strong> {profile?.plan || "Free"}
+                <strong>Plan:</strong> {profile?.plan || 'Free'}
               </p>
               <p className="text-white/70">
-                <strong>Joined:</strong>{" "}
+                <strong>Joined:</strong>{' '}
                 {new Date(user?.created_at).toLocaleDateString()}
               </p>
             </div>
 
-            {/* MAIN ACTIONS */}
+            {/* ACTIONS */}
             <div className="mt-6 space-y-2">
               <PanelItem
                 icon={<User size={18} />}
                 label="Edit Profile"
-                onClick={() => { 
-                  navigate("/settings");
+                onClick={() => {
+                  navigate('/settings');
                   setShowProfile(false);
                 }}
               />
@@ -137,11 +128,10 @@ export default function ProfilePanel({ user }) {
               <PanelItem
                 icon={<Settings size={18} />}
                 label="App Settings"
-                onClick={() => 
-                  {
-                    navigate("/settings")
+                onClick={() => {
+                  navigate('/settings');
                   setShowProfile(false);
-                  }}
+                }}
               />
 
               <PanelItem
@@ -156,11 +146,10 @@ export default function ProfilePanel({ user }) {
                 icon={<Shield size={18} />}
                 label="Change Password"
                 onClick={() => {
-                  navigate("/forgot-password");
+                  navigate('/forgot-password');
                   setShowProfile(false);
                 }}
               />
-
             </div>
 
             {/* LOGOUT */}
@@ -171,7 +160,7 @@ export default function ProfilePanel({ user }) {
                 danger
                 onClick={async () => {
                   await supabase.auth.signOut();
-                  navigate("/register");
+                  navigate('/login');
                 }}
               />
             </div>
@@ -182,13 +171,13 @@ export default function ProfilePanel({ user }) {
   );
 }
 
-/* ===== ITEM COMPONENT ===== */
+/* ITEM */
 function PanelItem({ icon, label, onClick, danger }) {
   return (
     <div
       onClick={onClick}
       className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition
-      ${danger ? "text-red-400 hover:bg-red-500/10" : "text-white hover:bg-white/5"}`}
+      ${danger ? 'text-red-400 hover:bg-red-500/10' : 'text-white hover:bg-white/5'}`}
     >
       {icon}
       <span className="text-sm">{label}</span>

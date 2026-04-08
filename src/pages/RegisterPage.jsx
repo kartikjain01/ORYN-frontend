@@ -9,6 +9,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -53,8 +54,11 @@ export default function AuthPage() {
         email: cleanEmail,
         password,
         options: {
-          // ✅ 🔥 FIXED (dynamic redirect)
           emailRedirectTo: `${window.location.origin}/login`,
+          data: {
+            full_name: fullName,
+            avatar_url: '',
+          },
         },
       });
 
@@ -141,7 +145,9 @@ export default function AuthPage() {
           className={`p-10 flex flex-col justify-center transition-opacity duration-500 ${!isLogin ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}
         >
           <div className="mb-8">
-          <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">ORYNEngine</div>
+            <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">
+              ORYNEngine
+            </div>
             <h1 className="text-4xl font-bold text-black">Welcome back</h1>
             <p className="text-black/70 mt-2">
               Sign in to continue managing your tasks, notes, and projects.
@@ -185,11 +191,11 @@ export default function AuthPage() {
             </div>
 
             <div
-              onClick={() => navigate("/forgot-password")}
+              onClick={() => navigate('/forgot-password')}
               className="text-right text-sm text-gray-500 hover:text-black cursor-pointer hover:underline transition"
-              >
+            >
               Forgot password?
-              </div>
+            </div>
 
             {/* Button */}
             <button
@@ -227,11 +233,24 @@ export default function AuthPage() {
           className={`p-10 flex flex-col justify-center transition-opacity duration-500 ${isLogin ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}
         >
           <div className="mb-8">
-          <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">ORYNEngine</div>
+            <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">
+              ORYNEngine
+            </div>
             <h1 className="text-4xl font-bold text-black">Create an account</h1>
             <p className="text-black/70 mt-2">
               Access your tasks, notes, and projects anytime, anywhere.
             </p>
+          </div>
+
+          <div className="relative">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+            />
           </div>
 
           <div className="space-y-5">
@@ -334,10 +353,10 @@ export default function AuthPage() {
             {isLogin ? (
               <>
                 <h2 className="text-6xl font-bold mb-5 text-gray-900">
-                Hello Friend! 
+                  Hello Friend!
                 </h2>
                 <p className="mb-8 text-gray-900">
-                Enter your personal details and start your journey with us 
+                  Enter your personal details and start your journey with us
                 </p>
                 <button
                   onClick={() => setIsLogin(false)}
@@ -349,10 +368,10 @@ export default function AuthPage() {
             ) : (
               <>
                 <h2 className="text-6xl font-bold mb-5 text-gray-900">
-                Welcome Back! 
+                  Welcome Back!
                 </h2>
                 <p className="mb-8 text-gray-900">
-                To keep connected with us please login with your personal info
+                  To keep connected with us please login with your personal info
                 </p>
                 <button
                   onClick={() => setIsLogin(true)}
