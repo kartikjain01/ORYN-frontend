@@ -70,7 +70,7 @@ function App() {
           <Route path="/voice-clone" element={<VoiceCloningPage />} />
           <Route path="/text-to-speech" element={<TextToSpeechPage />} />
           <Route path="/voice-editor" element={<VoiceEditorPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+           <Route path="/settings" element={<SettingsPage />} /> 
         </Route>
   
         {/* FALLBACK */}

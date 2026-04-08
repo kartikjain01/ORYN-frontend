@@ -141,20 +141,28 @@ export default function VoiceCloningPage() {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-black text-white pb-20">
+    <div className="relative h-screen w-full overflow-hidden isolate text-white" style={{ background: "#050010" }}>
       {/* 🔮 Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#140014] via-[#2b0030] to-[#ff6ad5]"></div>
-
-      {/* 🌟 Glow */}
-      <div
-        className="fixed w-[750px] h-[750px] rounded-full blur-[220px] opacity-40"
+      <div className="absolute inset-0 -z-20"
         style={{
           background:
-            'radial-gradient(circle at 60% 40%, #EB00E1 0%, #FFFFFF 100%)',
-          top: '-500px',
-          right: '-450px',
+            "radial-gradient(circle at 85% 15%, rgba(235,0,225,0.25), rgba(120,0,150,0.15), rgba(10,0,20,0.95))",
         }}
-      ></div>
+      />
+
+      {/* 🌟 Glow Ellipse */}
+      <div
+        className="absolute -z-10 pointer-events-none rounded-full"
+        style={{
+          top: "-150px",
+          right: "-150px",
+          width: 500,
+          height: 500,
+          filter: "blur(80px)",
+          background:
+            "radial-gradient(circle at 60% 40%, #EB00E1 0%, rgba(255,255,255,0.6) 100%)",
+        }}
+      />
 
       {/* 👤 Avatar */}
       <div className="absolute top-6 right-8 z-20">

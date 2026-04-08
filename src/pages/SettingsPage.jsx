@@ -142,17 +142,20 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen text-white bg-[#020008] relative overflow-hidden">
+    <div className="min-h-screen relative bg-gray-50 text-black overflow-hidden p-6">
+{/* PREMIUM BACKGROUND */}
+<div className="absolute inset-0 pointer-events-none">
+  <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-orange-200/40 blur-[120px] rounded-full" />
+  <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
+</div>
       
       {/* TOAST */}
       {toast && (
-        <div className="fixed top-5 right-5 bg-black/80 px-4 py-2 rounded-xl border border-white/10 backdrop-blur-md z-50">
+        <div className="fixed top-5 right-5 bg-white/90 text-black px-4 py-2 rounded-xl border border-gray-200 backdrop-blur-md z-50">
           {toast}
         </div>
       )}
 
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.5),rgba(168,85,247,0.3),transparent_50%),linear-gradient(180deg,#010004,#050012,#020008)]" />
 
       <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-6">
         
@@ -160,7 +163,7 @@ export default function SettingsPage() {
         <div className="flex justify-between items-center">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-white/70 hover:text-white"
+            className="flex items-center gap-2 text-sm text-gray/70 hover:text-gray"
           >
             <ArrowLeft size={16} />
             Back
@@ -168,7 +171,7 @@ export default function SettingsPage() {
 
           <button
             onClick={handleSave}
-            className="bg-gradient-to-r from-pink-500 to-purple-500 px-4 py-2 rounded-xl"
+            className="bg-black text-white px-4 py-2 rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-200"
           >
             Save Changes
           </button>
@@ -176,8 +179,8 @@ export default function SettingsPage() {
 
         {/* Title */}
         <div>
-          <h1 className="text-3xl font-semibold">Settings</h1>
-          <p className="text-white/50 text-sm mt-1">
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-gray/50 text-sm mt-1">
             Manage your account and preferences
           </p>
         </div>
@@ -197,7 +200,7 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-semibold">
                     {name || "Your Name"}
                   </h3>
-                  <p className="text-white/50 text-sm">
+                  <p className="text-gray/50 text-sm">
                     {user?.email}
                   </p>
                 </div>
@@ -229,7 +232,7 @@ export default function SettingsPage() {
                   />
                 </label>
 
-                <p className="text-sm text-white/50">
+                <p className="text-sm text-black/50">
                   Click to upload avatar
                 </p>
               </div>
@@ -239,13 +242,13 @@ export default function SettingsPage() {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-xl p-3"
+                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
                   placeholder="Full Name"
                 />
                 <input
                   value={user?.email || ""}
                   disabled
-                  className="bg-white/5 border border-white/10 rounded-xl p-3 opacity-60"
+                  className="bg-white/5 border border-gray/10 rounded-xl p-3 opacity-60"
                   placeholder="Email"
                 />
               </div>
@@ -254,16 +257,16 @@ export default function SettingsPage() {
             {/* Voice Defaults (UNCHANGED) */}
             <SectionCard title="Voice Defaults (coming soon)">
               <div className="grid md:grid-cols-2 gap-4">
-                <select className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <select className="ml-[6px] bg-white/5 border border-gray/10 rounded-xl p-3">
                   <option>Default Voice </option>
                 </select>
 
-                <select className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <select className="ml-[6px] bg-white/5 border border-gray/10 rounded-xl p-3">
                   <option>MP3</option>
                   <option>WAV</option>
                 </select>
 
-                <select className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <select className="ml-[6px] bg-white/5 border border-gray/10 rounded-xl p-3">
                   <option>English</option>
                   <option>Hindi</option>
                 </select>
