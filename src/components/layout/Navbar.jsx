@@ -118,44 +118,43 @@ export default function Navbar({ user }) {
       <header
         className={`fixed top--3 left-0 w-full z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#020817]/90 backdrop-blur-lg border-b border-white/10"
-            : "bg-transparent"
+            ? 'bg-[#020817]/90 backdrop-blur-lg border-b border-white/10'
+            : 'bg-transparent'
         }`}
       >
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-5 md:py-6 lg:px-6 relative">
-        
-        {/* LOGO */}
-        <div className="flex items-center justify-start min-w-[180px] pr-2 overflow-visible">
-  <span
-    onClick={() => navigate("/")}
-    className="cursor-pointer whitespace-nowrap"
-    style={{
-      fontFamily: "'Sora', sans-serif",
-      fontSize: "clamp(22px,2.2vw,26px)",
-      letterSpacing: "0px",
-      color: "#ffffff",
-      fontStyle: "italic",
-      paddingRight: "2px", // ✅ gives breathing space to 'e'
-      display: "inline-block",
-    }}
-  >
-    <span style={{ fontWeight: 700 }}>ORYN</span>
+          {/* LOGO */}
+          <div className="flex items-center justify-start min-w-[180px] pr-2 overflow-visible">
+            <span
+              onClick={() => navigate('/')}
+              className="cursor-pointer whitespace-nowrap"
+              style={{
+                fontFamily: "'Sora', sans-serif",
+                fontSize: 'clamp(22px,2.2vw,26px)',
+                letterSpacing: '0px',
+                color: '#ffffff',
+                fontStyle: 'italic',
+                paddingRight: '2px', // ✅ gives breathing space to 'e'
+                display: 'inline-block',
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>ORYN</span>
 
-    <span
-      style={{
-        fontWeight: 900,
-        marginLeft: "6px",
-        background: "linear-gradient(90deg, #8b3dff, #7cecff)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-        display: "inline-block",
-        paddingRight: "2px",
-      }}
-    >
-      Engine
-    </span>
-  </span>
-</div>
+              <span
+                style={{
+                  fontWeight: 900,
+                  marginLeft: '6px',
+                  background: 'linear-gradient(90deg, #8b3dff, #7cecff)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  display: 'inline-block',
+                  paddingRight: '2px',
+                }}
+              >
+                Engine
+              </span>
+            </span>
+          </div>
 
           {/* CENTER MENU */}
           <div className="w-[clamp(60px,6vw,96px)]" />
@@ -163,13 +162,13 @@ export default function Navbar({ user }) {
           <ul
             className="absolute left-1/2 -translate-x-1/2 hidden items-center md:flex"
             style={{
-              gap: "clamp(18px,3vw,40px)",
-              fontSize: "clamp(13px,1.2vw,20px)",
+              gap: 'clamp(18px,3vw,40px)',
+              fontSize: 'clamp(13px,1.2vw,20px)',
             }}
           >
-            {navItems.map((item) => (
+            {navItems.map(item => (
               <li key={item.name}>
-                {item.type === "about" ? (
+                {item.type === 'about' ? (
                   <button
                     onClick={() => {
                       setShowAbout(true);
@@ -179,7 +178,7 @@ export default function Navbar({ user }) {
                   >
                     {item.name}
                   </button>
-                ) : item.type === "contact" ? (
+                ) : item.type === 'contact' ? (
                   <button
                     onClick={() => {
                       setShowContact(true);
@@ -192,9 +191,7 @@ export default function Navbar({ user }) {
                   </button>
                 ) : (
                   <button
-                    onClick={() =>
-                      handleSectionNavigation(item.sectionId)
-                    }
+                    onClick={() => handleSectionNavigation(item.sectionId)}
                     className="text-white/70 hover:text-white transition"
                   >
                     {item.name}
@@ -205,9 +202,8 @@ export default function Navbar({ user }) {
           </ul>
 
           <div className="ml-auto flex items-center gap-3 pr-0 text-white/80">
-
             <button
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate('/settings')}
               className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
             >
               <Settings size={22} strokeWidth={1.8} />
@@ -215,9 +211,7 @@ export default function Navbar({ user }) {
 
             <div className="relative" ref={notificationRef}>
               <button
-                onClick={() =>
-                  setShowNotifications((prev) => !prev)
-                }
+                onClick={() => setShowNotifications(prev => !prev)}
                 className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
               >
                 <Bell size={22} strokeWidth={1.8} />
@@ -233,7 +227,7 @@ export default function Navbar({ user }) {
                   </div>
 
                   <div className="max-h-[300px] overflow-y-auto">
-                    {notifications.map((item) => (
+                    {notifications.map(item => (
                       <button
                         key={item.id}
                         className="w-full px-4 py-4 text-left border-b border-white/10 hover:bg-white/5"
@@ -254,43 +248,49 @@ export default function Navbar({ user }) {
               )}
             </div>
 
-{/* ✅ PROFILE BUTTON */}
-  {user ? (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        setShowProfile(true);
-      }}
-      className="flex items-center justify-center w-10 h-10 rounded-full 
-      bg-gradient-to-br from-[#8b3dff] to-[#7cecff] 
-      text-sm font-bold text-white 
-      shadow-[0_0_15px_rgba(139,61,255,0.3)] 
-      transition-all duration-300 
-      hover:scale-110 hover:shadow-[0_0_20px_rgba(139,61,255,0.6)]"
-    >
-      {profile?.avatar ? (
-        <img
-          src={profile.avatar}
-          className="w-full h-full rounded-full object-cover"
-        />
-      ) : (
-        profile?.email?.charAt(0).toUpperCase()
-      )}
-    </button>
-  ) : (
-    <button
-      onClick={() => navigate("/register")}
-      className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
-    >
-      <UserCircle2 size={22} strokeWidth={1.8} />
-    </button>
-  )}
+            {/* ✅ PROFILE BUTTON */}
+            {user ? (
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  setShowProfile(true);
+                }}
+                className="flex items-center justify-center w-10 h-10 rounded-full
+    overflow-hidden
+    bg-gradient-to-br from-[#8b3dff] to-[#7cecff]
+    text-sm font-bold text-white
+    shadow-[0_0_15px_rgba(139,61,255,0.3)]
+    transition-all duration-300
+    hover:scale-110 hover:shadow-[0_0_20px_rgba(139,61,255,0.6)]"
+              >
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url + '?t=' + Date.now()} // 🔥 force refresh
+                    className="w-full h-full object-cover"
+                    alt="avatar"
+                  />
+                ) : (
+                  <span>
+                    {profile?.full_name?.[0]?.toUpperCase() ||
+                      user?.email?.[0]?.toUpperCase() ||
+                      'U'}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/register')}
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
+              >
+                <UserCircle2 size={22} strokeWidth={1.8} />
+              </button>
+            )}
 
             {/* ✅ LOGOUT */}
             {user && (
               <button
-              onClick={() => navigate("/settings")}
-              className="text-[11px] uppercase tracking-widest text-white/30 hover:text-blue-400 transition"
+                onClick={() => navigate('/settings')}
+                className="text-[11px] uppercase tracking-widest text-white/30 hover:text-blue-400 transition"
               >
                 {/* ✅ if you write anything where then it will come on the home */}
               </button>
@@ -299,24 +299,23 @@ export default function Navbar({ user }) {
         </nav>
       </header>
 
-
       <div
         className={`fixed inset-0 z-50 transition-all duration-300 ${
           showAbout
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0'
         }`}
       >
         <div
           onClick={() => setShowAbout(false)}
           className={`absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300 ${
-            showAbout ? "opacity-100" : "opacity-0"
+            showAbout ? 'opacity-100' : 'opacity-0'
           }`}
         />
 
         <div
           className={`absolute right-0 top-0 h-full w-full max-w-[720px] transform border-l border-white/10 bg-[#080311]/90 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
-            showAbout ? "translate-x-0" : "translate-x-full"
+            showAbout ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_12%,rgba(236,72,153,0.18),rgba(168,85,247,0.12),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))]" />
@@ -455,7 +454,9 @@ export default function Navbar({ user }) {
                     <li>Fast generation workflow</li>
                     <li>Premium dark UI and creator-friendly tools</li>
                     <li>Realistic voice output and editing flow</li>
-                    <li>Simple structure for scaling into a full SaaS product</li>
+                    <li>
+                      Simple structure for scaling into a full SaaS product
+                    </li>
                   </ul>
                 </div>
 
@@ -493,20 +494,20 @@ export default function Navbar({ user }) {
       <div
         className={`fixed inset-0 z-50 transition-all duration-300 ${
           showContact
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0'
         }`}
       >
         <div
           onClick={() => setShowContact(false)}
           className={`absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300 ${
-            showContact ? "opacity-100" : "opacity-0"
+            showContact ? 'opacity-100' : 'opacity-0'
           }`}
         />
 
         <div
           className={`absolute right-0 top-0 h-full w-full max-w-[900px] transform border-l border-white/10 bg-[#080311]/90 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
-            showContact ? "translate-x-0" : "translate-x-full"
+            showContact ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 sm:px-8">
@@ -526,16 +527,13 @@ export default function Navbar({ user }) {
             >
               <X size={18} />
             </button>
-          </div>          
+          </div>
 
           <div className="h-[calc(100%-88px)] overflow-y-auto">
             <ContactSupportSection />
           </div>
         </div>
-       </div>
-      
-
-
-</>
+      </div>
+    </>
   );
 }
