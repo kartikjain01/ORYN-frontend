@@ -12,7 +12,7 @@ function SectionCard({ title, children }) {
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-gray-200 bg-white p-6 shadow-lg"
+      className="rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-2xl p-6 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
     >
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
       {children}
@@ -24,7 +24,7 @@ function SmallButton({ children, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-100 transition"
+      className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-200 transition"
     >
       {children}
     </button>
@@ -42,7 +42,10 @@ function ProgressRow({ label, current, total, width }) {
       </div>
 
       <div className="w-full bg-gray-200 h-2 rounded">
-        <div className="bg-purple-500 h-2 rounded" style={{ width: width }} />
+        <div
+          className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
+          style={{ width: width }}
+        />
       </div>
     </div>
   );
@@ -56,6 +59,10 @@ export default function SettingsPage() {
   const { profile, setProfile, fetchProfile, user } = useProfile();
 
   const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [birthday, setBirthday] = useState('');
   const [preview, setPreview] = useState(null);
   const [toast, setToast] = useState('');
 
@@ -65,6 +72,12 @@ export default function SettingsPage() {
     if (profile) {
       setName(profile.full_name || '');
       setPreview(profile.avatar_url || null);
+
+      // 🔥 NEW FIELDS
+      setAge(profile.age || '');
+      setGender(profile.gender || '');
+      setMobile(profile.mobile || '');
+      setBirthday(profile.birthday || '');
     }
   }, [profile]);
 
@@ -156,6 +169,12 @@ export default function SettingsPage() {
       .update({
         full_name: name,
         avatar_url: preview,
+
+        // 🔥 NEW FIELDS
+        age,
+        gender,
+        mobile,
+        birthday,
       })
       .eq('id', user.id);
 
@@ -165,7 +184,7 @@ export default function SettingsPage() {
     await fetchProfile(user.id);
 
     showToast('Profile updated 🚀');
-  };;
+  };
 
   return (
     <div className="min-h-screen relative bg-gray-50 text-black overflow-hidden p-6">
@@ -215,18 +234,6 @@ export default function SettingsPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* PROFILE (ENHANCED — NOTHING REMOVED) */}
             <SectionCard title="Profile">
-              {/* TOP INFO */}
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {name || 'Your Name'}
-                  </h3>
-                  <p className="text-gray/50 text-sm">{user?.email}</p>
-                </div>
-
-                <SmallButton>Edit</SmallButton>
-              </div>
-
               {/* 🔥 AVATAR UPLOAD */}
               <div className="flex items-center gap-4 mb-6">
                 <label className="cursor-pointer">
@@ -252,20 +259,78 @@ export default function SettingsPage() {
                 <p className="text-sm text-black/50">Click to upload avatar</p>
               </div>
 
-              {/* INPUTS (UNCHANGED + CONNECTED) */}
+              {/* TOP INFO */}
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    {name || 'Your Name'}
+                  </h3>
+                  <p className="text-gray/50 text-sm">{user?.email}</p>
+                </div>
+
+                <SmallButton>Edit</SmallButton>
+              </div>
+
+              {/* INPUTS */}
               <div className="grid md:grid-cols-2 gap-4">
+                {/* Name */}
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="bg-white/5 border border-gray/10 rounded-xl p-3"
                   placeholder="Full Name"
                 />
+
+                {/* Email */}
                 <input
                   value={user?.email || ''}
                   disabled
                   className="bg-white/5 border border-gray/10 rounded-xl p-3 opacity-60"
                   placeholder="Email"
                 />
+
+                {/* Age */}
+                <input
+                  type="number"
+                  value={age}
+                  onChange={e => setAge(e.target.value)}
+                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
+                  placeholder="Age"
+                />
+
+                {/* Gender */}
+                <select
+                  value={gender}
+                  onChange={e => setGender(e.target.value)}
+                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+
+                {/* 📅 Birthday (Calendar Picker) */}
+                <input
+                  type="date"
+                  value={birthday}
+                  onChange={e => setBirthday(e.target.value)}
+                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
+                />
+
+                {/* 📱 Mobile with +91 */}
+                <div className="flex">
+                  <span className="bg-white/10 border border-gray/10 rounded-l-xl px-3 flex items-center text-sm">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    value={mobile}
+                    onChange={e => setMobile(e.target.value)}
+                    className="bg-white/5 border border-gray/10 rounded-r-xl p-3 w-full"
+                    placeholder="Mobile Number"
+                  />
+                </div>
               </div>
             </SectionCard>
 
