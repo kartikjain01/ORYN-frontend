@@ -49,7 +49,7 @@ function App() {
             This is always the first page. No redirect here.
         */}
         <Route path="/" element={<HomePage />} />
-  
+
         {/* 2. AUTH PAGE
             If logged in, send them to Home. If not, show Register/Login.
         */}
@@ -57,30 +57,32 @@ function App() {
           path="/register"
           element={!session ? <RegisterPage /> : <Navigate to="/" replace />}
         />
-  
+
         {/* ✅ Public Forgot Password Route */}
         <Route path="/forgot-password" element={<ForgetPassword />} />
-  
+        {/* Reset Password (IMPORTANT) */}
+        <Route path="/reset-password" element={<ForgetPassword />} />
+
         {/* 3. PROTECTED ROUTES
             Requires login. If no session, redirect to /register.
         */}
         <Route
-          element={session ? <AppLayout /> : <Navigate to="/register" replace />}
+          element={
+            session ? <AppLayout /> : <Navigate to="/register" replace />
+          }
         >
           <Route path="/voice-clone" element={<VoiceCloningPage />} />
           <Route path="/text-to-speech" element={<TextToSpeechPage />} />
           <Route path="/voice-editor" element={<VoiceEditorPage />} />
-           <Route path="/settings" element={<SettingsPage />} /> 
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
-  
+
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-  
+
       {/* 🔥 GLOBAL PROFILE PANEL (ADDED ONLY THIS) */}
-      {showProfile && (
-      <ProfilePanel user={session?.user} />
-      )}
+      {showProfile && <ProfilePanel user={session?.user} />}
     </>
   );
 }

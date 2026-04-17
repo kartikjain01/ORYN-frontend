@@ -141,12 +141,16 @@ export default function VoiceCloningPage() {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden isolate text-white" style={{ background: "#050010" }}>
+    <div
+      className="relative min-h-screen w-full overflow-y-auto overflow-x-hidden isolate text-white"
+      style={{ background: '#050010' }}
+    >
       {/* 🔮 Background Gradient */}
-      <div className="absolute inset-0 -z-20"
+      <div
+        className="absolute inset-0 -z-20"
         style={{
           background:
-            "radial-gradient(circle at 85% 15%, rgba(235,0,225,0.25), rgba(120,0,150,0.15), rgba(10,0,20,0.95))",
+            'radial-gradient(circle at 85% 15%, rgba(235,0,225,0.25), rgba(120,0,150,0.15), rgba(10,0,20,0.95))',
         }}
       />
 
@@ -154,13 +158,13 @@ export default function VoiceCloningPage() {
       <div
         className="absolute -z-10 pointer-events-none rounded-full"
         style={{
-          top: "-150px",
-          right: "-150px",
+          top: '-150px',
+          right: '-150px',
           width: 500,
           height: 500,
-          filter: "blur(80px)",
+          filter: 'blur(80px)',
           background:
-            "radial-gradient(circle at 60% 40%, #EB00E1 0%, rgba(255,255,255,0.6) 100%)",
+            'radial-gradient(circle at 60% 40%, #EB00E1 0%, rgba(255,255,255,0.6) 100%)',
         }}
       />
 
@@ -174,10 +178,10 @@ export default function VoiceCloningPage() {
       </div>
 
       {/* 🧱 Layout */}
-      <div className="relative z-10 flex h-full">
+      <div className="relative z-10 flex min-h-screen">
         <div className="w-20"></div>
 
-        <div className="flex-1 flex flex-col items-center pt-24 px-10">
+        <div className="flex-1 flex flex-col items-center pt-24 px-10 pb-32">
           {/* 🔥 Heading */}
           <h1 className="text-7xl font-semibold text-center">Voice Cloning</h1>
 
