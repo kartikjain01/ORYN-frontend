@@ -209,15 +209,18 @@ export default function VoiceEditorPage() {
       formData.append('file', file);
       formData.append('user_id', fullName);
       if (enableNoiseRemoval) {
-        formData.append('processing_mode', processingMode);
+        formData.append('mode', processingMode);
       }
 
-      formData.append('polishing_audio', String(enablePolishingAudio));
+formData.append('youtube_polish', String(enablePolishingAudio));
 
-      const response = await fetch(`${API_BASE}/process-audio`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_BASE}/api/upload-audio/full-enhance`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Processing failed: ${response.status}`);
@@ -226,7 +229,7 @@ export default function VoiceEditorPage() {
       const data = await response.json();
       clearInterval(progressInterval);
       setProgress(100);
-      setProcessedAudio(data.audio_url || null);
+      setProcessedAudio(data.supabase_url || `${API_BASE}${data.download_url}`);
     } catch (error) {
       console.error('Audio processing error:', error);
       alert('Error processing audio');
