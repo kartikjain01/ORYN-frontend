@@ -84,18 +84,33 @@ export default function GlowBackgroundPlayground() {
   };
 
   // ✅ 🔥 MOVED OUT (THIS WAS YOUR BUG)
-  const handleConfirmExport = () => {
+  const handleConfirmExport = async () => {
     if (!audioUrl) {
       alert('No audio to export');
       return;
     }
 
-    const link = document.createElement('a');
-    link.href = audioUrl;
-    link.download = `speech.${selectedFormat.toLowerCase()}`;
-    link.click();
+    try {
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
 
-    setShowExportSettings(false);
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `speech.${selectedFormat.toLowerCase()}`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(blobUrl);
+
+      setShowExportSettings(false);
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert('Failed to download audio');
+    }
   };
 
   // ✅ GENERATE FUNCTION (ONLY CLEANED STRUCTURE, LOGIC SAME)
@@ -459,11 +474,25 @@ export default function GlowBackgroundPlayground() {
 
               <button
                 className="mt-3 w-full rounded-lg bg-purple-600 text-white py-1.5 text-sm"
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = audioUrl;
-                  link.download = 'speech.mp3';
-                  link.click();
+                onClick={async () => {
+                  try {
+                    const response = await fetch(audioUrl);
+                    const blob = await response.blob();
+
+                    const blobUrl = window.URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = 'speech.mp3';
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    window.URL.revokeObjectURL(blobUrl);
+                  } catch (err) {
+                    console.error('Download failed:', err);
+                  }
                 }}
               >
                 Download Audio
