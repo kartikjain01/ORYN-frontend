@@ -241,7 +241,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
 
   return (
     <div
-      className="relative h-screen w-full overflow-hidden isolate text-white"
+    className="relative min-h-screen w-full overflow-x-hidden isolate text-white pb-10"
       style={{ background: '#050010' }}
     >
       <div
@@ -265,33 +265,65 @@ formData.append('youtube_polish', String(enablePolishingAudio));
         }}
       />
 
-      <div className="absolute top-6 right-8 z-20 flex items-center gap-4">
-        <button
-          onClick={() => setShowHelpModal(true)}
-          className="px-5 py-2 rounded-xl bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-sm font-medium"
-        >
-          Help
-        </button>
+      <div className="absolute z-20 flex items-center gap-2 top-4 right-4 md:top-6 md:right-8 md:gap-4">
+      <button
+  onClick={() => setShowHelpModal(true)}
+  className="
+    px-3 py-1.5 md:px-5 md:py-2
+    rounded-lg md:rounded-xl
+    bg-white/10 text-white
+    border border-white/20
+    backdrop-blur-md
+    hover:bg-white/20
+    transition-all duration-300
+    text-[11px] md:text-sm
+    font-medium
+  "
+>
+  Help
+</button>
 
-        <button
-          onClick={() => setShowFeedbackModal(true)}
-          className="px-5 py-2 rounded-xl bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-sm font-medium"
-        >
-          Feedback
-        </button>
+<button
+  onClick={() => setShowFeedbackModal(true)}
+  className="
+    px-3 py-1.5 md:px-5 md:py-2
+    rounded-lg md:rounded-xl
+    bg-white/10 text-white
+    border border-white/20
+    backdrop-blur-md
+    hover:bg-white/20
+    transition-all duration-300
+    text-[11px] md:text-sm
+    font-medium
+  "
+>
+  Feedback
+</button>
 
-        <button
-          onClick={() => setShowExportSettings(!showExportSettings)}
-          className="px-5 py-2 rounded-xl bg-white text-black border border-white/70 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 text-sm font-medium flex items-center gap-2.5"
-        >
-          <span className="text-base -ml-1">↓</span>
-          <span>Export</span>
-        </button>
+<button
+  onClick={() => setShowExportSettings(!showExportSettings)}
+  className="
+    px-3 py-1.5 md:px-5 md:py-2
+    rounded-lg md:rounded-xl
+    bg-white text-black
+    border border-white/70
+    shadow-sm
+    hover:shadow-md
+    hover:scale-[1.02]
+    transition-all duration-300
+    text-[11px] md:text-sm
+    font-medium
+    flex items-center gap-1.5 md:gap-2.5
+  "
+>
+  <span className="text-xs md:text-base">↓</span>
+  <span>Export</span>
+</button>
       </div>
 
       {showExportSettings && (
-        <div className="absolute top-20 right-8 z-50" ref={exportBoxRef}>
-          <div className="w-[300px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-6 text-white">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex flex-wrap justify-end gap-2 sm:gap-4 max-w-[220px] sm:max-w-none" ref={exportBoxRef}>
+          <div className="w-[92vw] max-w-[300px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-6 text-white">
             <h2 className="text-lg font-semibold mb-5 text-white">
               Output Settings
             </h2>
@@ -366,7 +398,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
           onClick={() => setShowHelpModal(false)}
         >
           <div
-            className="w-[520px] rounded-3xl border border-gray-200 bg-white p-7 shadow-2xl text-black"
+            className="w-[92vw] max-w-[520px] max-h-[85vh] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-7 shadow-2xl text-black"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -426,7 +458,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
 
       {showFeedbackModal && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-[420px] rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl text-black">
+          <div className="w-[92vw] max-w-[420px] rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl text-black">
             <h2 className="text-xl font-semibold mb-2">Share Your Feedback</h2>
             <p className="text-sm text-gray-500 mb-5">
               Tell us about your experience using AI Voice Editing
@@ -472,10 +504,10 @@ formData.append('youtube_polish', String(enablePolishingAudio));
       )}
 
       <div className="relative z-10 flex h-full">
-        <div className="w-20" />
+        <div className="hidden lg:block w-20" />
 
-        <div className="flex-1 flex flex-col items-center pt-24 px-10">
-          <h1 className="text-7xl font-semibold text-center">
+        <div className="flex-1 flex flex-col items-center pt-28 sm:pt-24 px-4 sm:px-6 md:px-10">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-center leading-tight">
             AI Voice Editing
           </h1>
 
@@ -490,8 +522,8 @@ formData.append('youtube_polish', String(enablePolishingAudio));
             onDragOver={onDragOver}
             className={`mt-6 w-full ${
               processedAudio
-                ? 'max-w-5xl bg-[#e5e5e5] text-black rounded-2xl p-4 cursor-pointer'
-                : 'max-w-4xl bg-[#e5e5e5] text-black rounded-2xl p-10 cursor-pointer'
+                ? 'max-w-5xl w-full bg-[#e5e5e5] text-black rounded-2xl p-4 cursor-pointer'
+                : 'max-w-4xl bg-[#e5e5e5] text-black rounded-2xl p-5 sm:p-7 md:p-10 cursor-pointer'
             }`}
           >
             <input
@@ -505,7 +537,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
             {processedAudio ? (
               <>
                 <div className="flex items-start justify-start mb-6">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <>
                       <audio
                         ref={audioRef}
@@ -526,7 +558,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
                     </>
 
                     <div>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-sm sm:text-lg font-semibold text-gray-900 break-all">
                         {file ? file.name : 'My Recording.wav'}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
@@ -541,7 +573,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
                     Audio Waveform Preview
                   </div>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500 px-1">
+                  <div className="flex items-center justify-between text-[10px] sm:text-sm overflow-x-auto gap-3 text-gray-500 px-1">
                     <span>00:00</span>
                     <span>00:30</span>
                     <span>01:00</span>
@@ -572,7 +604,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
           {!processedAudio && (
             <>
               <div className="mt-6 w-full max-w-4xl">
-                <div className="flex items-center gap-4 mb-3">
+                <div className="flex flex-wrap items-center gap-4 mb-3">
                   <p className="text-white font-medium">
                     Remove Background Noise
                   </p>
@@ -641,7 +673,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
             <button
               onClick={processedAudio ? handleConfirmExport : processAudio}
               disabled={loading}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 disabled:opacity-60"
+              className="w-full py-3 sm:py-4 rounded-xl text-sm sm:text-base bg-gradient-to-r from-pink-500 to-purple-500 disabled:opacity-60"
             >
               {loading
                 ? `Processing... ${progress}%`

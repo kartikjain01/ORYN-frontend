@@ -425,24 +425,96 @@ export default function VoiceCloningPage() {
             'radial-gradient(circle at 60% 40%, #EB00E1 0%, rgba(255,255,255,0.6) 100%)',
         }}
       />
-      <div className="absolute top-6 right-8 z-20 flex items-center gap-4">
+      <div className="
+  absolute
+  top-16
+  left-1/2
+  -translate-x-1/2
+
+  sm:top-6
+  sm:left-auto
+  sm:right-8
+  sm:translate-x-0
+
+  z-20
+  flex
+  items-center
+  gap-2
+  sm:gap-4
+">
         <button
           onClick={() => setShowHelpModal(true)}
-          className="px-5 py-2 rounded-xl bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-sm font-medium"
+          className="
+  px-3
+  sm:px-5
+  py-1.5
+  sm:py-2
+  rounded-xl
+  bg-white/10
+  text-white
+  border
+  border-white/20
+  backdrop-blur-md
+  hover:bg-white/20
+  transition-all
+  duration-300
+  text-xs
+  sm:text-sm
+  font-medium
+"
         >
           Help
         </button>
 
         <button
           onClick={() => setShowFeedbackModal(true)}
-          className="px-5 py-2 rounded-xl bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-sm font-medium"
+          className="
+  px-3
+  sm:px-5
+  py-1.5
+  sm:py-2
+  rounded-xl
+  bg-white/10
+  text-white
+  border
+  border-white/20
+  backdrop-blur-md
+  hover:bg-white/20
+  transition-all
+  duration-300
+  text-xs
+  sm:text-sm
+  font-medium
+"
         >
           Feedback
         </button>
 
         <button
           onClick={() => setShowExportSettings(!showExportSettings)}
-          className="px-5 py-2 rounded-xl bg-white text-black border border-white/70 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 text-sm font-medium flex items-center gap-2.5"
+          className="
+  px-3
+  sm:px-5
+  py-1.5
+  sm:py-2
+  rounded-xl
+  bg-white
+  text-black
+  border
+  border-white/70
+  shadow-sm
+  hover:shadow-md
+  hover:scale-[1.02]
+  transition-all
+  duration-300
+  text-xs
+  sm:text-sm
+  font-medium
+  flex
+  items-center
+  gap-1.5
+  sm:gap-2.5
+"
         >
           <span className="text-base -ml-1">↓</span>
           <span>Export</span>
@@ -526,7 +598,21 @@ export default function VoiceCloningPage() {
           onClick={() => setShowHelpModal(false)}
         >
           <div
-            className="w-[520px] rounded-3xl border border-gray-200 bg-white p-7 shadow-2xl text-black"
+            
+            className="
+              w-[92%]
+              sm:w-[520px]
+              max-h-[90vh]
+              overflow-y-auto
+              rounded-3xl
+              border
+              border-gray-200
+              bg-white
+              p-5
+              sm:p-7
+              shadow-2xl
+              text-black
+            "
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -593,7 +679,18 @@ export default function VoiceCloningPage() {
           onClick={() => setShowFeedbackModal(false)} // ✅ close on outside click
         >
           <div
-            className="w-[420px] rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl text-black"
+  className="
+    w-[92%]
+    sm:w-[420px]
+    rounded-3xl
+    border
+    border-gray-200
+    bg-white
+    p-5
+    sm:p-6
+    shadow-2xl
+    text-black
+  "
             onClick={e => e.stopPropagation()} // ✅ prevent modal close when clicking inside
           >
             <h2 className="text-xl font-semibold mb-2">Share Your Feedback</h2>
@@ -649,22 +746,52 @@ export default function VoiceCloningPage() {
 
       {/* CONTENT */}
 
-      <div className="relative z-10 flex min-h-screen">
-        <div className="w-20"></div>
+      <div className="relative z-10 flex min-h-screen overflow-y-auto  pt-10 sm:pt-0">
+        <div className="hidden sm:block w-20"></div>
 
-        <div className="flex-1 flex flex-col items-center pt-24 px-10 pb-32">
+        <div className="
+  flex-1
+  flex
+  flex-col
+  items-center
+  pt-24
+  sm:pt-24
+  px-3
+  sm:px-4
+  md:px-10
+  pb-32
+">
           {/* HEADING */}
 
-          <h1 className="text-7xl font-semibold text-center">Voice Cloning</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-center">Voice Cloning</h1>
 
-          <p className="mt-4 text-white/70 text-center max-w-2xl text-lg">
+          <p className="
+  mt-4
+  text-white/70
+  text-center
+  max-w-2xl
+  text-sm
+  sm:text-base
+  lg:text-lg
+  px-2
+">
             Try AI voice cloning online. Instantly clone any voice from a short
             sample and turn text into custom speech.
           </p>
 
           {/* TOGGLE */}
 
-          <div className="mt-10 w-full max-w-4xl flex items-center gap-6">
+          <div className="
+  mt-10
+  w-full
+  max-w-4xl
+  flex
+  flex-col
+  sm:flex-row
+  sm:items-center
+  gap-4
+  sm:gap-6
+">
             <button
               onClick={() => setMode('upload')}
               className="flex items-center gap-2 text-sm text-white"
@@ -696,8 +823,16 @@ export default function VoiceCloningPage() {
             onDrop={onDrop}
             onDragOver={onDragOver}
             onClick={() => mode === 'upload' && inputRef.current?.click()}
-            className={`mt-10 w-full max-w-4xl rounded-2xl overflow-hidden ${
-              mode === 'upload' ? 'cursor-pointer' : 'cursor-default'
+            className={`
+              mt-10
+              w-full
+              max-w-4xl
+              rounded-2xl
+              overflow-hidden
+              ${
+                mode === 'upload'
+                  ? 'cursor-pointer'
+                  : 'cursor-default'
             }`}
           >
             <input
@@ -710,7 +845,19 @@ export default function VoiceCloningPage() {
 
             {/* TOP */}
 
-            <div className="bg-[#e5e5e5] text-black px-10 py-10 flex flex-col items-center justify-center">
+            <div className="
+  bg-[#e5e5e5]
+  text-black
+  px-5
+  sm:px-8
+  md:px-10
+  py-8
+  sm:py-10
+  flex
+  flex-col
+  items-center
+  justify-center
+">
               <div className="text-4xl mb-4">
                 {mode === 'upload' ? '☁️' : '🎤'}
               </div>
@@ -750,7 +897,18 @@ export default function VoiceCloningPage() {
               // UPLOAD PLAYER
               // =========================================
 
-              <div className="bg-white px-5 py-4 flex items-center gap-4 border-t border-gray-200">
+              <div className="
+  bg-white
+  px-3
+  sm:px-5
+  py-4
+  flex
+  items-center
+  gap-3
+  sm:gap-4
+  border-t
+  border-gray-200
+">
                 {/* PLAY */}
 
                 <button
@@ -958,7 +1116,20 @@ export default function VoiceCloningPage() {
               onClick={() => setShowTextBox(false)}
             >
               <div
-                className="w-full max-w-4xl bg-white rounded-2xl p-6 shadow-2xl text-black"
+                
+                className="
+                  w-[95%]
+                  sm:w-full
+                  max-w-4xl
+                  bg-white
+                  rounded-2xl
+                  p-4
+                  sm:p-6
+                  shadow-2xl
+                  text-black
+                  max-h-[90vh]
+                  overflow-y-auto
+                "
                 onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
@@ -1001,7 +1172,15 @@ export default function VoiceCloningPage() {
 
           {/* ACTIONS */}
 
-          <div className="mt-8 w-full max-w-4xl flex gap-4">
+          <div className="
+  mt-8
+  w-full
+  max-w-4xl
+  flex
+  flex-col
+  sm:flex-row
+  gap-4
+">
             <button
               onClick={uploadVoice}
               disabled={loading || !file}
