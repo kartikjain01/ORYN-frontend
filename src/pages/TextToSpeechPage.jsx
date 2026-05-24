@@ -168,7 +168,13 @@ export default function GlowBackgroundPlayground() {
 
   return (
     <div
-      className="relative h-screen w-full overflow-hidden isolate text-white"
+      className="relative
+    min-h-screen
+    w-full
+    overflow-x-hidden
+    overflow-y-auto
+    isolate
+    text-white"
       style={{ background: '#050010' }}
     >
       {/* Background Gradient */}
@@ -194,17 +200,51 @@ export default function GlowBackgroundPlayground() {
         }}
       />
 
-      <div className="absolute top-6 right-8 z-20 flex items-center gap-4">
+<div
+className="
+  relative z-20
+  flex flex-wrap justify-end
+  gap-2 sm:gap-3 md:gap-4
+  px-3 sm:px-5 md:px-8
+  pt-4 sm:pt-5 md:pt-6
+"
+>
         <button
           onClick={() => setShowHelpModal(true)}
-          className="px-5 py-2 rounded-xl bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-sm font-medium"
+          className="
+  px-3 py-1.5
+  sm:px-4 sm:py-2
+  md:px-5 md:py-2
+  rounded-xl
+  text-xs sm:text-sm
+  font-medium
+  bg-white/10
+  text-white
+  border border-white/20
+  backdrop-blur-md
+  hover:bg-white/20
+  transition-all duration-300
+"
         >
           Help
         </button>
 
         <button
           onClick={() => setShowFeedbackModal(true)}
-          className="px-5 py-2 rounded-xl bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-sm font-medium"
+          className="
+  px-3 py-1.5
+  sm:px-4 sm:py-2
+  md:px-5 md:py-2
+  rounded-xl
+  text-xs sm:text-sm
+  font-medium
+  bg-white/10
+  text-white
+  border border-white/20
+  backdrop-blur-md
+  hover:bg-white/20
+  transition-all duration-300
+"
         >
           Feedback
         </button>
@@ -219,8 +259,16 @@ export default function GlowBackgroundPlayground() {
       </div>
 
       {showExportSettings && (
-        <div className="absolute top-20 right-8 z-50" ref={exportBoxRef}>
-          <div className="w-[300px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-6 text-white">
+        <div
+        className="
+          absolute z-50
+          top-16 right-3
+          sm:top-20 sm:right-6
+          md:right-8
+        "
+        ref={exportBoxRef}
+      >
+          <div className="w-[92vw] max-w-[300px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-6 text-white">
             <h2 className="text-lg font-semibold mb-5 text-white">
               Output Settings
             </h2>
@@ -295,7 +343,18 @@ export default function GlowBackgroundPlayground() {
           onClick={() => setShowHelpModal(false)}
         >
           <div
-            className="w-[520px] rounded-3xl border border-gray-200 bg-white p-7 shadow-2xl text-black"
+            className="
+            w-[92vw]
+            max-w-[520px]
+            max-h-[90vh]
+            overflow-y-auto
+            rounded-3xl
+            border border-gray-200
+            bg-white
+            p-5 sm:p-7
+            shadow-2xl
+            text-black
+          "
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -362,7 +421,16 @@ export default function GlowBackgroundPlayground() {
           onClick={() => setShowFeedbackModal(false)} // ✅ close on outside click
         >
           <div
-            className="w-[420px] rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl text-black"
+            className="
+            w-[92vw]
+            max-w-[420px]
+            rounded-3xl
+            border border-gray-200
+            bg-white
+            p-5 sm:p-6
+            shadow-2xl
+            text-black
+          "
             onClick={e => e.stopPropagation()} // ✅ prevent modal close when clicking inside
           >
             <h2 className="text-xl font-semibold mb-2">Share Your Feedback</h2>
@@ -414,18 +482,41 @@ export default function GlowBackgroundPlayground() {
         </div>
       )}
       {/* Header */}
-      <div className="relative z-10 pt-16 text-center">
-        <h1 className="text-6xl font-semibold">Text to Speech</h1>
-        <p className="mt-4 text-lg text-gray-300">
+      <div className="relative z-10 pt-8 sm:pt-10 md:pt-14 text-center">
+      <h1 className="text-3xl sm:text-5xl md:text-6xl font-semibold px-4">Text to Speech</h1>
+      <p className="mt-4 text-sm sm:text-base md:text-lg text-gray-300 px-6">
           Your voice-powered automation hub plan, create and execute smarter
           with AI.
         </p>
       </div>
 
       {/* Main Section */}
-      <div className="relative z-10 mt-12 px-32 pr-[380px]">
+      <div
+  className="
+    relative z-10
+    mt-10
+    px-4 sm:px-6 md:px-10 lg:px-20
+    xl:pr-[380px]
+    pb-10
+  "
+>
         {/* Input Box */}
-        <div className="flex h-[470px] max-w-4xl overflow-hidden flex-col justify-between rounded-2xl bg-white/90 p-6 text-black">
+        <div
+  className="
+    flex
+    min-h-[420px]
+    md:h-[470px]
+    w-full
+    max-w-4xl
+    overflow-hidden
+    flex-col
+    justify-between
+    rounded-2xl
+    bg-white/90
+    p-4 sm:p-6
+    text-black
+  "
+>
           {/* ✅ Hidden File Input */}
           <input
             type="file"
@@ -438,7 +529,16 @@ export default function GlowBackgroundPlayground() {
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
-            className="h-full w-full resize-none bg-transparent text-gray-700 outline-none"
+            className="
+  h-full
+  min-h-[260px]
+  w-full
+  resize-none
+  bg-transparent
+  text-sm sm:text-base
+  text-gray-700
+  outline-none
+"
             placeholder="Start typing here or paste any text you want to turn into life like speech..."
           />
 
@@ -452,10 +552,10 @@ export default function GlowBackgroundPlayground() {
                 onEnded={() => setIsPlaying(false)}
               />
 
-              <div className="flex items-center gap-3">
+<div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={togglePlay}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-600 text-white"
+                  className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-purple-600 text-white"
                 >
                   {isPlaying ? '❚❚' : '▶️'}
                 </button>
@@ -500,7 +600,7 @@ export default function GlowBackgroundPlayground() {
             </div>
           )}
 
-          <div className="mt-4 flex items-center justify-between">
+<div className="mt-4 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 text-gray-500">
               <div
                 onClick={handleFileUploadClick}
@@ -518,7 +618,14 @@ export default function GlowBackgroundPlayground() {
 
             <button
               onClick={handleGenerate}
-              className="rounded-full bg-gray-400 px-4 py-2 text-white"
+              className="
+  w-full sm:w-auto
+  rounded-full
+  bg-gray-400
+  px-5 py-2.5
+  text-sm sm:text-base
+  text-white
+"
             >
               {isLoading ? 'Processing...' : 'Generate Speech'}
             </button>
@@ -526,7 +633,24 @@ export default function GlowBackgroundPlayground() {
         </div>
 
         {/* Right Tool Panel */}
-        <div className="absolute top-1/2 right-4 -translate-y-1/2 z-10 w-[340px] h-[470px] rounded-2xl bg-white/90 p-5 text-black overflow-auto">
+        <div
+  className="
+    relative xl:absolute
+    xl:top-1/2
+    xl:right-4
+    xl:-translate-y-1/2
+    z-10
+    w-full
+    xl:w-[340px]
+    mt-6 xl:mt-0
+    h-auto xl:h-[470px]
+    rounded-2xl
+    bg-white/90
+    p-5
+    text-black
+    overflow-x-hidden overflow-y-auto
+  "
+>
           <h2 className="mb-4 font-semibold">Tool (coming soon)</h2>
 
           <div className="space-y-4">
