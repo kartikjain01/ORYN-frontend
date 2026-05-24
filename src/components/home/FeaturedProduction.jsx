@@ -40,7 +40,7 @@ const featureRows = [
 
 function UploadCard({ title, subtitle }) {
   return (
-    <div className="w-full max-w-md rounded-2xl border border-violet-400/20 bg-white/[0.04] p-6 shadow-lg backdrop-blur-md">
+    <div className="w-full max-w-lg rounded-2xl border border-violet-400/20 bg-white/[0.04] p-6 transition-transform duration-300 active:scale-[0.98]">
 
       <div className="flex h-[160px] items-center justify-center rounded-xl border border-violet-400/30 bg-white/[0.03]">
         <div className="text-center">
@@ -113,12 +113,12 @@ function TTSCard() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
-          className="w-full h-[150px] rounded-lg border border-violet-400/25 bg-white/[0.02] px-3 py-3 text-sm text-white outline-none resize-none"
+          className="w-full h-[140px] sm:h-[160px] rounded-lg border border-violet-400/25 bg-white/[0.02] px-3 py-3 text-sm text-white outline-none resize-none"
           placeholder="Type or paste the text you want to convert to speech..."
         />
 
         {/* TOP SECTION */}
-        <div className="mt-4 flex items-end justify-between gap-6">
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h4 className="text-xl sm:text-1xl font-medium text-white">
               Voice Generation
@@ -132,7 +132,7 @@ function TTSCard() {
           <button
             onClick={handleGenerate}
             disabled={loading}
-            className="rounded-full border border-violet-400/25 bg-white/[0.04] px-6 py-2.5 text-sm font-medium text-white shadow-md"
+            className="w-full rounded-full border border-violet-400/25 bg-white/[0.04] px-6 py-2.5 text-sm font-medium text-white shadow-md sm:w-auto"
           >
             {loading ? "Generating..." : "Generate"}
           </button>
@@ -175,11 +175,11 @@ function FeatureText({ id, title, description, bullets }) {
 
       <p className="text-lg text-white/70">{id}</p>
 
-      <h3 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-semibold text-white">
+      <h3 className="mt-3 text-2xl sm:text-4xl lg:text-5xl font-semibold text-white">
         {title}
       </h3>
 
-      <p className="mt-4 max-w-xl text-base sm:text-lg text-white/80">
+      <p className="mt-4 max-w-2xl text-base sm:text-lg text-white/80">
         {description}
       </p>
 
@@ -195,7 +195,7 @@ function FeatureText({ id, title, description, bullets }) {
 
 export default function FeaturedProduction() {
   return (
-    <section className="relative mt-20 px-6 sm:px-10 lg:px-16">
+    <section className="relative mt-14 sm:mt-20 px-6 sm:px-10 lg:px-16">
 
       <div className="mx-auto max-w-7xl">
 
@@ -209,9 +209,9 @@ export default function FeaturedProduction() {
           </p>
         </div>
 
-        <div className="mt-16 space-y-24">
+        <div className="mt-16 space-y-16 sm:space-y-24">
 
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+          <div className="grid items-center gap-10 lg:gap-12 lg:grid-cols-2">
             <FeatureText {...featureRows[0]} />
             <div className="flex justify-center lg:justify-end">
               <UploadCard

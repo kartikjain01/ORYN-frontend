@@ -3,6 +3,7 @@ import {
   Bell,
   Settings,
   UserCircle2,
+  Menu,
   X,
   Sparkles,
   Mic2,
@@ -49,6 +50,7 @@ export default function Navbar({ user }) {
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const notificationRef = useRef(null);
   const { setShowProfile, profile } = useProfile();
@@ -96,6 +98,7 @@ export default function Navbar({ user }) {
         setShowAbout(false);
         setShowContact(false);
         setShowNotifications(false);
+        setMobileMenu(false);
       }
     }
 
@@ -112,17 +115,41 @@ export default function Navbar({ user }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenu(false);
+      }
+    };
+  
+    window.addEventListener("resize", handleResize);
+  
+    return () =>
+      window.removeEventListener("resize", handleResize);
+  }, []);
+  useEffect(() => {
+    if (showAbout || showContact || mobileMenu) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showAbout, showContact, mobileMenu]);
+
 
   return (
     <>
       <header
-        className={`fixed top--3 left-0 w-full z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
           scrolled
             ? 'bg-[#020817]/90 backdrop-blur-lg border-b border-white/10'
             : 'bg-transparent'
         }`}
       >
-        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-5 md:py-6 lg:px-6 relative">
+        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:py-5 sm:px-5 md:py-6 lg:px-6 relative">
           {/* LOGO */}
           <div className="flex items-center justify-start min-w-[180px] pr-2 overflow-visible">
             <span
@@ -202,6 +229,17 @@ export default function Navbar({ user }) {
           </ul>
 
           <div className="ml-auto flex items-center gap-3 pr-0 text-white/80">
+          {/* MOBILE MENU BUTTON */}
+<button
+  onClick={() => setMobileMenu(prev => !prev)}
+  className="flex md:hidden items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
+>
+  {mobileMenu ? (
+    <X size={24} strokeWidth={1.8} />
+  ) : (
+    <Menu size={24} strokeWidth={1.8} />
+  )}
+</button>
             <button
               onClick={() => navigate('/settings')}
               className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
@@ -219,7 +257,7 @@ export default function Navbar({ user }) {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 top-12 w-[320px] rounded-2xl border border-white/10 bg-[#0b0616]/95 shadow-xl backdrop-blur-xl">
+                <div className="absolute right-0 top-12 w-[92vw] max-w-[320px] rounded-2xl border border-white/10 bg-[#0b0616]/95 shadow-xl backdrop-blur-xl">
                   <div className="flex justify-between px-4 py-3 border-b border-white/10">
                     <h3 className="text-sm text-white font-semibold">
                       Notifications
@@ -298,6 +336,42 @@ export default function Navbar({ user }) {
           </div>
         </nav>
       </header>
+      {/* MOBILE MENU */}
+<div
+  className={`fixed top-[72px] left-0 w-full z-40 md:hidden transition-all duration-300 ${
+    mobileMenu
+      ? "opacity-100 pointer-events-auto"
+      : "opacity-0 pointer-events-none"
+  }`}
+>
+  <div className="mx-4 rounded-3xl border border-white/10 bg-[#080311]/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
+    
+    <div className="flex flex-col p-4">
+      {navItems.map(item => (
+        <button
+          key={item.name}
+          onClick={() => {
+            setMobileMenu(false);
+
+            if (item.type === "about") {
+              setShowAbout(true);
+              setShowContact(false);
+            } else if (item.type === "contact") {
+              setShowContact(true);
+              setShowAbout(false);
+            } else {
+              handleSectionNavigation(item.sectionId);
+            }
+          }}
+          className="flex items-center justify-between rounded-2xl px-4 py-4 text-left text-white/75 hover:bg-white/5 hover:text-white transition"
+        >
+          <span>{item.name}</span>
+        </button>
+      ))}
+    </div>
+
+  </div>
+</div>
 
       <div
         className={`fixed inset-0 z-50 transition-all duration-300 ${

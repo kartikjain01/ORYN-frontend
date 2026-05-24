@@ -9,7 +9,7 @@ export default function AppLayout() {
   const location = useLocation();
 
   // Hide sidebar on settings page
-  const hideSidebar = location.pathname === "/settings";
+  const hideSidebar = location.pathname.startsWith("/settings");
 
   // Logout Function
   const handleLogout = async () => {
@@ -28,14 +28,14 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#020817]">
+    <div className="flex min-h-dvh w-full overflow-x-hidden bg-[#020817]">
       
       {/* Sidebar (hidden on /settings) */}
       {!hideSidebar && <Sidebar />}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-auto">
+      <main className="flex min-w-0 flex-1 flex-col">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto">
           <Outlet />
         </div>
       </main>

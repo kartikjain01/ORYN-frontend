@@ -1,15 +1,15 @@
 import robotHero from '../../assets/images/robot-hero.png';
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-6 pt-16 md:px-10 lg:px-14">
-      <div className="relative mx-auto flex min-h-[700px] md:min-h-[820px] lg:min-h-[920px] w-full max-w-[1512px] flex-col items-center text-center">
+    <section className="relative overflow-hidden px-6 pt-10 sm:pt-16 md:px-10 lg:px-14">
+      <div className="relative mx-auto flex min-h-[560px] sm:min-h-[700px] md:min-h-[820px] lg:min-h-[920px] w-full max-w-[1512px] flex-col items-center text-center">
         {/* Big back text */}
         <h1
-          className="pointer-events-none absolute top-[120px] md:top-[180px] lg:top-[180px] z-[1] select-none text-white/95"
+          className="pointer-events-none absolute top-[80px] sm:top-[120px] md:top-[180px] lg:top-[180px] z-[1] select-none text-white/95"
           style={{
             fontFamily: 'Inter, sans-serif',
             fontWeight: 500,
-            fontSize: 'clamp(180px, 110vw, 480px)',
+            fontSize: 'clamp(90px, 38vw, 480px)',
             lineHeight: '0.9',
             letterSpacing: '0em',
             textShadow: '0px 4px 4px rgba(255, 255, 255, 0)',
@@ -23,9 +23,9 @@ export default function HeroSection() {
           <img
             src={robotHero}
             alt="AI robot"
-            className="max-w-full object-contain drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)]"
+            className="w-full max-w-full object-contain drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)]"
             style={{
-              width: 'clamp(420px, 80vw, 1266px)',
+              width: 'clamp(260px, 82vw, 1266px)',
               height: 'auto',
             }}
           />
@@ -33,7 +33,7 @@ export default function HeroSection() {
           <div
             className="absolute z-[12] pointer-events-none"
             style={{
-              width: 'clamp(800px, 120vw, 2086px)',
+              width: 'clamp(320px, 100vw, 2086px)',
               height: '100px',
               left: '50%',
               transform: 'translateX(-50%)',
@@ -46,9 +46,9 @@ export default function HeroSection() {
         </div>
 
         {/* Main heading */}
-        <div className="relative z-10 -mt-[40px] md:-mt-[50px] lg:-mt-[-100px] max-w-[1200px]">
+        <div className="relative z-10 -mt-[20px] sm:-mt-[40px] md:-mt-[50px] lg:-mt-[100px] max-w-[1200px]">
           <h2
-            className="font-bold leading-[1.08] tracking-[-0.03em] text-transparent bg-clip-text text-[32px] sm:text-[48px] md:text-[70px] lg:text-[90px]"
+            className="font-bold leading-[1.08] tracking-[-0.03em] text-transparent bg-clip-text text-[28px] sm:text-[44px] md:text-[64px] lg:text-[82px]"
             style={{
               background: 'linear-gradient(90deg, #9C34FF 0%, #4FFFFF 100%)',
               WebkitBackgroundClip: 'text',
@@ -69,8 +69,8 @@ export default function HeroSection() {
             fontWeight: 400,
             fontSize: 'clamp(16px, 1.6vw, 18px)',
             color: '#FFFFFF',
-            lineHeight: '1.3',
-            maxWidth: '980px',
+            lineHeight: '1.6',
+            maxWidth: '760px',
             margin: '20px auto 0',
           }}
         >

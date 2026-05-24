@@ -13,10 +13,10 @@ import WhyChooseUs from "../components/home/WhyChooseUs";
 export default function HomePage() {
   const [user, setUser] = useState(null);
 
+  /* ✅ FETCH USER SESSION */
   useEffect(() => {
     let isMounted = true;
 
-    // Get current session
     const getSession = async () => {
       try {
         const {
@@ -25,6 +25,7 @@ export default function HomePage() {
 
         if (isMounted && session?.user) {
           setUser(session.user);
+
           console.log("Logged in as:", session.user.email);
         }
       } catch (err) {
@@ -34,7 +35,7 @@ export default function HomePage() {
 
     getSession();
 
-    // Listen for auth changes
+    /* ✅ AUTH LISTENER */
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -43,41 +44,100 @@ export default function HomePage() {
       }
     });
 
-    // Cleanup
+    /* ✅ CLEANUP */
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
+  /* ✅ SCROLL TO SECTION AFTER NAVIGATION */
+  useEffect(() => {
+    const target = sessionStorage.getItem("scrollTarget");
+
+    if (target) {
+      setTimeout(() => {
+        const element = document.getElementById(target);
+
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+
+        sessionStorage.removeItem("scrollTarget");
+      }, 120);
+    }
+  }, []);
+
+  /* ✅ PAGE SCROLL FIX */
+  useEffect(() => {
+    document.body.style.overflowX = "hidden";
+
+    return () => {
+      document.body.style.overflowX = "auto";
+    };
+  }, []);
+
   return (
-    <div className="relative min-h-screen bg-[#050014] text-white overflow-hidden">
-      
-      {/* Background Gradient */}
+    <div className="relative min-h-screen overflow-hidden bg-[#050014] text-white">
+      {/* ✅ GLOBAL BACKGROUND */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(88,28,135,0.35),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(56,189,248,0.10),transparent_20%),linear-gradient(to_bottom,#070014,#04000d_45%,#020007)]"
+        className="
+          absolute inset-0 -z-10
+          bg-[radial-gradient(circle_at_top,rgba(88,28,135,0.35),transparent_30%),
+          radial-gradient(circle_at_80%_20%,rgba(56,189,248,0.10),transparent_20%),
+          linear-gradient(to_bottom,#070014,#04000d_45%,#020007)]
+        "
       />
 
-      {/* Navbar */}
+      {/* ✅ EXTRA GLOW EFFECTS */}
+      <div className="pointer-events-none absolute left-[-120px] top-[10%] h-[280px] w-[280px] rounded-full bg-fuchsia-500/20 blur-[120px]" />
+
+      <div className="pointer-events-none absolute right-[-120px] top-[30%] h-[320px] w-[320px] rounded-full bg-cyan-400/10 blur-[130px]" />
+
+      {/* ✅ NOISE OVERLAY */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-soft-light bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+      {/* ✅ NAVBAR */}
       <Navbar user={user} />
 
-      {/* Main Content */}
-      <main>
-      <section id="home" className="scroll-mt-32">
+      {/* ✅ MAIN CONTENT */}
+      <main className="relative z-10">
+        {/* HERO */}
+        <section
+          id="home"
+          className="scroll-mt-32"
+        >
           <HeroSection />
         </section>
 
-        <section id="feature-cards">
+        {/* FEATURE CARDS */}
+        <section
+          id="feature-cards"
+          className="relative"
+        >
           <FeatureCards />
         </section>
 
-        <section id="features" className="scroll-mt-32">
+        {/* FEATURES */}
+        <section
+          id="features"
+          className="scroll-mt-32 relative"
+        >
           <FeaturedProduction />
         </section>
-        <WhyChooseUs />
+
+        {/* WHY CHOOSE US */}
+        <section className="relative">
+          <WhyChooseUs />
+        </section>
       </main>
 
+      {/* ✅ BOTTOM FADE */}
+      <div className="pointer-events-none absolute bottom-0 left-0 h-40 w-full bg-gradient-to-t from-[#020007] to-transparent" />
     </div>
   );
 }

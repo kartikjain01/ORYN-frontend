@@ -12,7 +12,7 @@ function SectionCard({ title, children }) {
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-2xl p-6 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
+      className="rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-2xl p-4 sm:p-6 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
     >
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
       {children}
@@ -187,7 +187,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen relative bg-gray-50 text-black overflow-hidden p-6">
+    <div className="min-h-screen relative bg-gray-50 text-black overflow-hidden px-4 py-6 sm:p-6">
       {/* PREMIUM BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-orange-200/40 blur-[120px] rounded-full" />
@@ -201,12 +201,12 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-6">
+        <div className="relative z-10 max-w-6xl mx-auto space-y-6">
         {/* Top Bar */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between sm:items-center">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-sm text-gray/70 hover:text-gray"
+            className="flex items-center gap-2 text-sm text-black/70 hover:text-gray"
           >
             <ArrowLeft size={16} />
             Back
@@ -214,7 +214,7 @@ export default function SettingsPage() {
 
           <button
             onClick={handleSave}
-            className="bg-black text-white px-4 py-2 rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-200"
+            className="w-full sm:w-auto bg-black text-white px-4 py-2 rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-200"
           >
             Save Changes
           </button>
@@ -222,14 +222,14 @@ export default function SettingsPage() {
 
         {/* Title */}
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
           <p className="text-gray/50 text-sm mt-1">
             Manage your account and preferences
           </p>
         </div>
 
         {/* Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT */}
           <div className="lg:col-span-2 space-y-6">
             {/* PROFILE (ENHANCED — NOTHING REMOVED) */}
@@ -237,7 +237,7 @@ export default function SettingsPage() {
               {/* 🔥 AVATAR UPLOAD */}
               <div className="flex items-center gap-4 mb-6">
                 <label className="cursor-pointer">
-                  <div className="w-15 h-15 rounded-full bg-gradient-to-br from-[#8b3dff] to-[#7cecff] flex items-center justify-center text-xl font-bold overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#8b3dff] to-[#7cecff] flex items-center justify-center text-xl font-bold overflow-hidden">
                     {preview ? (
                       <img
                         src={preview}
@@ -265,7 +265,7 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-semibold">
                     {name || 'Your Name'}
                   </h3>
-                  <p className="text-gray/50 text-sm">{user?.email}</p>
+                  <p className="text-black/50 text-sm">{user?.email}</p>
                 </div>
 
                 <SmallButton>Edit</SmallButton>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
+                  className="w-full bg-white/5 border border-black/10 rounded-xl p-3 text-sm sm:text-base"
                   placeholder="Full Name"
                 />
 
@@ -319,8 +319,8 @@ export default function SettingsPage() {
                 />
 
                 {/* 📱 Mobile with +91 */}
-                <div className="flex">
-                  <span className="bg-white/10 border border-gray/10 rounded-l-xl px-3 flex items-center text-sm">
+                <div className="flex w-full">
+                  <span className="bg-white/10 border border-black/10 rounded-l-xl px-3 flex items-center text-sm">
                     +91
                   </span>
                   <input
@@ -359,7 +359,7 @@ export default function SettingsPage() {
           {/* RIGHT (UNCHANGED) */}
           <div className="space-y-6">
             <SectionCard title="Usage & Plan (coming soon)">
-              <div className="mb-4 flex justify-between items-center">
+            <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between sm:items-center">
                 <span>Free Plan</span>
                 <SmallButton>Upgrade</SmallButton>
               </div>

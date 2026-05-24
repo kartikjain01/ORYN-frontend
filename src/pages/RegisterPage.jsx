@@ -132,23 +132,33 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-6 bg-gray-50 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center p-3 sm:p-6 bg-gray-50 overflow-hidden">
       {/* PREMIUM BACKGROUND */}
       <div className="absolute inset-0">
         <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-orange-200/40 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative w-full h-[95vh] max-w-7xl mx-auto grid md:grid-cols-2 gap-6 bg-white border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
+      <div className="relative w-full min-h-screen md:min-h-[95vh] max-w-7xl mx-auto grid md:grid-cols-2 bg-white border border-gray-200 rounded-[28px] shadow-xl overflow-hidden">
         {/* LEFT - LOGIN */}
         <div
-          className={`p-10 flex flex-col justify-center transition-opacity duration-500 ${!isLogin ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}
+          className={`
+            px-6 py-10
+            sm:px-8
+            lg:px-10
+            flex flex-col justify-center
+            transition-all duration-500
+            min-h-[100vh] md:min-h-0
+            ${
+              !isLogin
+                ? 'md:opacity-30 md:pointer-events-none hidden md:flex'
+                : 'opacity-100 flex'}`}
         >
           <div className="mb-8">
             <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">
               ORYNEngine
             </div>
-            <h1 className="text-4xl font-bold text-black">Welcome back</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-black">Welcome back</h1>
             <p className="text-black/70 mt-2">
               Sign in to continue managing your tasks, notes, and projects.
             </p>
@@ -209,14 +219,23 @@ export default function AuthPage() {
             {/* Divider */}
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex-1 h-px bg-gray-200" />
-              or continue with
+              <span className="whitespace-nowrap">or continue with</span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
             {/* Social */}
+            <div className="pt-1">
             <SocialButtons onSocialClick={handleSocialLogin} />
+            </div>
 
             <p className="text-sm text-gray-600 text-center">
+            <button
+  onClick={() => setIsLogin(false)}
+  className="w-full py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+>
+  Create new account
+</button>     
+              
               Don’t have an account?{' '}
               <span
                 onClick={() => setIsLogin(false)}
@@ -230,13 +249,25 @@ export default function AuthPage() {
 
         {/* RIGHT - REGISTER */}
         <div
-          className={`p-10 flex flex-col justify-center transition-opacity duration-500 ${isLogin ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}
+  className={`
+    px-6 py-10
+    sm:px-8
+    lg:px-10
+    flex flex-col justify-center
+    transition-all duration-500
+    min-h-[100vh] md:min-h-0
+    ${
+      isLogin
+        ? 'md:opacity-30 md:pointer-events-none hidden md:flex'
+        : 'opacity-100 flex'
+    }
+  `}
         >
           <div className="mb-8">
             <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">
               ORYNEngine
             </div>
-            <h1 className="text-4xl font-bold text-black">Create an account</h1>
+            <h1 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-black">Create an account</h1>
             <p className="text-black/70 mt-2">
               Access your tasks, notes, and projects anytime, anywhere.
             </p>
@@ -345,14 +376,16 @@ export default function AuthPage() {
 
         {/* FLOATING GLASS OVERLAY (FOR DESKTOP) */}
         <motion.div
-          animate={{ x: isLogin ? '100%' : '0%' }}
+          animate={{
+            x: isLogin ? '100%' : '0%',
+          }}
           transition={{ type: 'spring', stiffness: 90, damping: 18 }}
           className="hidden md:flex absolute top-0 left-0 w-1/2 h-full backdrop-blur-2xl bg-white/30 border border-white/50 shadow-2xl items-center justify-center pointer-events-none z-10"
         >
           <div className="text-center p-10 pointer-events-auto">
             {isLogin ? (
               <>
-                <h2 className="text-6xl font-bold mb-5 text-gray-900">
+                <h2 className="text-4xl lg:text-6xl font-bold mb-5 text-gray-900">
                   Hello Friend!
                 </h2>
                 <p className="mb-8 text-gray-900">
@@ -441,7 +474,7 @@ function SocialButtons({ onSocialClick }) {
   ];
 
   return (
-    <div className="flex gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {socialOptions.map(item => (
         <button
           key={item.provider}
