@@ -23,9 +23,9 @@ export default function GlowBackgroundPlayground() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const exportBoxRef = useRef(null);
   // ✅ LANGUAGE + VOICE STATES
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+const [selectedLanguage, setSelectedLanguage] = useState('en');
 
-  const [selectedVoice, setSelectedVoice] = useState('bella');
+const [selectedVoice, setSelectedVoice] = useState('michael');
 
   // ✅ VOICE LIST
   const voices = {
@@ -139,9 +139,9 @@ export default function GlowBackgroundPlayground() {
   // ✅ AUTO CHANGE VOICE WHEN LANGUAGE CHANGES
   useEffect(() => {
     if (selectedLanguage === 'hi') {
-      setSelectedVoice('hm_omega');
+      setSelectedVoice('omega');
     } else {
-      setSelectedVoice('af_bella');
+      setSelectedVoice('michael');
     }
   }, [selectedLanguage]);
 
@@ -220,6 +220,7 @@ export default function GlowBackgroundPlayground() {
           text: text.replace(/\n/g, ' '),
           speed: 1,
           voice: selectedVoice,
+          language: selectedLanguage,
           user_id: fullName,
         }),
       });
@@ -750,7 +751,17 @@ export default function GlowBackgroundPlayground() {
 
               <select
                 value={selectedLanguage}
-                onChange={e => setSelectedLanguage(e.target.value)}
+                onChange={e => {
+                  const lang = e.target.value;
+
+                  setSelectedLanguage(lang);
+
+                  if (lang === 'en') {
+                    setSelectedVoice('michael');
+                  } else if (lang === 'hi') {
+                    setSelectedVoice('omega');
+                  }
+                }}
                 className="
       w-full
       rounded-lg
