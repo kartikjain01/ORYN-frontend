@@ -29,6 +29,16 @@ export default function VoiceCloningPage() {
   // UI
   const [statusMsg, setStatusMsg] = useState('');
 
+  // recording
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedBlob, setRecordedBlob] = useState(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState(null);
+  // websocket refs
+  const wsRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
   // player states
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -139,6 +149,7 @@ export default function VoiceCloningPage() {
     if (!f) return;
 
     setFile(f);
+    setAudioPreviewUrl(URL.createObjectURL(f));
     setFileName(f.name);
 
     resetAllStates();
@@ -152,12 +163,107 @@ export default function VoiceCloningPage() {
     if (!f) return;
 
     setFile(f);
+    setAudioPreviewUrl(URL.createObjectURL(f));
     setFileName(f.name);
 
     resetAllStates();
   };
 
   const onDragOver = e => e.preventDefault();
+
+  // =========================================
+  // START RECORDING
+  // =========================================
+
+  const startRecording = async () => {
+    try {
+      setStatusMsg('Connecting recorder...');
+
+      const WS_BASE =
+        window.location.hostname === 'localhost'
+          ? 'ws://localhost:8000'
+          : import.meta.env.VITE_WS_URL;
+
+      const ws = new WebSocket(`${WS_BASE}/ws/record`);
+
+      wsRef.current = ws;
+
+      ws.onopen = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        mediaStreamRef.current = stream;
+
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'audio/webm',
+        });
+
+        mediaRecorderRef.current = mediaRecorder;
+
+        audioChunksRef.current = [];
+        mediaRecorder.ondataavailable = async event => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+
+            const buffer = await event.data.arrayBuffer();
+
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(buffer);
+            }
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          ws.close();
+          const blob = new Blob(audioChunksRef.current, {
+            type: 'audio/webm',
+          });
+
+          setRecordedBlob(blob);
+          const previewUrl = URL.createObjectURL(blob);
+
+          setAudioPreviewUrl(previewUrl);
+
+          const recordedFile = new File([blob], 'recording.webm', {
+            type: 'audio/webm',
+          });
+
+          setFile(recordedFile);
+
+          setFileName('recording.webm');
+
+          setStatusMsg('Recording completed');
+        };
+
+        mediaRecorder.start(250);
+
+        setIsRecording(true);
+
+        setStatusMsg('Recording...');
+      };
+    } catch (err) {
+      console.error(err);
+
+      setStatusMsg('Microphone access denied');
+    }
+  };
+
+  // =========================================
+  // STOP RECORDING
+  // =========================================
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+    }
+
+    setIsRecording(false);
+  };
 
   // =========================================
   // TIME FORMAT
@@ -425,7 +531,8 @@ export default function VoiceCloningPage() {
             'radial-gradient(circle at 60% 40%, #EB00E1 0%, rgba(255,255,255,0.6) 100%)',
         }}
       />
-      <div className="
+      <div
+        className="
   absolute
   top-16
   left-1/2
@@ -441,7 +548,8 @@ export default function VoiceCloningPage() {
   items-center
   gap-2
   sm:gap-4
-">
+"
+      >
         <button
           onClick={() => setShowHelpModal(true)}
           className="
@@ -598,7 +706,6 @@ export default function VoiceCloningPage() {
           onClick={() => setShowHelpModal(false)}
         >
           <div
-            
             className="
               w-[92%]
               sm:w-[520px]
@@ -679,7 +786,7 @@ export default function VoiceCloningPage() {
           onClick={() => setShowFeedbackModal(false)} // ✅ close on outside click
         >
           <div
-  className="
+            className="
     w-[92%]
     sm:w-[420px]
     rounded-3xl
@@ -749,7 +856,8 @@ export default function VoiceCloningPage() {
       <div className="relative z-10 flex min-h-screen overflow-y-auto  pt-10 sm:pt-0">
         <div className="hidden sm:block w-20"></div>
 
-        <div className="
+        <div
+          className="
   flex-1
   flex
   flex-col
@@ -760,12 +868,16 @@ export default function VoiceCloningPage() {
   sm:px-4
   md:px-10
   pb-32
-">
+"
+        >
           {/* HEADING */}
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-center">Voice Cloning</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-center">
+            Voice Cloning
+          </h1>
 
-          <p className="
+          <p
+            className="
   mt-4
   text-white/70
   text-center
@@ -774,14 +886,16 @@ export default function VoiceCloningPage() {
   sm:text-base
   lg:text-lg
   px-2
-">
+"
+          >
             Try AI voice cloning online. Instantly clone any voice from a short
             sample and turn text into custom speech.
           </p>
 
           {/* TOGGLE */}
 
-          <div className="
+          <div
+            className="
   mt-10
   w-full
   max-w-4xl
@@ -791,7 +905,8 @@ export default function VoiceCloningPage() {
   sm:items-center
   gap-4
   sm:gap-6
-">
+"
+          >
             <button
               onClick={() => setMode('upload')}
               className="flex items-center gap-2 text-sm text-white"
@@ -829,11 +944,7 @@ export default function VoiceCloningPage() {
               max-w-4xl
               rounded-2xl
               overflow-hidden
-              ${
-                mode === 'upload'
-                  ? 'cursor-pointer'
-                  : 'cursor-default'
-            }`}
+              ${mode === 'upload' ? 'cursor-pointer' : 'cursor-default'}`}
           >
             <input
               type="file"
@@ -845,7 +956,8 @@ export default function VoiceCloningPage() {
 
             {/* TOP */}
 
-            <div className="
+            <div
+              className="
   bg-[#e5e5e5]
   text-black
   px-5
@@ -857,7 +969,8 @@ export default function VoiceCloningPage() {
   flex-col
   items-center
   justify-center
-">
+"
+            >
               <div className="text-4xl mb-4">
                 {mode === 'upload' ? '☁️' : '🎤'}
               </div>
@@ -885,6 +998,37 @@ export default function VoiceCloningPage() {
                     <p className="text-sm text-gray-700 mt-2">
                       1–5 min recording works best. Keep it clear & natural 🎤
                     </p>
+                    <div className="mt-5 flex gap-4">
+                      {!isRecording ? (
+                        <button
+                          onClick={startRecording}
+                          className="
+        px-5
+        py-3
+        rounded-xl
+        bg-gradient-to-r
+        from-pink-500
+        to-purple-500
+        text-white
+      "
+                        >
+                          Start Recording
+                        </button>
+                      ) : (
+                        <button
+                          onClick={stopRecording}
+                          className="
+        px-5
+        py-3
+        rounded-xl
+        bg-red-500
+        text-white
+      "
+                        >
+                          Stop Recording
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -897,7 +1041,8 @@ export default function VoiceCloningPage() {
               // UPLOAD PLAYER
               // =========================================
 
-              <div className="
+              <div
+                className="
   bg-white
   px-3
   sm:px-5
@@ -908,7 +1053,8 @@ export default function VoiceCloningPage() {
   sm:gap-4
   border-t
   border-gray-200
-">
+"
+              >
                 {/* PLAY */}
 
                 <button
@@ -989,7 +1135,46 @@ export default function VoiceCloningPage() {
 
                 <audio
                   ref={uploadAudioRef}
-                  src={file ? URL.createObjectURL(file) : ''}
+                  src={audioPreviewUrl || undefined}
+                  preload="metadata"
+                  onLoadedMetadata={e => {
+                    let dur = e.target.duration;
+
+                    // FIX FOR WEBM RECORDINGS
+                    if (!isFinite(dur)) {
+                      e.target.currentTime = 1e101;
+
+                      e.target.ontimeupdate = () => {
+                        e.target.ontimeupdate = null;
+
+                        e.target.currentTime = 0;
+
+                        dur = e.target.duration;
+
+                        if (isFinite(dur) && !isNaN(dur)) {
+                          setDurationSec(dur);
+
+                          const min = Math.floor(dur / 60);
+
+                          const sec = Math.floor(dur % 60)
+                            .toString()
+                            .padStart(2, '0');
+
+                          setAudioDuration(`${min}:${sec}`);
+                        }
+                      };
+                    } else {
+                      setDurationSec(dur);
+
+                      const min = Math.floor(dur / 60);
+
+                      const sec = Math.floor(dur % 60)
+                        .toString()
+                        .padStart(2, '0');
+
+                      setAudioDuration(`${min}:${sec}`);
+                    }
+                  }}
                   onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
                   onPause={() => setIsPlaying(false)}
                   onPlay={() => setIsPlaying(true)}
@@ -1065,7 +1250,7 @@ export default function VoiceCloningPage() {
 
                 <audio
                   ref={generatedAudioRef}
-                  src={audioUrl || ''}
+                  src={audioUrl || undefined}
                   onLoadedMetadata={e => setDuration(e.target.duration)}
                   onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
                   onPause={() => setIsPlaying(false)}
@@ -1116,7 +1301,6 @@ export default function VoiceCloningPage() {
               onClick={() => setShowTextBox(false)}
             >
               <div
-                
                 className="
                   w-[95%]
                   sm:w-full
@@ -1172,7 +1356,8 @@ export default function VoiceCloningPage() {
 
           {/* ACTIONS */}
 
-          <div className="
+          <div
+            className="
   mt-8
   w-full
   max-w-4xl
@@ -1180,7 +1365,8 @@ export default function VoiceCloningPage() {
   flex-col
   sm:flex-row
   gap-4
-">
+"
+          >
             <button
               onClick={uploadVoice}
               disabled={loading || !file}
