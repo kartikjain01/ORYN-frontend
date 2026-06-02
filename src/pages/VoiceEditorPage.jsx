@@ -35,10 +35,23 @@ const API_BASE =
     ? import.meta.env.VITE_API_VOICE_EDITOR
     : '';
 
+const WS_EDITOR =
+  typeof import.meta !== 'undefined' &&
+  import.meta.env &&
+  import.meta.env.VITE_WS_EDITOR
+    ? import.meta.env.VITE_WS_EDITOR
+    : '';
+
 console.log('VOICE EDITOR API:', API_BASE || 'Not configured');
 
 export default function VoiceEditorPage() {
   const [mode, setMode] = useState('upload');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedBlob, setRecordedBlob] = useState(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState('');
+
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [processedAudio, setProcessedAudio] = useState(null);
@@ -55,6 +68,95 @@ export default function VoiceEditorPage() {
   const [progress, setProgress] = useState(0);
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [fileName, setFileName] = useState('');
+
+  const [audioDuration, setAudioDuration] = useState('0:00');
+
+  const [durationSec, setDurationSec] = useState(0);
+
+  const [currentTime, setCurrentTime] = useState(0);
+  const generatedAudioRef = useRef(null);
+
+  const [duration, setDuration] = useState(0);
+
+  const generatedAudioReady = !!processedAudio;
+
+  const audioUrl = processedAudio || '';
+
+  const uploadAudioRef = useRef(null);
+
+  const [waveHeights] = useState(() =>
+    Array.from({ length: 60 }, () => Math.random() * 20 + 6)
+  );
+
+  const formatTime = secs => {
+    if (!secs || isNaN(secs)) return '0:00';
+
+    const min = Math.floor(secs / 60);
+    const sec = Math.floor(secs % 60)
+      .toString()
+      .padStart(2, '0');
+
+    return `${min}:${sec}`;
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      const recorder = new MediaRecorder(stream);
+
+      chunksRef.current = [];
+
+      recorder.ondataavailable = e => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+
+        setRecordedBlob(blob);
+
+        const url = URL.createObjectURL(blob);
+
+        setAudioPreviewUrl(url);
+        setFileName('recording.webm');
+
+        const audio = new Audio(url);
+
+        audio.onloadedmetadata = () => {
+          const dur = audio.duration;
+
+          setDurationSec(dur);
+
+          const min = Math.floor(dur / 60);
+
+          const sec = Math.floor(dur % 60)
+            .toString()
+            .padStart(2, '0');
+
+          setAudioDuration(`${min}:${sec}`);
+        };
+      };
+
+      mediaRecorderRef.current = recorder;
+
+      recorder.start();
+
+      setIsRecording(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
 
   const handlePlayAudio = () => {
     if (!audioRef.current || !processedAudio) return;
@@ -65,6 +167,18 @@ export default function VoiceEditorPage() {
     } else {
       audioRef.current.play();
       setIsPlaying(true);
+    }
+  };
+
+  const toggleGeneratedPlay = () => {
+    if (!generatedAudioRef.current) return;
+
+    if (generatedAudioRef.current.paused) {
+      generatedAudioRef.current.play();
+      setIsPlaying(true);
+    } else {
+      generatedAudioRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -143,8 +257,32 @@ export default function VoiceEditorPage() {
 
   const onFileChange = e => {
     const selectedFile = e.target.files?.[0];
+
     if (!selectedFile) return;
+
     setFile(selectedFile);
+
+    setFileName(selectedFile.name);
+
+    const url = URL.createObjectURL(selectedFile);
+
+    setAudioPreviewUrl(url);
+
+    const audio = new Audio(url);
+
+    audio.onloadedmetadata = () => {
+      const dur = audio.duration;
+
+      setDurationSec(dur);
+
+      const min = Math.floor(dur / 60);
+
+      const sec = Math.floor(dur % 60)
+        .toString()
+        .padStart(2, '0');
+
+      setAudioDuration(`${min}:${sec}`);
+    };
   };
 
   const onDrop = e => {
@@ -160,7 +298,7 @@ export default function VoiceEditorPage() {
 
   const processAudio = async () => {
     let progressInterval;
-    if (!file) {
+    if (mode === 'upload' && !file) {
       alert('Please upload an audio file first');
       return;
     }
@@ -205,8 +343,22 @@ export default function VoiceEditorPage() {
       const fullName =
         user?.user_metadata?.full_name || user?.email || 'unknown_user';
 
+      if (mode === 'record' && !recordedBlob) {
+        alert('Please record audio first');
+        return;
+      }
+
       const formData = new FormData();
-      formData.append('file', file);
+      if (mode === 'upload') {
+        formData.append('file', file);
+      } else {
+        formData.append(
+          'file',
+          new File([recordedBlob], 'recording.webm', {
+            type: 'audio/webm',
+          })
+        );
+      }
       formData.append('user_id', fullName);
       if (enableNoiseRemoval) {
         formData.append('mode', processingMode);
@@ -241,7 +393,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
 
   return (
     <div
-    className="relative min-h-screen w-full overflow-x-hidden isolate text-white pb-10"
+      className="relative min-h-screen w-full overflow-x-hidden isolate text-white pb-10"
       style={{ background: '#050010' }}
     >
       <div
@@ -266,9 +418,9 @@ formData.append('youtube_polish', String(enablePolishingAudio));
       />
 
       <div className="absolute z-20 flex items-center gap-2 top-4 right-4 md:top-6 md:right-8 md:gap-4">
-      <button
-  onClick={() => setShowHelpModal(true)}
-  className="
+        <button
+          onClick={() => setShowHelpModal(true)}
+          className="
     px-3 py-1.5 md:px-5 md:py-2
     rounded-lg md:rounded-xl
     bg-white/10 text-white
@@ -279,13 +431,13 @@ formData.append('youtube_polish', String(enablePolishingAudio));
     text-[11px] md:text-sm
     font-medium
   "
->
-  Help
-</button>
+        >
+          Help
+        </button>
 
-<button
-  onClick={() => setShowFeedbackModal(true)}
-  className="
+        <button
+          onClick={() => setShowFeedbackModal(true)}
+          className="
     px-3 py-1.5 md:px-5 md:py-2
     rounded-lg md:rounded-xl
     bg-white/10 text-white
@@ -296,13 +448,13 @@ formData.append('youtube_polish', String(enablePolishingAudio));
     text-[11px] md:text-sm
     font-medium
   "
->
-  Feedback
-</button>
+        >
+          Feedback
+        </button>
 
-<button
-  onClick={() => setShowExportSettings(!showExportSettings)}
-  className="
+        <button
+          onClick={() => setShowExportSettings(!showExportSettings)}
+          className="
     px-3 py-1.5 md:px-5 md:py-2
     rounded-lg md:rounded-xl
     bg-white text-black
@@ -315,14 +467,17 @@ formData.append('youtube_polish', String(enablePolishingAudio));
     font-medium
     flex items-center gap-1.5 md:gap-2.5
   "
->
-  <span className="text-xs md:text-base">↓</span>
-  <span>Export</span>
-</button>
+        >
+          <span className="text-xs md:text-base">↓</span>
+          <span>Export</span>
+        </button>
       </div>
 
       {showExportSettings && (
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex flex-wrap justify-end gap-2 sm:gap-4 max-w-[220px] sm:max-w-none" ref={exportBoxRef}>
+        <div
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex flex-wrap justify-end gap-2 sm:gap-4 max-w-[220px] sm:max-w-none"
+          ref={exportBoxRef}
+        >
           <div className="w-[92vw] max-w-[300px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-6 text-white">
             <h2 className="text-lg font-semibold mb-5 text-white">
               Output Settings
@@ -507,7 +662,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
         <div className="hidden lg:block w-20" />
 
         <div className="flex-1 flex flex-col items-center pt-28 sm:pt-24 px-4 sm:px-6 md:px-10">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-center leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-center leading-tight">
             AI Voice Editing
           </h1>
 
@@ -516,88 +671,373 @@ formData.append('youtube_polish', String(enablePolishingAudio));
             technology.
           </p>
 
+          {/* TOGGLE */}
+
           <div
-            onClick={onPickFile}
+            className="
+  mt-10
+  w-full
+  max-w-4xl
+  flex
+  flex-col
+  sm:flex-row
+  sm:items-center
+  gap-4
+  sm:gap-6
+"
+          >
+            <button
+              onClick={() => setMode('upload')}
+              className="flex items-center gap-2 text-sm text-white"
+            >
+              <span
+                className={`w-3 h-3 rounded-full ${
+                  mode === 'upload' ? 'bg-pink-400' : 'border border-white/40'
+                }`}
+              ></span>
+              Upload to Clone
+            </button>
+
+            <button
+              onClick={() => setMode('record')}
+              className="flex items-center gap-2 text-sm text-white"
+            >
+              <span
+                className={`w-3 h-3 rounded-full ${
+                  mode === 'record' ? 'bg-pink-400' : 'border border-white/40'
+                }`}
+              ></span>
+              Record to Clone
+            </button>
+          </div>
+
+          {/* UPLOAD BOX */}
+
+          <div
             onDrop={onDrop}
             onDragOver={onDragOver}
-            className={`mt-6 w-full ${
-              processedAudio
-                ? 'max-w-5xl w-full bg-[#e5e5e5] text-black rounded-2xl p-4 cursor-pointer'
-                : 'max-w-4xl bg-[#e5e5e5] text-black rounded-2xl p-5 sm:p-7 md:p-10 cursor-pointer'
-            }`}
+            onClick={() => mode === 'upload' && inputRef.current?.click()}
+            className={`
+              mt-10
+              w-full
+              max-w-4xl
+              rounded-2xl
+              overflow-hidden
+              ${mode === 'upload' ? 'cursor-pointer' : 'cursor-default'}`}
           >
             <input
-              ref={inputRef}
               type="file"
               accept={accepted}
-              className="hidden"
+              ref={inputRef}
               onChange={onFileChange}
+              className="hidden"
             />
 
-            {processedAudio ? (
-              <>
-                <div className="flex items-start justify-start mb-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <>
-                      <audio
-                        ref={audioRef}
-                        src={processedAudio}
-                        onEnded={() => setIsPlaying(false)}
-                        className="hidden"
-                      />
+            {/* TOP */}
 
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          handlePlayAudio();
-                        }}
-                        className="w-14 h-14 rounded-full border-2 border-indigo-500 flex items-center justify-center text-indigo-600 text-xl bg-white"
-                      >
-                        {isPlaying ? '❚❚' : '▶️'}
-                      </button>
-                    </>
+            <div
+              className="
+  bg-[#e5e5e5]
+  text-black
+  px-5
+  sm:px-8
+  md:px-10
+  py-8
+  sm:py-10
+  flex
+  flex-col
+  items-center
+  justify-center
+"
+            >
+              <div className="text-4xl mb-4">
+                {mode === 'upload' ? '☁️' : '🎤'}
+              </div>
 
-                    <div>
-                      <p className="text-sm sm:text-lg font-semibold text-gray-900 break-all">
-                        {file ? file.name : 'My Recording.wav'}
+              <div className="text-lg font-medium text-center">
+                {mode === 'upload' ? (
+                  <>
+                    <p>
+                      {fileName ? fileName : 'Upload Mp3 or WAV audio file.'}
+                    </p>
+
+                    {!fileName && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        must be 1 min - 10 mins, max 100 MB, one voice only,
+                        clear audio minimal noise.
                       </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        02:45 • 12.4 MB • WAV
-                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold">
+                      Record your voice to clone (coming soon)
+                    </p>
+
+                    <p className="text-sm text-gray-700 mt-2">
+                      1–5 min recording works best. Keep it clear & natural 🎤
+                    </p>
+                    <div className="mt-5 flex gap-4">
+                      {!isRecording ? (
+                        <button
+                          onClick={startRecording}
+                          className="
+        px-5
+        py-3
+        rounded-xl
+        bg-gradient-to-r
+        from-pink-500
+        to-purple-500
+        text-white
+      "
+                        >
+                          Start Recording
+                        </button>
+                      ) : (
+                        <button
+                          onClick={stopRecording}
+                          className="
+        px-5
+        py-3
+        rounded-xl
+        bg-red-500
+        text-white
+      "
+                        >
+                          Stop Recording
+                        </button>
+                      )}
                     </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* PLAYER SWITCH */}
+
+            {!generatedAudioReady ? (
+              // =========================================
+              // UPLOAD PLAYER
+              // =========================================
+
+              <div
+                className="
+  bg-white
+  px-3
+  sm:px-5
+  py-4
+  flex
+  items-center
+  gap-3
+  sm:gap-4
+  border-t
+  border-gray-200
+  rounded-b-2xl
+"
+              >
+                {/* PLAY */}
+
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+
+                    if (!uploadAudioRef.current) return;
+
+                    if (uploadAudioRef.current.paused) {
+                      uploadAudioRef.current.play();
+
+                      setIsPlaying(true);
+                    } else {
+                      uploadAudioRef.current.pause();
+
+                      setIsPlaying(false);
+                    }
+                  }}
+                  disabled={!audioPreviewUrl}
+                  className={`w-11 h-11 flex items-center justify-center rounded-full transition-all duration-200 ${
+                    file
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md hover:scale-105'
+                      : 'bg-gray-200 text-gray-400'
+                  }`}
+                >
+                  {isPlaying ? '❚❚' : '▶️'}
+                </button>
+
+                {/* WAVE */}
+
+                <div className="flex-1 flex flex-col justify-center">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {fileName || 'No audio selected'}
+                  </p>
+
+                  <div className="flex items-center gap-[2px] mt-1 h-9 overflow-hidden">
+                    {waveHeights.map((h, i) => {
+                      const progress = durationSec
+                        ? Math.min(currentTime / durationSec, 1)
+                        : 0;
+
+                      const active = i / 60 < progress;
+
+                      return (
+                        <div
+                          key={i}
+                          onClick={e => {
+                            e.stopPropagation();
+
+                            if (!uploadAudioRef.current) return;
+
+                            const newTime = (i / 60) * durationSec;
+
+                            uploadAudioRef.current.currentTime = newTime;
+
+                            setCurrentTime(newTime);
+                          }}
+                          className={`w-[2px] rounded-full cursor-pointer transition-all duration-150 ${
+                            active ? 'bg-pink-500' : 'bg-gray-300'
+                          }`}
+                          style={{
+                            width: '2px',
+                            height: `${h}px`,
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="h-48 rounded-2xl bg-white border border-gray-200 px-6 py-6 flex flex-col justify-between shadow-sm">
-                  <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-                    Audio Waveform Preview
-                  </div>
+                {/* DURATION */}
 
-                  <div className="flex items-center justify-between text-[10px] sm:text-sm overflow-x-auto gap-3 text-gray-500 px-1">
-                    <span>00:00</span>
-                    <span>00:30</span>
-                    <span>01:00</span>
-                    <span>01:30</span>
-                    <span>02:00</span>
-                    <span>02:30</span>
-                    <span>02:45</span>
-                  </div>
-                </div>
-              </>
+                <span className="text-xs text-gray-500 min-w-[50px] text-right">
+                  {audioDuration || '0:00'}
+                </span>
+
+                {/* AUDIO */}
+
+                <audio
+                  ref={uploadAudioRef}
+                  src={audioPreviewUrl || undefined}
+                  preload="metadata"
+                  onLoadedMetadata={e => {
+                    let dur = e.target.duration;
+
+                    // FIX FOR WEBM RECORDINGS
+                    if (!isFinite(dur)) {
+                      e.target.currentTime = 1e101;
+
+                      e.target.ontimeupdate = () => {
+                        e.target.ontimeupdate = null;
+
+                        e.target.currentTime = 0;
+
+                        dur = e.target.duration;
+
+                        if (isFinite(dur) && !isNaN(dur)) {
+                          setDurationSec(dur);
+
+                          const min = Math.floor(dur / 60);
+
+                          const sec = Math.floor(dur % 60)
+                            .toString()
+                            .padStart(2, '0');
+
+                          setAudioDuration(`${min}:${sec}`);
+                        }
+                      };
+                    } else {
+                      setDurationSec(dur);
+
+                      const min = Math.floor(dur / 60);
+
+                      const sec = Math.floor(dur % 60)
+                        .toString()
+                        .padStart(2, '0');
+
+                      setAudioDuration(`${min}:${sec}`);
+                    }
+                  }}
+                  onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
+                  onPause={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                />
+              </div>
             ) : (
-              <>
-                <div className="w-full flex justify-center mb-4">
-                  <div className="text-4xl">☁️</div>
+              // =========================================
+              // GENERATED PLAYER
+              // =========================================
+
+              <div className="bg-white px-5 py-4 flex items-center gap-4 border-t border-gray-200">
+                {/* PLAY */}
+
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+
+                    toggleGeneratedPlay();
+                  }}
+                  className="w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md hover:scale-105 transition-all duration-200"
+                >
+                  {isPlaying ? '❚❚' : '▶️'}
+                </button>
+
+                {/* GENERATED WAVE */}
+
+                <div className="flex-1 flex flex-col justify-center">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    Generated Audio Preview
+                  </p>
+
+                  <div className="flex items-center gap-[2px] mt-1 h-9 overflow-hidden">
+                    {waveHeights.map((h, i) => {
+                      const progress = duration
+                        ? Math.min(currentTime / duration, 1)
+                        : 0;
+
+                      const active = i / 60 < progress;
+
+                      return (
+                        <div
+                          key={i}
+                          className={`w-[2px] rounded-full transition-all duration-150 ${
+                            active ? 'bg-pink-500' : 'bg-gray-300'
+                          }`}
+                          style={{
+                            width: '2px',
+                            height: `${h}px`,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <p className="text-lg font-medium text-center">
-                  {file ? file.name : 'Upload MP3 or WAV file'}
-                </p>
+                {/* TIME */}
 
-                <p className="text-sm text-gray-600 mt-2 text-center">
-                  1–10 min, max 100MB, clean audio
-                </p>
-              </>
+                <span className="text-xs text-gray-500 min-w-[50px] text-right">
+                  {formatTime(duration)}
+                </span>
+
+                {/* DOWNLOAD */}
+
+                <a
+                  href={audioUrl}
+                  download="generated.wav"
+                  className="text-xs px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+                >
+                  Download
+                </a>
+
+                {/* AUDIO */}
+
+                <audio
+                  ref={generatedAudioRef}
+                  src={audioUrl || undefined}
+                  onLoadedMetadata={e => setDuration(e.target.duration)}
+                  onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
+                  onPause={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  onEnded={() => setIsPlaying(false)}
+                />
+              </div>
             )}
           </div>
 
