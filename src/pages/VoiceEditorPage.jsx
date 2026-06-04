@@ -213,7 +213,7 @@ export default function VoiceEditorPage() {
       const link = document.createElement('a');
 
       link.href = downloadUrl;
-      link.download = `processed-audio.${selectedFormat.toLowerCase()}`;
+      link.download = `editor_output.${selectedFormat.toLowerCase()}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1018,13 +1018,30 @@ formData.append('youtube_polish', String(enablePolishingAudio));
 
                 {/* DOWNLOAD */}
 
-                <a
-                  href={audioUrl}
-                  download="generated.wav"
-                  className="text-xs px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+                <button
+                  style={{
+                    border: '0.5px solid gray',
+                  }}
+                  onClick={async () => {
+                    const response = await fetch(audioUrl);
+                    const blob = await response.blob();
+
+                    const url = window.URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `editor_output.${selectedFormat.toLowerCase()}`;
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    window.URL.revokeObjectURL(url);
+                  }}
+                  className="text-xs px-4 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100 transition"
                 >
                   Download
-                </a>
+                </button>
 
                 {/* AUDIO */}
 

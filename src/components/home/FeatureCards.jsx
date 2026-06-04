@@ -27,20 +27,60 @@ export default function FeatureCards() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative mt-12 md:mt-24 overflow-hidden pb-16">
+    <section className="relative mt-12 md:mt-24 overflow-visible pb-16">
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 lg:px-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map((card) => (
+          {cards.map(card => (
             <div
               key={card.title}
               onClick={() => navigate(card.path)}
-              className="group flex w-full cursor-pointer flex-col items-center text-center transition-transform duration-300 hover:scale-105 active:scale-[0.98]"
+              className="
+    group
+    flex
+    w-full
+    cursor-pointer
+    flex-col
+    items-center
+    text-center
+
+    transition-all
+    duration-500
+
+    hover:scale-105
+
+    active:scale-[0.98]
+  "
             >
-              <div className="w-full overflow-hidden rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
+              <div
+                className="
+    aspect-[1/1]
+    w-full
+    overflow-hidden
+    rounded-3xl
+
+    border border-white/10
+
+    shadow-[0_20px_40px_rgba(0,0,0,0.45),
+             0_0_30px_rgba(168,85,247,0.25)]
+
+    bg-gradient-to-b
+    from-white/5
+    to-white/[0.02]
+
+    backdrop-blur-sm
+
+    transition-all
+    duration-500
+
+
+    hover:shadow-[0_35px_70px_rgba(0,0,0,0.6),
+                  0_0_50px_rgba(168,85,247,0.45)]
+  "
+              >
                 <img
                   src={card.image}
                   alt={card.alt}
-                  className="h-[220px] w-full object-cover sm:h-[280px] md:h-[320px]"
+                  className="!w-full !h-full object-cover object-center"
                 />
               </div>
 

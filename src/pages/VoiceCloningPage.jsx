@@ -416,6 +416,29 @@ export default function VoiceCloningPage() {
     }
   };
 
+  const handleDownload = async () => {
+    try {
+      if (!audioUrl) return;
+
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
+
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = 'clone_output.wav';
+
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
+
   // =========================================
   // CHECK STATUS
   // =========================================
@@ -1238,13 +1261,15 @@ export default function VoiceCloningPage() {
 
                 {/* DOWNLOAD */}
 
-                <a
-                  href={audioUrl}
-                  download="generated.wav"
-                  className="text-xs px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+                <button
+                  style={{
+                    border: '0.5px solid gray',
+                  }}
+                  onClick={handleDownload}
+                  className="text-xs px-4 py-2 rounded-lg border border-gray-100 text-gray-700 hover:bg-gray-100 transition"
                 >
                   Download
-                </a>
+                </button>
 
                 {/* AUDIO */}
 

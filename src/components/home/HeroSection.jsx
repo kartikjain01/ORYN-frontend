@@ -4,18 +4,32 @@ export default function HeroSection() {
     <section className="relative overflow-hidden px-6 pt-10 sm:pt-16 md:px-10 lg:px-14">
       <div className="relative mx-auto flex min-h-[560px] sm:min-h-[700px] md:min-h-[820px] lg:min-h-[920px] w-full max-w-[1512px] flex-col items-center text-center">
         {/* Big back text */}
+        {/* Left OR */}
         <h1
-          className="pointer-events-none absolute top-[80px] sm:top-[120px] md:top-[180px] lg:top-[180px] z-[1] select-none text-white/95"
+          className="pointer-events-none absolute left-[-1px] top-[120px] z-[1] select-none text-white/95s"
           style={{
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'Orbitron, sans-serif',
             fontWeight: 500,
-            fontSize: 'clamp(90px, 38vw, 480px)',
+            fontSize: 'clamp(80px, 25vw, 380px)',
             lineHeight: '0.9',
-            letterSpacing: '0em',
-            textShadow: '0px 4px 4px rgba(255, 255, 255, 0)',
+            letterSpacing: '0.05em',
           }}
         >
-          ORYN
+          OR
+        </h1>
+
+        {/* Right YN */}
+        <h1
+          className="pointer-events-none absolute right-[-1px] top-[360px] z-[1] select-none text-white/95"
+          style={{
+            fontFamily: 'Orbitron, sans-serif',
+            fontWeight: 500,
+            fontSize: 'clamp(80px, 20vw, 380px)',
+            lineHeight: '0.9',
+            letterSpacing: '0.05em',
+          }}
+        >
+          YN
         </h1>
 
         {/* Robot image */}
@@ -46,7 +60,7 @@ export default function HeroSection() {
         </div>
 
         {/* Main heading */}
-        <div className="relative z-10 -mt-[20px] sm:-mt-[40px] md:-mt-[50px] lg:-mt-[100px] max-w-[1200px]">
+        <div className="relative z-10 mt-0 sm:mt-[10px] md:-mt-[50px] lg:-mt-[50px] max-w-[1200px]">
           <h2
             className="font-bold leading-[1.08] tracking-[-0.03em] text-transparent bg-clip-text text-[28px] sm:text-[44px] md:text-[64px] lg:text-[82px]"
             style={{

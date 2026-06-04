@@ -674,7 +674,7 @@ const [selectedVoice, setSelectedVoice] = useState('michael');
 
                     const link = document.createElement('a');
                     link.href = blobUrl;
-                    link.download = 'speech.mp3';
+                    link.download = `tts_output.${selectedFormat.toLowerCase()}`;
 
                     document.body.appendChild(link);
                     link.click();
