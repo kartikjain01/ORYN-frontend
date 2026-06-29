@@ -107,26 +107,16 @@ export default function HomePage() {
       {/* ✅ MAIN CONTENT */}
       <main className="relative z-10">
         {/* HERO */}
-        <section
-          id="home"
-          className="scroll-mt-32"
-        >
+        <section id="home" className="scroll-mt-32">
           <HeroSection />
         </section>
 
         {/* FEATURE CARDS */}
-        <section
-          id="feature-cards"
-          className="relative"
-        >
+        <section className="relative">
           <FeatureCards />
         </section>
 
-        {/* FEATURES */}
-        <section
-          id="features"
-          className="scroll-mt-32 relative"
-        >
+        <section className="relative">
           <FeaturedProduction />
         </section>
 

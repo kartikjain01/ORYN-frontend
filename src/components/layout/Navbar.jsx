@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logo from '../../assets/images/logo.png';
 import {
   Bell,
   Settings,
@@ -9,8 +11,7 @@ import {
   Mic2,
   Waves,
   SlidersHorizontal,
-} from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+} from 'lucide-react';
 import ContactSupportSection from "../home/ContactSupportSection";
 import { useProfile } from "../../context/ProfileContext";
 
@@ -121,9 +122,9 @@ export default function Navbar({ user }) {
         setMobileMenu(false);
       }
     };
-  
+
     window.addEventListener("resize", handleResize);
-  
+
     return () =>
       window.removeEventListener("resize", handleResize);
   }, []);
@@ -133,7 +134,7 @@ export default function Navbar({ user }) {
     } else {
       document.body.style.overflow = "auto";
     }
-  
+
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -149,9 +150,28 @@ export default function Navbar({ user }) {
             : 'bg-transparent'
         }`}
       >
-        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:py-5 sm:px-5 md:py-6 lg:px-6 relative">
-          {/* LOGO */}
+        <nav className="h-20 w-full flex items-center justify-between px-12 xl:px-2 relative">
+          {/* LOGO */}{' '}
           <div className="flex items-center justify-start min-w-[180px] pr-2 overflow-visible">
+            <Link
+              to="/"
+              className="flex items-center flex-shrink-0 h-full mt-3"
+            >
+              <img
+                src={logo}
+                alt="ORYN Engine"
+                className="
+        h-12
+        md:h-14
+        lg:h-16
+        w-[250px]
+        object-contain
+        transition-all
+        duration-300
+      "
+                draggable={false}
+              />
+            </Link>
             <span
               onClick={() => navigate('/')}
               className="cursor-pointer whitespace-nowrap"
@@ -165,7 +185,7 @@ export default function Navbar({ user }) {
                 display: 'inline-block',
               }}
             >
-              <span style={{ fontWeight: 700 }}>ORYN</span>
+              {/*}   <span style={{ fontWeight: 700 }}>ORYN</span>
 
               <span
                 style={{
@@ -179,13 +199,11 @@ export default function Navbar({ user }) {
                 }}
               >
                 Engine
-              </span>
+              </span>   */}
             </span>
           </div>
-
           {/* CENTER MENU */}
           <div className="w-[clamp(60px,6vw,96px)]" />
-
           <ul
             className="absolute left-1/2 -translate-x-1/2 hidden items-center md:flex"
             style={{
@@ -227,19 +245,18 @@ export default function Navbar({ user }) {
               </li>
             ))}
           </ul>
-
           <div className="ml-auto flex items-center gap-3 pr-0 text-white/80">
-          {/* MOBILE MENU BUTTON */}
-<button
-  onClick={() => setMobileMenu(prev => !prev)}
-  className="flex md:hidden items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
->
-  {mobileMenu ? (
-    <X size={24} strokeWidth={1.8} />
-  ) : (
-    <Menu size={24} strokeWidth={1.8} />
-  )}
-</button>
+            {/* MOBILE MENU BUTTON */}
+            <button
+              onClick={() => setMobileMenu(prev => !prev)}
+              className="flex md:hidden items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
+            >
+              {mobileMenu ? (
+                <X size={24} strokeWidth={1.8} />
+              ) : (
+                <Menu size={24} strokeWidth={1.8} />
+              )}
+            </button>
             <button
               onClick={() => navigate('/settings')}
               className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 transition"
@@ -337,41 +354,39 @@ export default function Navbar({ user }) {
         </nav>
       </header>
       {/* MOBILE MENU */}
-<div
-  className={`fixed top-[72px] left-0 w-full z-40 md:hidden transition-all duration-300 ${
-    mobileMenu
-      ? "opacity-100 pointer-events-auto"
-      : "opacity-0 pointer-events-none"
-  }`}
->
-  <div className="mx-4 rounded-3xl border border-white/10 bg-[#080311]/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
-    
-    <div className="flex flex-col p-4">
-      {navItems.map(item => (
-        <button
-          key={item.name}
-          onClick={() => {
-            setMobileMenu(false);
+      <div
+        className={`fixed top-[72px] left-0 w-full z-40 md:hidden transition-all duration-300 ${
+          mobileMenu
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="mx-4 rounded-3xl border border-white/10 bg-[#080311]/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
+          <div className="flex flex-col p-4">
+            {navItems.map(item => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  setMobileMenu(false);
 
-            if (item.type === "about") {
-              setShowAbout(true);
-              setShowContact(false);
-            } else if (item.type === "contact") {
-              setShowContact(true);
-              setShowAbout(false);
-            } else {
-              handleSectionNavigation(item.sectionId);
-            }
-          }}
-          className="flex items-center justify-between rounded-2xl px-4 py-4 text-left text-white/75 hover:bg-white/5 hover:text-white transition"
-        >
-          <span>{item.name}</span>
-        </button>
-      ))}
-    </div>
-
-  </div>
-</div>
+                  if (item.type === 'about') {
+                    setShowAbout(true);
+                    setShowContact(false);
+                  } else if (item.type === 'contact') {
+                    setShowContact(true);
+                    setShowAbout(false);
+                  } else {
+                    handleSectionNavigation(item.sectionId);
+                  }
+                }}
+                className="flex items-center justify-between rounded-2xl px-4 py-4 text-left text-white/75 hover:bg-white/5 hover:text-white transition"
+              >
+                <span>{item.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <div
         className={`fixed inset-0 z-50 transition-all duration-300 ${

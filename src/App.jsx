@@ -13,12 +13,14 @@ import TextToSpeechPage from "./pages/TextToSpeechPage";
 import VoiceEditorPage from "./pages/VoiceEditorPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePanel from "./components/layout/ProfilePanel";
+import Loader from './components/Loader';
 
 
 
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(true);
 
   const { showProfile } = useProfile(); // ✅ ADD THIS
 
@@ -29,18 +31,26 @@ function App() {
       } = await supabase.auth.getSession();
       setSession(session);
       setLoading(false);
+
+      setTimeout(() => {
+        setShowLoader(false);
+      }, 250);
     };
 
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) return null;
+  if (loading || showLoader) {
+    return <Loader />;
+  }
 
   return (
     <>

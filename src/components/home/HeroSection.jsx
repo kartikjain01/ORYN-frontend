@@ -1,5 +1,26 @@
+import { useRef, useState } from 'react';
 import robotHero from '../../assets/images/robot-hero.png';
+import welcomeAudio from '../../assets/audio/welcome.mp3';
+
 export default function HeroSection() {
+  const audioRef = useRef(new Audio(welcomeAudio));
+  const [speaking, setSpeaking] = useState(false);
+
+  const handleRobotClick = () => {
+    const audio = audioRef.current;
+
+    audio.pause();
+    audio.currentTime = 0;
+
+    setSpeaking(true);
+
+    audio.onended = () => {
+      setSpeaking(false);
+    };
+
+    audio.play();
+  };
+
   return (
     <section className="relative overflow-hidden px-6 pt-10 sm:pt-16 md:px-10 lg:px-14">
       <div className="relative mx-auto flex min-h-[560px] sm:min-h-[700px] md:min-h-[820px] lg:min-h-[920px] w-full max-w-[1512px] flex-col items-center text-center">
@@ -37,10 +58,47 @@ export default function HeroSection() {
           <img
             src={robotHero}
             alt="AI robot"
-            className="w-full max-w-full object-contain drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)]"
+            className={`
+    w-full
+    max-w-full
+    object-contain
+    cursor-pointer
+    transition-all
+    duration-500
+    active:scale-[0.98]
+    ${
+      speaking
+        ? 'scale-[1.02] drop-shadow-[0_0_50px_rgba(168,85,247,0.6)]'
+        : 'drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)]'
+    }
+  `}
             style={{
               width: 'clamp(260px, 82vw, 1266px)',
               height: 'auto',
+            }}
+          />
+
+          {/* Invisible headphone button */}
+          <button
+            onClick={handleRobotClick}
+            aria-label="Talk to ORYN Engine"
+            className="
+    absolute
+    rounded-full
+    cursor-pointer
+    bg-transparent
+    transition-all
+    duration-200
+  "
+            style={{
+              width: '90px',
+              height: '90px',
+
+              // Adjust these two values
+              top: '32%',
+              left: '42%',
+
+              transform: 'translate(-50%, -50%)',
             }}
           />
 
@@ -60,7 +118,8 @@ export default function HeroSection() {
         </div>
 
         {/* Main heading */}
-        <div className="relative z-10 mt-0 sm:mt-[10px] md:-mt-[50px] lg:-mt-[50px] max-w-[1200px]">
+
+        <div className="relative z-10 mt-0 sm:mt-[10px] md:-mt-[50px] lg:-mt-[40px] max-w-[1200px]">
           <h2
             className="font-bold leading-[1.08] tracking-[-0.03em] text-transparent bg-clip-text text-[28px] sm:text-[44px] md:text-[64px] lg:text-[82px]"
             style={{
@@ -76,6 +135,7 @@ export default function HeroSection() {
         </div>
 
         {/* Description text */}
+
         <p
           className="mt-[20px] text-center px-4"
           style={{

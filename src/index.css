@@ -624,3 +624,21 @@ body {
 .animate-fadeSlide {
   animation: fadeSlide 0.25s ease-out;
 }
+
+@keyframes breathe {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.015);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2.5s ease-in-out infinite;
+}

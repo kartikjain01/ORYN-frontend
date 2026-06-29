@@ -34,7 +34,7 @@ export default function WhyChooseUs() {
   return (
     <section
       id="why-choose-us"
-      className="relative px-6 pb-16 px-4 pb-16 pt-20 sm:px-8 md:pt-28 lg:px-14 lg:pt-36"
+      className="relative px-4 sm:px-8 lg:px-14 pt-8 md:pt-12 lg:pt-16 pb-16"
     >
       <div className="mx-auto max-w-7xl">
         <div className="h-px w-full bg-violet-400/30" />
@@ -55,38 +55,31 @@ export default function WhyChooseUs() {
 
         <div className="mt-8 text-center">
           <h2 className="text-2xl font-semibold uppercase leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-            Why Creators Choose Our
+            Why Creators Choose
             <br />
-            AI Voice Platform
+            Our Platform
           </h2>
         </div>
 
-        <div className="mt-14 sm:mt-16 grid items-center gap-10 lg:gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.03] transition-transform duration-300 sm:translate-y-10 lg:translate-y-16">
+        <div className="mt-14 sm:mt-16 grid items-center gap-10 lg:gap-15 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="h-[420px] overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.03] transition-transform duration-300 sm:translate-y-0 lg:translate-y-4">
             <img
               src={whyChooseUsImage}
               alt="Why choose us"
-              className="h-full w-full object-cover transition-transform duration-300"
+              className="w-full h-full object-cover scale-120 object-[center_20%] transition-transform duration-300"
             />
           </div>
 
           <div>
-            <p className="max-w-2xl text-base leading-relaxed text-white/88 sm:text-lg md:text-xl">
-              <span className="font-semibold">Our AI voice</span> platform helps
-              you create professional audio in seconds. Clone voices, convert
-              text into natural speech, and edit voices with powerful AI tools —
-              all in one place.
-              <br />
-              Create podcasts, videos, narrations, and content faster without
-              expensive recording setups.
-            </p>
-
-            <div className="mt-10 space-y-8">
-              {features.map((item) => {
+            <div className="mt-10 space-y-4">
+              {features.map(item => {
                 const Icon = item.icon;
 
                 return (
-                  <div key={item.title} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+                  <div
+                    key={item.title}
+                    className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5"
+                  >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-gradient-to-b from-white/80 via-violet-300 to-violet-600 shadow-[0_10px_30px_rgba(129,90,255,0.24)] md:h-16 md:w-16">
                       <Icon
                         size={26}
@@ -96,11 +89,11 @@ export default function WhyChooseUs() {
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold leading-tight text-white sm:text-2xl">
+                      <h3 className="text-lg font-semibold leading-tight text-white sm:text-xl lg:text-[22px]">
                         {item.title}
                       </h3>
 
-                      <p className="mt-2 text-sm leading-relaxed text-white/70 sm:text-base md:text-lg">
+                      <p className="mt-2 text-sm sm:text-[15px] lg:text-[18px] leading-[1.6] text-white/70 max-w-[560px]">
                         {item.text}
                       </p>
                     </div>

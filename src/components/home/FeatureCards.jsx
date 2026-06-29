@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Sparkles } from 'lucide-react';
 import voiceCloneImg from "../../assets/images/voice-clone.png";
 import ttsImg from "../../assets/images/text-to-speech.png";
 import voiceEditorImg from "../../assets/images/ai-voice-editor.png";
@@ -27,8 +28,22 @@ export default function FeatureCards() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative mt-12 md:mt-24 overflow-visible pb-16">
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 lg:px-16">
+    <section
+      id="features"
+      className="relative mt-12 md:mt-24 overflow-visible pb-16 scroll-mt-45"
+    >
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center">
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-semibold text-white">
+            Featured Products
+          </h2>
+          <p className="mt-3 text-base sm:text-lg text-white/80">
+            Create, clone, edit and enhance voices using our next-generation
+            AI-powered speech technology.
+          </p>
+        </div>
+        <div className="mt-16 space-y-16 sm:space-y-24"></div>
+
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map(card => (
             <div
@@ -54,7 +69,8 @@ export default function FeatureCards() {
               <div
                 className="
     aspect-[1/1]
-    w-full
+    w-[85%]
+    mx-auto
     overflow-hidden
     rounded-3xl
 
