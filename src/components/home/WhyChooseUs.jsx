@@ -30,7 +30,7 @@ const features = [
   },
 ];
 
-export default function WhyChooseUs() {
+export default function WhyChooseUs({ onTerms, onPrivacy }) {
   return (
     <section
       id="why-choose-us"
@@ -108,12 +108,13 @@ export default function WhyChooseUs() {
 
         <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex items-center gap-8 text-sm text-white/55 sm:text-base">
-            <a href="#" className="transition hover:text-white">
-              Terms of use
-            </a>
-            <a href="#" className="transition hover:text-white">
+            <button onClick={onTerms} className="transition hover:text-white">
+              Terms of Use
+            </button>
+
+            <button onClick={onPrivacy} className="transition hover:text-white">
               Privacy Policy
-            </a>
+            </button>
           </div>
 
           <div className="flex items-center gap-5 text-white/80">

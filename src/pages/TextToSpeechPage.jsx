@@ -199,9 +199,12 @@ const [selectedVoice, setSelectedVoice] = useState('michael');
 
   // ✅ GENERATE FUNCTION (ONLY CLEANED STRUCTURE, LOGIC SAME)
   const handleGenerate = async () => {
-    if (!text.trim()) return;
+  if (!text.trim()) {
+    alert('Please enter text first');
+    return;
+  }
 
-    setIsLoading(true);
+  setIsLoading(true);
 
     try {
       const {
@@ -700,9 +703,9 @@ const [selectedVoice, setSelectedVoice] = useState('michael');
                 <Paperclip size={16} />
               </div>
 
-              <div className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400">
+              {/*<div className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400">
                 <Mic size={16} />
-              </div>
+              </div>  */}
 
               <span>Data source</span>
             </div>
@@ -727,9 +730,8 @@ const [selectedVoice, setSelectedVoice] = useState('michael');
         <div
           className="
     relative xl:absolute
-    xl:top-1/2
-    xl:right-4
-    xl:-translate-y-1/2
+    xl:top-[0px]
+    xl:right-6
     z-10
     w-full
     xl:w-[340px]
@@ -742,7 +744,7 @@ const [selectedVoice, setSelectedVoice] = useState('michael');
     overflow-x-hidden overflow-y-auto
   "
         >
-          <h2 className="mb-4 font-semibold">Tool (coming soon)</h2>
+          <h2 className="mb-4 font-semibold">Tools</h2>
 
           <div className="space-y-4">
             {/* ✅ LANGUAGE FIRST */}

@@ -16,10 +16,12 @@ import ContactSupportSection from "../home/ContactSupportSection";
 import { useProfile } from "../../context/ProfileContext";
 
 const navItems = [
-  { name: "Home", sectionId: "home", type: "scroll" },
-  { name: "About", type: "about" },
-  { name: "Features", sectionId: "features", type: "scroll" },
-  { name: "Contact", type: "contact" },
+  { name: 'About', type: 'about' },
+  { name: 'Features', sectionId: 'features', type: 'scroll' },
+  { name: 'Contact', type: 'contact' },
+  {
+    /* { name: "Home", sectionId: "home", type: "scroll" }, */
+  },
 ];
 
 const notifications = [

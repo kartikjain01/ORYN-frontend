@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 /**
  * Safe preview fallback for environments where:
@@ -1082,7 +1083,7 @@ formData.append('youtube_polish', String(enablePolishingAudio));
                 </div>
 
                 {enableNoiseRemoval && (
-                  <div className="relative">
+                  <div className="relative w-[210px]">
                     <select
                       value={processingMode}
                       onChange={e => setProcessingMode(e.target.value)}
@@ -1098,6 +1099,10 @@ formData.append('youtube_polish', String(enablePolishingAudio));
                         DeepFilter
                       </option>
                     </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex flex-col leading-none text-white/70">
+                      <ChevronUp size={10} />
+                      <ChevronDown size={10} className="-mt-1" />
+                    </div>
                   </div>
                 )}
               </div>
@@ -1129,8 +1134,26 @@ formData.append('youtube_polish', String(enablePolishingAudio));
           <div className="mt-8 w-full max-w-4xl">
             <button
               onClick={processedAudio ? handleConfirmExport : processAudio}
-              disabled={loading}
-              className="w-full py-3 sm:py-4 rounded-xl text-sm sm:text-base bg-gradient-to-r from-pink-500 to-purple-500 disabled:opacity-60"
+              disabled={
+                loading ||
+                (!processedAudio &&
+                  ((mode === 'upload' && !file) ||
+                    (mode === 'record' && !recordedBlob)))
+              }
+              className={`
+    w-full
+    py-3 sm:py-4
+    rounded-xl
+    text-sm sm:text-base
+    transition-all duration-300
+    ${
+      loading ||
+      (!processedAudio &&
+        ((mode === 'upload' && !file) || (mode === 'record' && !recordedBlob)))
+        ? 'bg-white/10 border border-white/20 text-white/40 cursor-not-allowed'
+        : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90 text-white'
+    }
+  `}
             >
               {loading
                 ? `Processing... ${progress}%`

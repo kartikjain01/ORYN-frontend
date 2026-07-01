@@ -102,9 +102,9 @@ export default function ProfilePanel() {
 
             {/* ACCOUNT INFO */}
             <div className="mt-6 bg-white/5 rounded-xl p-4 space-y-2 text-sm">
-              <p className="text-white/70">
+              {/*<p className="text-white/70">
                 <strong>User ID:</strong> {user?.id}
-              </p>
+              </p>*/}
               <p className="text-white/70">
                 <strong>Plan:</strong> {profile?.plan || 'Free'}
               </p>

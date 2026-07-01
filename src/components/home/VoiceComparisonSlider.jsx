@@ -28,7 +28,9 @@ import vcAi1 from '../../assets/audio/voice-cloning-demo/ai1.wav';
 // ===============================
 
 import ttsReal1 from '../../assets/audio/tts-demo/real1.wav';
-import ttsAi1 from '../../assets/audio/tts-demo/ai1.wav';
+import ttsAi1 from '../../assets/audio/tts-demo/ai1.mp3';
+import ttsAi2 from '../../assets/audio/tts-demo/ai2.mp3';
+import ttsAi3 from '../../assets/audio/tts-demo/ai3.mp3';
 
 // ===============================
 // Voice Editor Audio
@@ -88,7 +90,7 @@ const ttsSlides = [
     imageBottom: 0, // move down
     imageLeft: '99.5%',
     realAudio: ttsReal1,
-    aiAudio: ttsAi1,
+    aiAudio: ttsAi2,
   },
   {
     image: ttsDemo3,
@@ -97,7 +99,7 @@ const ttsSlides = [
     imageBottom: 0, // move down
     imageLeft: '99.5%',
     realAudio: ttsReal1,
-    aiAudio: ttsAi1,
+    aiAudio: ttsAi3,
   },
 ];
 

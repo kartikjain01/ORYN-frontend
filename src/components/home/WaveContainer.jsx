@@ -19,17 +19,20 @@ export default function WaveContainer({ playing = null }) {
     return () => clearInterval(interval);
   }, [playing]);
 
-  const whiteHeights = baseWhite.map((h, i) => {
-    if (playing !== 'real') return h;
+  const animateWhite = playing === 'real' || playing === 'both';
+  const animatePurple = playing === 'ai' || playing === 'both';
 
-    return Math.max(16, h + Math.sin(frame * 0.55 + i * 0.8) * 8);
-  });
+const whiteHeights = baseWhite.map((h, i) => {
+  if (!animateWhite) return h;
 
-  const purpleHeights = basePurple.map((h, i) => {
-    if (playing !== 'ai') return h;
+  return Math.max(16, h + Math.sin(frame * 0.55 + i * 0.8) * 8);
+});
 
-    return Math.max(16, h + Math.sin(frame * 0.55 + i * 0.8) * 8);
-  });
+const purpleHeights = basePurple.map((h, i) => {
+  if (!animatePurple) return h;
+
+  return Math.max(16, h + Math.sin(frame * 0.55 + i * 0.8) * 8);
+});
 
   return (
     <div

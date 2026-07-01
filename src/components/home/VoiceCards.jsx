@@ -156,35 +156,37 @@ export default function VoiceCards({
               </div>
 
               {/* REAL BUTTON */}
-              <button
-                onClick={onPlayReal}
-                className={`
-absolute
-top-5
-left-110
-w-10
-h-10
-rounded-full
-border
-border-white/30
-bg-white/10
-backdrop-blur-md
-flex
-items-center
-justify-center
-transition-all
-duration-300
-ease-out
-active:scale-95
-${realPop ? 'scale-150' : 'scale-100'}
-`}
-              >
-                {playing === 'real' ? (
-                  <PauseIcon className="w-7 h-7 text-white" />
-                ) : (
-                  <PlayIcon className="w-7 h-7 text-white" />
-                )}
-              </button>
+              {!isTTS && (
+                <button
+                  onClick={onPlayReal}
+                  className={`
+      absolute
+      top-5
+      left-110
+      w-10
+      h-10
+      rounded-full
+      border
+      border-white/30
+      bg-white/10
+      backdrop-blur-md
+      flex
+      items-center
+      justify-center
+      transition-all
+      duration-300
+      ease-out
+      active:scale-95
+      ${realPop ? 'scale-150' : 'scale-100'}
+    `}
+                >
+                  {playing === 'real' ? (
+                    <PauseIcon className="w-7 h-7 text-white" />
+                  ) : (
+                    <PlayIcon className="w-7 h-7 text-white" />
+                  )}
+                </button>
+              )}
 
               {/* Image */}
               {isTTS ? (
@@ -209,10 +211,10 @@ ${realPop ? 'scale-150' : 'scale-100'}
                   >
                     Welcome to ORYN Engine.
                     {'\n'}
-                    Experience AI-powered voice generation instantly.
+                    Experience intelligent voice generation instantly.
                     {'\n'}
-                    Transform text into realistic speech with natural
-                    expression.
+                    Transform text into natural, human-like speech with
+                    expressive delivery.
                   </p>
                 </div>
               ) : (
@@ -366,10 +368,10 @@ active:scale-95
 ${aiPop ? 'scale-150' : 'scale-100'}
 `}
               >
-                {playing === 'ai' ? (
-                  <PauseIcon className="w-7 h-7 text-white" />
+                {playing === 'ai' || playing === 'both' ? (
+                  <PauseIcon />
                 ) : (
-                  <PlayIcon className="w-7 h-7 text-white" />
+                  <PlayIcon />
                 )}
               </button>
 
@@ -412,7 +414,10 @@ ${aiPop ? 'scale-150' : 'scale-100'}
               transformOrigin: 'center bottom',
             }}
           >
-            <WaveContainer progress={progress} playing={playing} />
+            <WaveContainer
+              progress={progress}
+              playing={isTTS ? (playing ? 'both' : null) : playing}
+            />
           </div>
         </div>
       </div>

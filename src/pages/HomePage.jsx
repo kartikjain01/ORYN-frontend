@@ -1,4 +1,5 @@
 // src/pages/HomePage.jsx
+import LegalModal from '../components/LegalModal';
 
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
@@ -12,6 +13,7 @@ import WhyChooseUs from "../components/home/WhyChooseUs";
 
 export default function HomePage() {
   const [user, setUser] = useState(null);
+  const [legalModal, setLegalModal] = useState(null);
 
   /* ✅ FETCH USER SESSION */
   useEffect(() => {
@@ -26,10 +28,10 @@ export default function HomePage() {
         if (isMounted && session?.user) {
           setUser(session.user);
 
-          console.log("Logged in as:", session.user.email);
+          console.log('Logged in as:', session.user.email);
         }
       } catch (err) {
-        console.error("Error fetching session:", err.message);
+        console.error('Error fetching session:', err.message);
       }
     };
 
@@ -53,7 +55,7 @@ export default function HomePage() {
 
   /* ✅ SCROLL TO SECTION AFTER NAVIGATION */
   useEffect(() => {
-    const target = sessionStorage.getItem("scrollTarget");
+    const target = sessionStorage.getItem('scrollTarget');
 
     if (target) {
       setTimeout(() => {
@@ -61,22 +63,22 @@ export default function HomePage() {
 
         if (element) {
           element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
+            behavior: 'smooth',
+            block: 'start',
           });
         }
 
-        sessionStorage.removeItem("scrollTarget");
+        sessionStorage.removeItem('scrollTarget');
       }, 120);
     }
   }, []);
 
   /* ✅ PAGE SCROLL FIX */
   useEffect(() => {
-    document.body.style.overflowX = "hidden";
+    document.body.style.overflowX = 'hidden';
 
     return () => {
-      document.body.style.overflowX = "auto";
+      document.body.style.overflowX = 'auto';
     };
   }, []);
 
@@ -122,10 +124,17 @@ export default function HomePage() {
 
         {/* WHY CHOOSE US */}
         <section className="relative">
-          <WhyChooseUs />
+          <WhyChooseUs
+            onTerms={() => setLegalModal('terms')}
+            onPrivacy={() => setLegalModal('privacy')}
+          />
         </section>
       </main>
-
+      <LegalModal
+        open={legalModal !== null}
+        type={legalModal}
+        onClose={() => setLegalModal(null)}
+      />
       {/* ✅ BOTTOM FADE */}
       <div className="pointer-events-none absolute bottom-0 left-0 h-40 w-full bg-gradient-to-t from-[#020007] to-transparent" />
     </div>

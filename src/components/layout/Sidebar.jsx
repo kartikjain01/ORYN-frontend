@@ -29,7 +29,7 @@ export default function Sidebar() {
         <h2 className="text-lg font-semibold text-white">ORYN</h2>
 
         <button
-          onClick={() => navigate("/settings")}
+          onClick={() => navigate('/settings')}
           className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10"
         >
           <Settings size={20} />
@@ -47,7 +47,7 @@ export default function Sidebar() {
       {/* ================= MOBILE SIDEBAR ================= */}
       <aside
         className={`fixed top-0 left-0 z-50 h-screen w-[280px] transform border-r border-white/10 bg-[#0b0616] transition-transform duration-300 md:hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex h-full flex-col justify-between p-6">
@@ -106,7 +106,7 @@ export default function Sidebar() {
               Icon={Settings}
               label="Settings"
               onClick={() => {
-                navigate("/settings");
+                navigate('/settings');
                 setMobileOpen(false);
               }}
             />
@@ -116,16 +116,12 @@ export default function Sidebar() {
 
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside className="hidden md:block w-[88px] lg:w-[92px] shrink-0 border-r border-white/10 bg-[#0b0616]/40 backdrop-blur-xl h-screen sticky top-0">
-        <div className="flex h-full flex-col items-center justify-between py-8">
+        <div className="flex h-full flex-col items-center py-15">
           {/* MAIN NAVIGATION */}
-          <nav className="flex flex-col items-center gap-6">
+          <nav className="flex flex-col items-center gap-6 mb-6">
             <SideNavIcon to="/" Icon={Home} label="Home" end />
 
-            <SideNavIcon
-              to="/voice-clone"
-              Icon={Mic}
-              label="Voice Clone"
-            />
+            <SideNavIcon to="/voice-clone" Icon={Mic} label="Voice Clone" />
 
             <SideNavIcon
               to="/text-to-speech"
@@ -147,7 +143,7 @@ export default function Sidebar() {
             <IconButton
               Icon={Settings}
               label="Settings"
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate('/settings')}
             />
           </div>
         </div>
