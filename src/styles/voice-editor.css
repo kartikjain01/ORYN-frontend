@@ -1,0 +1,102 @@
+/* ============================================================
+   VOICE EDITOR PAGE
+   ============================================================ */
+
+/* Reuse same card style */
+.voice-editor-page .tts-card,
+.voice-editor-page .tool-panel,
+.voice-editor-page .preview-modal {
+  border-radius: 18px;
+  background: rgba(236, 236, 236, 0.08);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Layout */
+.voice-editor-page .editor-section {
+  width: min(1050px, 100%);
+  margin: 70px auto 0;
+}
+
+/* Audio Section */
+.voice-editor-page .audio-preview {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.voice-editor-page .audio-player {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* Download */
+.voice-editor-page .download-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: #e86cff;
+}
+
+/* Buttons (same style) */
+.voice-editor-page .generate-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 34px;
+}
+
+.voice-editor-page .generate-btn {
+  min-width: 300px;
+  height: 54px;
+  padding: 0 48px;
+  border-radius: 999px;
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  background: linear-gradient(90deg, #df25f2 0%, #b454ff 100%);
+  box-shadow:
+    0 0 28px rgba(222, 37, 242, 0.35),
+    0 18px 50px rgba(206, 47, 255, 0.28);
+}
+
+.voice-editor-page .generate-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* Modal (if used) */
+.voice-editor-page .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 500;
+}
+
+.voice-editor-page .preview-modal {
+  width: 100%;
+  max-width: 560px;
+  padding: 24px;
+}
+
+.voice-editor-page .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.voice-editor-page .modal-btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  color: white;
+}
+
+.voice-editor-page .modal-btn.ghost {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.voice-editor-page .modal-btn.primary {
+  background: linear-gradient(90deg, #df25f2 0%, #b454ff 100%);
+}
