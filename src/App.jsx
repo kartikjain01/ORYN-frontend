@@ -8,21 +8,26 @@ import { useProfile } from "./context/ProfileContext";
 import HomePage from "./pages/HomePage"; // Create or import your Home Page
 import RegisterPage from "./pages/RegisterPage";
 import ForgetPassword from "./pages/Forgetpassword";
+import DashboardPage from "./pages/DashboardPage";
 import VoiceCloningPage from "./pages/VoiceCloningPage";
 import TextToSpeechPage from "./pages/TextToSpeechPage";
 import VoiceEditorPage from "./pages/VoiceEditorPage";
+import CaptionGenerationPage from "./pages/CaptionGenerationPage";
 import SettingsPage from "./pages/SettingsPage";
+import ProjectsPage from "./pages/ProjectsPage";
+import MyVoicesPage from "./pages/MyVoicesPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import UpgradePage from "./pages/UpgradePage";
 import ProfilePanel from "./components/layout/ProfilePanel";
-import Loader from './components/Loader';
 
 
 
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showLoader, setShowLoader] = useState(true);
 
-  const { showProfile } = useProfile(); // ✅ ADD THIS
+  const { showProfile } = useProfile();
 
   useEffect(() => {
     const getSession = async () => {
@@ -31,10 +36,6 @@ function App() {
       } = await supabase.auth.getSession();
       setSession(session);
       setLoading(false);
-
-      setTimeout(() => {
-        setShowLoader(false);
-      }, 250);
     };
 
     getSession();
@@ -48,9 +49,7 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading || showLoader) {
-    return <Loader />;
-  }
+  if (loading) return null;
 
   return (
     <>
@@ -58,14 +57,14 @@ function App() {
         {/* 1. PUBLIC HOME PAGE
             This is always the first page. No redirect here.
         */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <HomePage />} />
 
         {/* 2. AUTH PAGE
             If logged in, send them to Home. If not, show Register/Login.
         */}
         <Route
           path="/register"
-          element={!session ? <RegisterPage /> : <Navigate to="/" replace />}
+          element={!session ? <RegisterPage /> : <Navigate to="/dashboard" replace />}
         />
 
         {/* ✅ Public Forgot Password Route */}
@@ -81,10 +80,17 @@ function App() {
             session ? <AppLayout /> : <Navigate to="/register" replace />
           }
         >
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/voice-clone" element={<VoiceCloningPage />} />
           <Route path="/text-to-speech" element={<TextToSpeechPage />} />
           <Route path="/voice-editor" element={<VoiceEditorPage />} />
+          <Route path="/caption-generation" element={<CaptionGenerationPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/my-voices" element={<MyVoicesPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/upgrade" element={<UpgradePage />} />
         </Route>
 
         {/* FALLBACK */}

@@ -4,12 +4,15 @@ import { BrowserRouter } from "react-router-dom" // This is what's missing!
 import './index.css'
 import App from './App.jsx'
 import { ProfileProvider } from "./context/ProfileContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ProfileProvider>
-        <App />
+        <NotificationProvider>
+          <App />
+        </NotificationProvider>
       </ProfileProvider>
     </BrowserRouter>
   </StrictMode>

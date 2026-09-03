@@ -75,13 +75,13 @@ function Field({ id, label, error, hint, children }) {
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <label
           htmlFor={id}
-          className="text-[12.5px] font-medium text-fg"
+          className="text-[12.5px] font-medium text-white/85"
         >
           {label}
         </label>
 
         {hint && (
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-muted">
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-white/40">
             {hint}
           </span>
         )}
@@ -93,7 +93,7 @@ function Field({ id, label, error, hint, children }) {
         <p
           id={`${id}-error`}
           role="alert"
-          className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-red-600"
+          className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-red-400"
         >
           <AlertCircle size={13} strokeWidth={2} />
           {error}
@@ -104,8 +104,8 @@ function Field({ id, label, error, hint, children }) {
 }
 
 const inputClass = invalid =>
-  `w-full min-h-[48px] rounded-2xl border bg-page px-4 py-3 text-[14px] text-fg outline-none transition-colors placeholder:text-fg-muted focus:border-brand-500 focus:bg-card ${
-    invalid ? 'border-red-500/70' : 'border-line'
+  `w-full min-h-[48px] rounded-2xl border bg-white/[0.06] px-4 py-3 text-[14px] text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-500 focus:bg-white/[0.09] ${
+    invalid ? 'border-red-500/70' : 'border-white/12'
   }`;
 
 export default function ContactConsole({ open, onClose }) {
@@ -195,33 +195,33 @@ export default function ContactConsole({ open, onClose }) {
       onClose={onClose}
       label="Contact support"
       eyebrow="ORYN — Open channel"
-      tone="light"
+      tone="dark"
     >
       <div className="mx-auto grid max-w-[1400px] gap-8 px-5 py-7 sm:px-8 sm:py-9 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
         {/* ================= COMPOSER ================= */}
         <div>
-          <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-[-0.03em] text-fg sm:text-[32px]">
+          <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-[-0.03em] text-white sm:text-[32px]">
             Say something.
             <br />
-            <span className="text-brand-600">We are listening.</span>
+            <span className="text-brand-500">We are listening.</span>
           </h2>
 
-          <p className="mt-3 max-w-[46ch] text-[13.5px] leading-[1.6] text-fg-muted">
+          <p className="mt-3 max-w-[46ch] text-[13.5px] leading-[1.6] text-white/55">
             Voice cloning, generation, billing or something that simply broke —
             it all reaches the same team.
           </p>
 
           {sent ? (
-            <div className="mt-8 rounded-[22px] border border-brand-100 bg-brand-100/35 p-7">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white">
+            <div className="mt-8 rounded-[22px] border border-brand-500/30 bg-brand-500/10 p-7">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-500 text-white">
                 <Check size={24} strokeWidth={2.4} />
               </span>
 
-              <h3 className="mt-5 text-[20px] font-bold text-fg">
+              <h3 className="mt-5 text-[20px] font-bold text-white">
                 Handed to your mail client.
               </h3>
 
-              <p className="mt-2 max-w-[44ch] text-[13.5px] leading-[1.6] text-fg-muted">
+              <p className="mt-2 max-w-[44ch] text-[13.5px] leading-[1.6] text-white/60">
                 Your draft is open and addressed to {SUPPORT_EMAIL}. Send it
                 from there and we will reply within 24 hours.
               </p>
@@ -229,7 +229,7 @@ export default function ContactConsole({ open, onClose }) {
               <button
                 type="button"
                 onClick={reset}
-                className="mt-6 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-line bg-card px-5 text-[13.5px] font-medium text-fg transition hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                className="mt-6 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-5 text-[13.5px] font-medium text-white/80 transition hover:bg-white/12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
                 <RotateCcw size={15} strokeWidth={2} />
                 Write another
@@ -297,7 +297,7 @@ export default function ContactConsole({ open, onClose }) {
               </Field>
 
               <div className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11.5px] text-fg-muted">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11.5px] text-white/40">
                   <span className="inline-flex items-center gap-1.5">
                     <Clock3 size={13} strokeWidth={1.9} />
                     Reply within 24 hours
@@ -310,11 +310,7 @@ export default function ContactConsole({ open, onClose }) {
 
                 <button
                   type="submit"
-                  /* brand-600, not brand-500: white on #669af7 is 2.8:1 and
-                     fails AA. On a dark slide the button sits on black and
-                     reads fine; on this light surface it is the one thing the
-                     eye has to land on, so it takes the accessible tier. */
-                  className="group inline-flex min-h-[48px] items-center justify-center gap-2.5 rounded-full bg-brand-600 px-7 text-[14.5px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(37,99,235,0.45)] transition duration-200 hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                  className="group inline-flex min-h-[48px] items-center justify-center gap-2.5 rounded-full bg-brand-500 px-7 text-[14.5px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(102,154,247,0.6)] transition duration-200 hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                 >
                   <Send
                     size={16}
@@ -329,15 +325,15 @@ export default function ContactConsole({ open, onClose }) {
 
         {/* ================= SCOPE ================= */}
         <div className="lg:sticky lg:top-0 lg:self-start">
-          <div className="overflow-hidden rounded-[22px] border border-line bg-page">
-            <div className="flex items-center justify-between border-b border-line px-5 py-3">
-              <p className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-fg-muted">
+          <div className="overflow-hidden rounded-[22px] border border-white/[0.08] bg-white/[0.03]">
+            <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-3">
+              <p className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-white/45">
                 Message signal
               </p>
 
               <span
                 className={`font-mono text-[10.5px] uppercase tracking-[0.18em] transition-colors duration-300 ${
-                  metrics.characters ? 'text-brand-600' : 'text-fg-muted'
+                  metrics.characters ? 'text-brand-500' : 'text-white/35'
                 }`}
               >
                 {metrics.characters ? 'Live' : 'Idle'}
@@ -347,7 +343,7 @@ export default function ContactConsole({ open, onClose }) {
             <div className="relative px-5 py-7">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-5 top-1/2 h-px bg-line"
+                className="pointer-events-none absolute inset-x-5 top-1/2 h-px bg-white/[0.08]"
               />
 
               <svg
@@ -379,10 +375,7 @@ export default function ContactConsole({ open, onClose }) {
                           ? undefined
                           : 'transition-[height,y] duration-300 ease-out'
                       }
-                      /* Deeper blue on the light scope: #669af7 at low
-                         opacity all but disappears against white, and the
-                         waveform's shape is the whole point of it. */
-                      fill={height > 0.05 ? '#2563eb' : 'rgba(16,24,40,0.13)'}
+                      fill={height > 0.05 ? '#669af7' : 'rgba(255,255,255,0.12)'}
                       opacity={height > 0.05 ? 0.55 + height * 0.45 : 1}
                     />
                   );
@@ -392,7 +385,7 @@ export default function ContactConsole({ open, onClose }) {
 
             <dl
               id="signal-readout"
-              className="grid grid-cols-3 divide-x divide-line border-t border-line"
+              className="grid grid-cols-3 divide-x divide-white/[0.07] border-t border-white/[0.07]"
             >
               {[
                 { label: 'Words', value: metrics.words },
@@ -400,10 +393,10 @@ export default function ContactConsole({ open, onClose }) {
                 { label: 'Spoken', value: metrics.spoken },
               ].map(item => (
                 <div key={item.label} className="px-5 py-4">
-                  <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-fg-muted">
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/40">
                     {item.label}
                   </dt>
-                  <dd className="mt-1.5 font-mono text-[19px] font-medium tabular-nums text-fg">
+                  <dd className="mt-1.5 font-mono text-[19px] font-medium tabular-nums text-white">
                     {item.value}
                   </dd>
                 </div>
@@ -411,31 +404,27 @@ export default function ContactConsole({ open, onClose }) {
             </dl>
           </div>
 
-          <p className="mt-4 text-[12px] leading-[1.6] text-fg-muted">
+          <p className="mt-4 text-[12px] leading-[1.6] text-white/40">
             The waveform is drawn from your message itself — same words, same
             wave. &ldquo;Spoken&rdquo; estimates how long it would take to read
             aloud at {WORDS_PER_MINUTE} words per minute.
           </p>
 
-          {/* Direct line. The old panel also offered Live Chat and Help Docs
-              buttons, but there is no chat backend and no docs route — both
-              were dead controls. Email is the one channel that actually
-              works, so it is the one that is offered. */}
           <motion.a
             href={`mailto:${SUPPORT_EMAIL}`}
             whileHover={reduceMotion ? undefined : { y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="mt-5 flex items-center gap-4 rounded-[18px] border border-line bg-card px-5 py-4 transition-colors hover:border-brand-500/45 hover:bg-brand-100/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            className="mt-5 flex items-center gap-4 rounded-[18px] border border-white/[0.08] bg-white/[0.04] px-5 py-4 transition-colors hover:border-brand-500/45 hover:bg-brand-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-100/50 text-brand-600">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-brand-500">
               <Mail size={19} strokeWidth={1.9} />
             </span>
 
             <span className="min-w-0">
-              <span className="block text-[13.5px] font-semibold text-fg">
+              <span className="block text-[13.5px] font-semibold text-white">
                 Prefer your own inbox?
               </span>
-              <span className="block truncate text-[12.5px] text-fg-muted">
+              <span className="block truncate text-[12.5px] text-white/50">
                 {SUPPORT_EMAIL}
               </span>
             </span>

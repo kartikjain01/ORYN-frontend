@@ -1,7 +1,9 @@
 import { motion, useReducedMotion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 import globe from '../../assets/images/why-choose-us-globe.png';
+import GlobeVisual from './GlobeVisual';
 
 /* ============================================================
    WHY CHOOSE US
@@ -32,6 +34,7 @@ const IMAGE_ALT =
 
 export default function WhyChooseUs() {
   const reduceMotion = useReducedMotion();
+  const navigate = useNavigate();
 
   const rise = delay => ({
     initial: { opacity: 0, y: reduceMotion ? 0 : 16 },
@@ -45,7 +48,7 @@ export default function WhyChooseUs() {
   return (
     <section
       id="why-choose-us"
-      className="relative w-full px-4 py-6 sm:px-8 lg:px-14"
+      className="relative w-full px-4 py-6 sm:px-8 lg:px-14 -mt-16"
     >
       <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
         {/* ---------------- LEFT: copy ---------------- */}
@@ -84,12 +87,7 @@ export default function WhyChooseUs() {
           <motion.div {...rise(0.18)} className="mt-8">
             <button
               type="button"
-              onClick={() =>
-                document.getElementById('impact')?.scrollIntoView({
-                  behavior: reduceMotion ? 'auto' : 'smooth',
-                  block: 'start',
-                })
-              }
+              onClick={() => navigate('/dashboard')}
               className="group inline-flex items-center gap-4 rounded-full border border-line bg-card py-2 pl-2 pr-7 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_28px_-10px_rgba(16,24,40,0.18)] transition duration-200 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_18px_38px_-10px_rgba(37,99,235,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-[0_6px_16px_-4px_rgba(37,99,235,0.6)]">
@@ -109,15 +107,7 @@ export default function WhyChooseUs() {
 
         {/* ---------------- RIGHT: globe ---------------- */}
         <motion.div {...rise(0.1)}>
-          <img
-            src={globe}
-            width={958}
-            height={1006}
-            alt={IMAGE_ALT}
-            loading="lazy"
-            decoding="async"
-            className="mx-auto h-[clamp(260px,50vh,540px)] w-full object-contain"
-          />
+          <GlobeVisual />
         </motion.div>
       </div>
     </section>

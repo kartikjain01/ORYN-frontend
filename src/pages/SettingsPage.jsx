@@ -1,410 +1,631 @@
 import { supabase } from "../supabaseClient";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, User, CreditCard, Shield, Bell, Link2, Trash2, Check, X, Lock } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useProfile } from "../context/ProfileContext";
 
-/* ================= UI COMPONENTS ================= */
-
-function SectionCard({ title, children }) {
+function SectionCard({ title, description, children }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-2xl p-4 sm:p-6 shadow-[0_10px_40px_rgba(0,0,0,0.3)]"
-    >
-      <h2 className="text-lg font-semibold mb-4">{title}</h2>
-      {children}
-    </motion.div>
-  );
-}
-
-function SmallButton({ children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-200 transition"
-    >
-      {children}
-    </button>
-  );
-}
-
-function ProgressRow({ label, current, total, width }) {
-  return (
-    <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span>{label}</span>
-        <span>
-          {current}/{total}
-        </span>
+    <div className="rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="mb-5">
+        <h2 className="text-[17px] font-bold text-slate-900">{title}</h2>
+        {description && <p className="text-[13px] text-slate-400 mt-1">{description}</p>}
       </div>
-
-      <div className="w-full bg-gray-200 h-2 rounded">
-        <div
-          className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
-          style={{ width: width }}
-        />
-      </div>
+      {children}
     </div>
   );
 }
 
-/* ================= MAIN ================= */
+function ToggleSwitch({ enabled, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${enabled ? 'bg-blue-600' : 'bg-slate-200'}`}
+    >
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-5' : ''}`} />
+    </button>
+  );
+}
+
+function SettingRow({ label, description, children }) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+      <div>
+        <p className="text-[14px] font-medium text-slate-700">{label}</p>
+        {description && <p className="text-[12px] text-slate-400 mt-0.5">{description}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const COUNTRY_CODES = [
+  { name: 'India', code: '+91', flag: '🇮🇳' },
+  { name: 'United States', code: '+1', flag: '🇺🇸' },
+  { name: 'United Kingdom', code: '+44', flag: '🇬🇧' },
+  { name: 'Australia', code: '+61', flag: '🇦🇺' },
+  { name: 'Canada', code: '+1', flag: '🇨🇦' },
+  { name: 'Germany', code: '+49', flag: '🇩🇪' },
+  { name: 'France', code: '+33', flag: '🇫🇷' },
+  { name: 'Japan', code: '+81', flag: '🇯🇵' },
+  { name: 'China', code: '+86', flag: '🇨🇳' },
+  { name: 'Russia', code: '+7', flag: '🇷🇺' },
+  { name: 'Brazil', code: '+55', flag: '🇧🇷' },
+  { name: 'Spain', code: '+34', flag: '🇪🇸' },
+  { name: 'Italy', code: '+39', flag: '🇮🇹' },
+  { name: 'South Korea', code: '+82', flag: '🇰🇷' },
+  { name: 'Indonesia', code: '+62', flag: '🇮🇩' },
+  { name: 'Malaysia', code: '+60', flag: '🇲🇾' },
+  { name: 'Singapore', code: '+65', flag: '🇸🇬' },
+  { name: 'UAE', code: '+971', flag: '🇦🇪' },
+  { name: 'Saudi Arabia', code: '+966', flag: '🇸🇦' },
+  { name: 'Pakistan', code: '+92', flag: '🇵🇰' },
+  { name: 'Bangladesh', code: '+880', flag: '🇧🇩' },
+  { name: 'Sri Lanka', code: '+94', flag: '🇱🇰' },
+  { name: 'Nepal', code: '+977', flag: '🇳🇵' },
+  { name: 'South Africa', code: '+27', flag: '🇿🇦' },
+  { name: 'Nigeria', code: '+234', flag: '🇳🇬' },
+  { name: 'Kenya', code: '+254', flag: '🇰🇪' },
+  { name: 'Egypt', code: '+20', flag: '🇪🇬' },
+  { name: 'Mexico', code: '+52', flag: '🇲🇽' },
+  { name: 'Argentina', code: '+54', flag: '🇦🇷' },
+  { name: 'Netherlands', code: '+31', flag: '🇳🇱' },
+  { name: 'Sweden', code: '+46', flag: '🇸🇪' },
+  { name: 'Switzerland', code: '+41', flag: '🇨🇭' },
+  { name: 'Turkey', code: '+90', flag: '🇹🇷' },
+  { name: 'Thailand', code: '+66', flag: '🇹🇭' },
+  { name: 'Vietnam', code: '+84', flag: '🇻🇳' },
+  { name: 'Philippines', code: '+63', flag: '🇵🇭' },
+  { name: 'New Zealand', code: '+64', flag: '🇳🇿' },
+  { name: 'Ireland', code: '+353', flag: '🇮🇪' },
+  { name: 'Portugal', code: '+351', flag: '🇵🇹' },
+  { name: 'Poland', code: '+48', flag: '🇵🇱' },
+];
+
+const NAV_ITEMS = [
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'plan', label: 'Usage & Plan', icon: CreditCard },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'connected', label: 'Connected Accounts', icon: Link2 },
+  { id: 'security', label: 'Security', icon: Shield },
+  { id: 'danger', label: 'Danger Zone', icon: Trash2 },
+];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-
   const { profile, setProfile, fetchProfile, user } = useProfile();
 
+  const [activeSection, setActiveSection] = useState('profile');
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [mobile, setMobile] = useState('');
   const [birthday, setBirthday] = useState('');
   const [preview, setPreview] = useState(null);
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState({ message: '', type: '' });
 
-  /* ================= LOAD PROFILE ================= */
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [pushNotifs, setPushNotifs] = useState(true);
+  const [marketingEmails, setMarketingEmails] = useState(false);
+  const [weeklyDigest, setWeeklyDigest] = useState(true);
+
+  const [countryCode, setCountryCode] = useState('+91');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const countryDropdownRef = useRef(null);
+  const [initialValues, setInitialValues] = useState({});
+
+  useEffect(() => {
+    const handleClickOutside = e => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target)) {
+        setShowCountryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (profile) {
-      setName(profile.full_name || '');
-      setPreview(profile.avatar_url || null);
-
-      // 🔥 NEW FIELDS
-      setAge(profile.age || '');
-      setGender(profile.gender || '');
-      setMobile(profile.mobile || '');
-      setBirthday(profile.birthday || '');
+      const vals = {
+        name: profile.full_name || '',
+        avatar: profile.avatar_url || null,
+        age: profile.age || '',
+        gender: profile.gender || '',
+        mobile: profile.mobile || '',
+        birthday: profile.birthday || '',
+      };
+      setName(vals.name);
+      setPreview(vals.avatar);
+      setAge(vals.age);
+      setGender(vals.gender);
+      setMobile(vals.mobile);
+      setBirthday(vals.birthday);
+      setInitialValues(vals);
     }
   }, [profile]);
 
-  /* ================= TOAST ================= */
+  const hasChanges = useMemo(() => {
+    if (!initialValues.name && !name) return false;
+    return (
+      name !== initialValues.name ||
+      age !== initialValues.age ||
+      gender !== initialValues.gender ||
+      mobile !== initialValues.mobile ||
+      birthday !== initialValues.birthday ||
+      preview !== initialValues.avatar
+    );
+  }, [name, age, gender, mobile, birthday, preview, initialValues]);
 
-  const showToast = msg => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: '' }), 3000);
   };
 
-  /* ================= AVATAR UPLOAD ================= */
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
 
-  const handleAvatarUpload = async file => {
-    if (!file || !user) return;
-
-    try {
-      const fileExt = file.name.split('.').pop();
-
-      // ✅ Unique filename (fix cache issue)
-      const fileName = `avatar_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
-      /* ================= STEP 1: GET OLD FILES ================= */
-      const { data: existingFiles, error: listError } = await supabase.storage
-        .from('avatars')
-        .list(user.id);
-
-      if (listError) {
-        console.error('LIST ERROR:', listError);
-      }
-
-      /* ================= STEP 2: DELETE OLD FILES ================= */
-      if (existingFiles && existingFiles.length > 0) {
-        const oldPaths = existingFiles.map(file => `${user.id}/${file.name}`);
-
-        const { error: deleteError } = await supabase.storage
-          .from('avatars')
-          .remove(oldPaths);
-
-        if (deleteError) {
-          console.error('DELETE ERROR:', deleteError);
-        }
-      }
-
-      /* ================= STEP 3: UPLOAD NEW FILE ================= */
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          contentType: file.type,
-        });
-
-      if (uploadError) {
-        console.error('UPLOAD ERROR:', uploadError);
-        showToast('Upload failed ❌');
-        return;
-      }
-
-      /* ================= STEP 4: GET PUBLIC URL ================= */
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-      const publicUrl = data.publicUrl;
-
-      /* ================= STEP 5: UPDATE UI ================= */
-      setPreview(publicUrl);
-
-      /* ================= STEP 6: SAVE IN DB ================= */
-      await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      /* ================= STEP 7: REFRESH ================= */
-      await fetchProfile(user.id);
-
-      showToast('Avatar updated ✅');
-    } catch (err) {
-      console.error(err);
-      showToast('Something went wrong ❌');
-    }
+  const handleAvatarUpload = file => {
+    if (!file) return;
+    setPendingAvatarFile(file);
+    const localUrl = URL.createObjectURL(file);
+    setPreview(localUrl);
   };
 
-  /* ================= SAVE PROFILE ================= */
+  const handleRemoveAvatar = () => {
+    setPendingAvatarFile(null);
+    setPreview(null);
+  };
 
   const handleSave = async () => {
     if (!user) return;
+    let avatarUrl = preview;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: name,
-        avatar_url: preview,
+    if (pendingAvatarFile) {
+      try {
+        const fileExt = pendingAvatarFile.name.split('.').pop();
+        const fileName = `avatar_${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
 
-        // 🔥 NEW FIELDS
-        age,
-        gender,
-        mobile,
-        birthday,
-      })
-      .eq('id', user.id);
+        const { data: existingFiles } = await supabase.storage.from('avatars').list(user.id);
+        if (existingFiles && existingFiles.length > 0) {
+          const oldPaths = existingFiles.map(f => `${user.id}/${f.name}`);
+          await supabase.storage.from('avatars').remove(oldPaths);
+        }
 
-    if (error) return showToast('Error saving ❌');
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, pendingAvatarFile, { contentType: pendingAvatarFile.type });
+        if (uploadError) { showToast('Avatar upload failed', 'error'); return; }
 
-    // 🔥 refresh global state
+        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        avatarUrl = data.publicUrl;
+        setPendingAvatarFile(null);
+      } catch {
+        showToast('Avatar upload failed', 'error');
+        return;
+      }
+    } else if (preview === null && initialValues.avatar) {
+      const { data: existingFiles } = await supabase.storage.from('avatars').list(user.id);
+      if (existingFiles && existingFiles.length > 0) {
+        const oldPaths = existingFiles.map(f => `${user.id}/${f.name}`);
+        await supabase.storage.from('avatars').remove(oldPaths);
+      }
+      avatarUrl = null;
+    }
+
+    const { error } = await supabase.from('profiles').update({
+      full_name: name,
+      avatar_url: avatarUrl,
+      age,
+      gender,
+      mobile,
+      birthday,
+    }).eq('id', user.id);
+
+    if (error) return showToast('Error saving', 'error');
     await fetchProfile(user.id);
-
-    showToast('Profile updated 🚀');
+    showToast('Profile updated');
   };
 
-  return (
-    <div className="min-h-screen relative bg-gray-50 text-black overflow-hidden px-4 py-6 sm:p-6">
-      {/* PREMIUM BACKGROUND */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-orange-200/40 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
-      </div>
+  const handleDiscard = () => {
+    setName(initialValues.name);
+    setAge(initialValues.age);
+    setGender(initialValues.gender);
+    setMobile(initialValues.mobile);
+    setBirthday(initialValues.birthday);
+    setPreview(initialValues.avatar);
+    setPendingAvatarFile(null);
+  };
 
-      {/* TOAST */}
-      {toast && (
-        <div className="fixed top-5 right-5 bg-white/90 text-black px-4 py-2 rounded-xl border border-gray-200 backdrop-blur-md z-50">
-          {toast}
+  const scrollToSection = (id) => {
+    setActiveSection(id);
+    document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const authProvider = user?.app_metadata?.provider || 'email';
+  const isOAuth = authProvider === 'google' || authProvider === 'github';
+
+  return (
+    <div className="flex h-full">
+      {/* Toast */}
+      {toast.message && (
+        <div className={`fixed top-5 right-5 flex items-center gap-2.5 px-5 py-3 rounded-xl border shadow-lg text-[14px] font-medium z-50 animate-fadeSlide ${
+          toast.type === 'error'
+            ? 'bg-red-50 text-red-700 border-red-200'
+            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        }`}>
+          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+            toast.type === 'error' ? 'bg-red-100' : 'bg-emerald-100'
+          }`}>
+            {toast.type === 'error' ? <X size={11} className="text-red-600" /> : <Check size={11} className="text-emerald-600" />}
+          </div>
+          {toast.message}
         </div>
       )}
 
-        <div className="relative z-10 max-w-6xl mx-auto space-y-6">
-        {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between sm:items-center">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-sm text-black/70 hover:text-gray"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
+      {/* Settings Sidebar Navigation */}
+      <aside className="w-[260px] shrink-0 border-r border-slate-200 bg-white p-6 overflow-y-auto">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 text-[13px] font-semibold text-white bg-gradient-to-r from-[#2563eb] to-[#4f46e5] px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 cursor-pointer mb-6"
+        >
+          <ArrowLeft size={14} />
+          Back to Dashboard
+        </button>
 
-          <button
-            onClick={handleSave}
-            className="w-full sm:w-auto bg-black text-white px-4 py-2 rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-200"
-          >
-            Save Changes
-          </button>
+        <h1 className="text-[22px] font-bold text-slate-900 mb-1">Settings</h1>
+        <p className="text-[13px] text-slate-400 mb-6">Manage your account</p>
+
+        <nav className="space-y-1">
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition cursor-pointer ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                }`}
+              >
+                <Icon size={16} className={isActive ? 'text-blue-600' : 'text-slate-400'} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-8 relative">
+        {/* Sticky Save Bar — floating pill */}
+        <div className={`sticky top-4 z-40 flex justify-center transition-all duration-300 mb-4 ${hasChanges ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6 pointer-events-none'}`}>
+          <div className="flex items-center justify-between w-full max-w-[520px] bg-slate-900/95 backdrop-blur-xl rounded-full px-6 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/[0.08]">
+            <span className="text-[12px] text-slate-300 font-medium">Unsaved changes</span>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={handleDiscard}
+                className="h-[30px] px-4 rounded-full border border-white/12 text-[12px] font-medium text-slate-300 hover:bg-white/10 transition cursor-pointer"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleSave}
+                className="h-[30px] px-5 rounded-full bg-white text-[12px] font-semibold text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Title */}
-        <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-          <p className="text-gray/50 text-sm mt-1">
-            Manage your account and preferences
-          </p>
-        </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* PROFILE (ENHANCED — NOTHING REMOVED) */}
-            <SectionCard title="Profile">
-              {/* 🔥 AVATAR UPLOAD */}
+        <div className="max-w-5xl space-y-6">
+          {/* Profile Section */}
+          <div id="section-profile">
+            <SectionCard title="Profile" description="Your personal information and avatar">
               <div className="flex items-center gap-4 mb-6">
-                <label className="cursor-pointer">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#8b3dff] to-[#7cecff] flex items-center justify-center text-xl font-bold overflow-hidden">
+                <label className="cursor-pointer group">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden ring-2 ring-slate-100 group-hover:ring-blue-200 transition">
                     {preview ? (
-                      <img
-                        src={preview}
-                        alt="avatar"
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={preview} alt="avatar" className="w-full h-full object-cover" />
                     ) : (
                       user?.email?.charAt(0).toUpperCase()
                     )}
                   </div>
-
-                  <input
-                    type="file"
-                    hidden
-                    onChange={e => handleAvatarUpload(e.target.files[0])}
-                  />
+                  <input type="file" hidden accept="image/*" onChange={e => handleAvatarUpload(e.target.files[0])} />
                 </label>
-
-                <p className="text-sm text-black/50">Click to upload avatar</p>
-              </div>
-
-              {/* TOP INFO */}
-              <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold">
-                    {name || 'Your Name'}
-                  </h3>
-                  <p className="text-black/50 text-sm">{user?.email}</p>
+                  <p className="text-[14px] font-medium text-slate-700">{name || 'Your Name'}</p>
+                  <p className="text-[12px] text-slate-400">{user?.email}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-[11px] text-blue-500 cursor-pointer hover:text-blue-600">Click avatar to change</p>
+                    {preview && (
+                      <button onClick={handleRemoveAvatar} className="text-[11px] text-red-400 hover:text-red-500 cursor-pointer">Remove</button>
+                    )}
+                  </div>
                 </div>
-
-                <SmallButton>Edit</SmallButton>
               </div>
 
-              {/* INPUTS */}
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Name */}
-                <input
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-white/5 border border-black/10 rounded-xl p-3 text-sm sm:text-base"
-                  placeholder="Full Name"
-                />
-
-                {/* Email */}
-                <input
-                  value={user?.email || ''}
-                  disabled
-                  className="bg-white/5 border border-gray/10 rounded-xl p-3 opacity-60"
-                  placeholder="Email"
-                />
-
-                {/* Age */}
-                <input
-                  type="number"
-                  value={age}
-                  onChange={e => setAge(e.target.value)}
-                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
-                  placeholder="Age"
-                />
-
-                {/* Gender */}
-                <select
-                  value={gender}
-                  onChange={e => setGender(e.target.value)}
-                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-
-                {/* 📅 Birthday (Calendar Picker) */}
-                <input
-                  type="date"
-                  value={birthday}
-                  onChange={e => setBirthday(e.target.value)}
-                  className="bg-white/5 border border-gray/10 rounded-xl p-3"
-                />
-
-                {/* 📱 Mobile with +91 */}
-                <div className="flex w-full">
-                  <span className="bg-white/10 border border-black/10 rounded-l-xl px-3 flex items-center text-sm">
-                    +91
-                  </span>
+                <div>
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">Full Name</label>
                   <input
-                    type="tel"
-                    value={mobile}
-                    onChange={e => setMobile(e.target.value)}
-                    className="bg-white/5 border border-gray/10 rounded-r-xl p-3 w-full"
-                    placeholder="Mobile Number"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition"
+                    placeholder="Full Name"
                   />
                 </div>
-              </div>
-            </SectionCard>
-
-            {/* Voice Defaults (UNCHANGED) */}
-            <SectionCard title="Voice Defaults (coming soon)">
-              <div className="grid md:grid-cols-2 gap-4">
-                <select className="ml-[6px] bg-white/5 border border-gray/10 rounded-xl p-3">
-                  <option>Default Voice </option>
-                </select>
-
-                <select className="ml-[6px] bg-white/5 border border-gray/10 rounded-xl p-3">
-                  <option>MP3</option>
-                  <option>WAV</option>
-                </select>
-
-                <select className="ml-[6px] bg-white/5 border border-gray/10 rounded-xl p-3">
-                  <option>English</option>
-                  <option>Hindi</option>
-                </select>
-
-                <input type="range" className="col-span-2" />
+                <div>
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 flex items-center gap-1.5">
+                    Email
+                    {isOAuth && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                        <Lock size={8} />
+                        Managed by {authProvider === 'google' ? 'Google' : 'GitHub'}
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-400 bg-slate-100 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">Age</label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={e => setAge(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition"
+                    placeholder="Age"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">Gender</label>
+                  <select
+                    value={gender}
+                    onChange={e => setGender(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition cursor-pointer"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">Birthday</label>
+                  <input
+                    type="date"
+                    value={birthday}
+                    onChange={e => setBirthday(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">Mobile</label>
+                  <div className="flex relative" ref={countryDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => { setShowCountryDropdown(!showCountryDropdown); setCountrySearch(''); }}
+                      className="bg-slate-100 border border-slate-200 border-r-0 rounded-l-xl px-3 py-3 flex items-center gap-1.5 text-[13px] text-slate-600 font-medium cursor-pointer hover:bg-slate-50 transition min-w-[90px]"
+                    >
+                      <span>{COUNTRY_CODES.find(c => c.code === countryCode)?.flag}</span>
+                      <span>{countryCode}</span>
+                      <svg className="w-3 h-3 text-slate-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    {showCountryDropdown && (
+                      <div className="absolute top-full left-0 mt-1 w-[260px] bg-white rounded-xl border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-50 overflow-hidden">
+                        <div className="p-2 border-b border-slate-100">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={countrySearch}
+                            onChange={e => setCountrySearch(e.target.value)}
+                            placeholder="Search country..."
+                            className="w-full px-3 py-2 text-[13px] rounded-lg bg-slate-50 border border-slate-200 outline-none focus:border-blue-400 transition"
+                          />
+                        </div>
+                        <div className="max-h-[200px] overflow-y-auto">
+                          {COUNTRY_CODES.filter(c =>
+                            c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+                            c.code.includes(countrySearch)
+                          ).map(c => (
+                            <button
+                              key={c.code + c.name}
+                              type="button"
+                              onClick={() => { setCountryCode(c.code); setShowCountryDropdown(false); }}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-[13px] hover:bg-blue-50 transition cursor-pointer ${countryCode === c.code ? 'bg-blue-50 text-blue-700' : 'text-slate-700'}`}
+                            >
+                              <span className="text-[16px]">{c.flag}</span>
+                              <span className="flex-1 text-left truncate">{c.name}</span>
+                              <span className="text-slate-400 text-[12px]">{c.code}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      type="tel"
+                      value={mobile}
+                      onChange={e => setMobile(e.target.value)}
+                      onFocus={() => setShowCountryDropdown(false)}
+                      className="border border-slate-200 rounded-r-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition"
+                      placeholder="Mobile Number"
+                    />
+                  </div>
+                </div>
               </div>
             </SectionCard>
           </div>
 
-          {/* RIGHT (UNCHANGED) */}
-          <div className="space-y-6">
-            <SectionCard title="Usage & Plan (coming soon)">
-            <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between sm:items-center">
-                <span>Free Plan</span>
-                <SmallButton>Upgrade</SmallButton>
+          {/* Usage & Plan */}
+          <div id="section-plan">
+            <SectionCard title="Usage & Plan" description="Monitor your usage and manage subscription">
+              <div className="flex items-center justify-between mb-5 p-4 bg-slate-50 rounded-xl">
+                <div>
+                  <p className="text-[15px] font-semibold text-slate-800">Free Plan</p>
+                  <p className="text-[12px] text-slate-400 mt-0.5">Basic features with limited usage</p>
+                </div>
+                <button
+                  onClick={() => navigate('/upgrade')}
+                  className="h-[36px] px-5 rounded-xl bg-gradient-to-r from-[#2563eb] to-[#4f46e5] text-white text-[13px] font-semibold shadow-md hover:shadow-lg transition cursor-pointer"
+                >
+                  Upgrade Plan
+                </button>
               </div>
 
               <div className="space-y-4">
-                <ProgressRow
-                  label="Voice Clones"
-                  current="2"
-                  total="10"
-                  width="20%"
-                />
-                <ProgressRow
-                  label="Characters"
-                  current="12k"
-                  total="50k"
-                  width="30%"
-                />
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Security">
-              <div className="space-y-3">
-                <SmallButton
-                  onClick={() =>
-                    navigate('/forgot-password', {
-                      state: { fromSettings: true },
-                    })
-                  }
-                >
-                  Change Password
-                </SmallButton>
-
-                <SmallButton
-                  onClick={async () => {
-                    await supabase.auth.signOut({ scope: 'global' });
-                    window.location.href = '/';
-                  }}
-                >
-                  Logout All Devices
-                </SmallButton>
+                <div>
+                  <div className="flex justify-between text-[13px] mb-1.5">
+                    <span className="text-slate-600">Voice Clones</span>
+                    <span className="font-medium text-slate-800">2 / 10</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full">
+                    <div className="h-full rounded-full bg-blue-500" style={{ width: '20%' }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[13px] mb-1.5">
+                    <span className="text-slate-600">Characters Used</span>
+                    <span className="font-medium text-slate-800">12,000 / 50,000</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full">
+                    <div className="h-full rounded-full bg-indigo-500" style={{ width: '24%' }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[13px] mb-1.5">
+                    <span className="text-slate-600">Projects</span>
+                    <span className="font-medium text-slate-800">3 / 20</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full">
+                    <div className="h-full rounded-full bg-teal-500" style={{ width: '15%' }} />
+                  </div>
+                </div>
               </div>
             </SectionCard>
           </div>
+
+          {/* Notifications */}
+          <div id="section-notifications">
+            <SectionCard title="Notifications" description="Choose what you want to be notified about">
+              <div className="space-y-0">
+                <SettingRow label="Email Notifications" description="Get notified about account activity via email">
+                  <ToggleSwitch enabled={emailNotifs} onToggle={() => setEmailNotifs(!emailNotifs)} />
+                </SettingRow>
+                <SettingRow label="Push Notifications" description="Browser push notifications for real-time updates">
+                  <ToggleSwitch enabled={pushNotifs} onToggle={() => setPushNotifs(!pushNotifs)} />
+                </SettingRow>
+                <SettingRow label="Marketing Emails" description="Receive product updates and feature announcements">
+                  <ToggleSwitch enabled={marketingEmails} onToggle={() => setMarketingEmails(!marketingEmails)} />
+                </SettingRow>
+                <SettingRow label="Weekly Digest" description="Summary of your activity sent every Monday">
+                  <ToggleSwitch enabled={weeklyDigest} onToggle={() => setWeeklyDigest(!weeklyDigest)} />
+                </SettingRow>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Connected Accounts */}
+          <div id="section-connected">
+            <SectionCard title="Connected Accounts" description="Link external services for faster login and integrations">
+              <div className="space-y-0">
+                <SettingRow label="Google" description={authProvider === 'google' ? 'Signed in with Google' : 'Sign in with Google'}>
+                  {authProvider === 'google' ? (
+                    <span className="inline-flex items-center gap-1.5 h-[34px] px-4 rounded-lg bg-emerald-50 border border-emerald-200 text-[13px] font-medium text-emerald-700">
+                      <Check size={13} /> Connected
+                    </span>
+                  ) : (
+                    <button className="h-[34px] px-4 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition cursor-pointer">
+                      Connect
+                    </button>
+                  )}
+                </SettingRow>
+                <SettingRow label="GitHub" description={authProvider === 'github' ? 'Signed in with GitHub' : 'Link your GitHub account'}>
+                  {authProvider === 'github' ? (
+                    <span className="inline-flex items-center gap-1.5 h-[34px] px-4 rounded-lg bg-emerald-50 border border-emerald-200 text-[13px] font-medium text-emerald-700">
+                      <Check size={13} /> Connected
+                    </span>
+                  ) : (
+                    <button className="h-[34px] px-4 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition cursor-pointer">
+                      Connect
+                    </button>
+                  )}
+                </SettingRow>
+                <SettingRow label="Discord" description="Connect for community features">
+                  <button className="h-[34px] px-4 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition cursor-pointer">
+                    Connect
+                  </button>
+                </SettingRow>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Security */}
+          <div id="section-security">
+            <SectionCard title="Security" description="Manage your password and session security">
+              <div className="space-y-0">
+                <SettingRow label="Change Password" description={isOAuth ? `Password managed by ${authProvider === 'google' ? 'Google' : 'GitHub'}` : 'Update your account password'}>
+                  <button
+                    onClick={() => navigate('/forgot-password', { state: { fromSettings: true } })}
+                    disabled={isOAuth}
+                    className={`h-[34px] px-4 rounded-lg border text-[13px] font-medium transition cursor-pointer ${
+                      isOAuth
+                        ? 'border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 shadow-sm'
+                    }`}
+                  >
+                    {isOAuth ? 'Not Available' : 'Change'}
+                  </button>
+                </SettingRow>
+                <SettingRow label="Logout All Devices" description="Sign out from every active session">
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut({ scope: 'global' });
+                      window.location.href = '/';
+                    }}
+                    className="h-[34px] px-4 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition cursor-pointer"
+                  >
+                    Logout All
+                  </button>
+                </SettingRow>
+              </div>
+              <div className="mt-5 p-4 bg-slate-50 rounded-xl">
+                <p className="text-[13px] text-slate-500">
+                  <span className="font-medium text-slate-700">Last login:</span> Today from Chrome on macOS
+                </p>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Danger Zone */}
+          <div id="section-danger">
+            <div className="rounded-2xl border border-red-200 bg-red-50/30 p-6">
+              <div className="mb-5">
+                <h2 className="text-[17px] font-bold text-red-700">Danger Zone</h2>
+                <p className="text-[13px] text-red-400 mt-1">Irreversible actions — proceed with caution</p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-red-100">
+                  <div>
+                    <p className="text-[14px] font-medium text-red-700">Delete Account</p>
+                    <p className="text-[12px] text-red-400 mt-0.5">Permanently delete your account and all data</p>
+                  </div>
+                  <button className="h-[34px] px-4 rounded-lg border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 hover:bg-red-100 transition cursor-pointer">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom spacer */}
+          <div className="h-8" />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

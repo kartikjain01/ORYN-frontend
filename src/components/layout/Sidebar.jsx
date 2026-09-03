@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  Home,
+  LayoutDashboard,
   Mic,
   Type,
   SlidersHorizontal,
+  Captions,
   Star,
   Settings,
   Menu,
@@ -68,9 +69,9 @@ export default function Sidebar() {
             {/* NAVIGATION */}
             <nav className="space-y-3">
               <MobileNavItem
-                to="/"
-                Icon={Home}
-                label="Home"
+                to="/dashboard"
+                Icon={LayoutDashboard}
+                label="Dashboard"
                 end
                 onClick={() => setMobileOpen(false)}
               />
@@ -93,6 +94,13 @@ export default function Sidebar() {
                 to="/voice-editor"
                 Icon={SlidersHorizontal}
                 label="Voice Editor"
+                onClick={() => setMobileOpen(false)}
+              />
+
+              <MobileNavItem
+                to="/caption-generation"
+                Icon={Captions}
+                label="Captions"
                 onClick={() => setMobileOpen(false)}
               />
             </nav>
@@ -119,7 +127,7 @@ export default function Sidebar() {
         <div className="flex h-full flex-col items-center py-15">
           {/* MAIN NAVIGATION */}
           <nav className="flex flex-col items-center gap-6 mb-6">
-            <SideNavIcon to="/" Icon={Home} label="Home" end />
+            <SideNavIcon to="/dashboard" Icon={LayoutDashboard} label="Dashboard" end />
 
             <SideNavIcon to="/voice-clone" Icon={Mic} label="Voice Clone" />
 
@@ -133,6 +141,12 @@ export default function Sidebar() {
               to="/voice-editor"
               Icon={SlidersHorizontal}
               label="Voice Editor"
+            />
+
+            <SideNavIcon
+              to="/caption-generation"
+              Icon={Captions}
+              label="Captions"
             />
           </nav>
 

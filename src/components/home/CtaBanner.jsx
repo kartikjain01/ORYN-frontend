@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Globe2, Gauge, ShieldCheck, ArrowRight } from 'lucide-react';
 import earth from '../../assets/images/earth.png';
-import { useMagnetic } from '../../hooks/useMagnetic';
 
 const pills = [
   {
@@ -24,7 +23,6 @@ const pills = [
 export default function CtaBanner() {
   const navigate = useNavigate();
 
-  const magneticRef = useMagnetic({ strength: 0.3, radius: 80 });
 
   return (
     <section className="relative px-4 sm:px-8 lg:px-14">
@@ -76,10 +74,7 @@ export default function CtaBanner() {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                {/* The magnetic pull is applied to a wrapper, not the button:
-                    the hook writes an inline `transition`, which would otherwise
-                    override the button's own colour transition. */}
-                <span ref={magneticRef} className="inline-flex">
+                <span className="inline-flex">
                   <button
                     onClick={() => navigate('/register')}
                     className="

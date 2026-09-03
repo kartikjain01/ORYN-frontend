@@ -186,12 +186,7 @@ export default function HomePage() {
             className="pointer-events-none absolute left-[-120px] top-[10%] h-[280px] w-[280px] rounded-full bg-blue-500/20 blur-[120px]"
           />
 
-          {/* WebGL voice field — audio-reactive, self-disabling where WebGL,
-              Data Saver or the GPU can't support it. Purely decorative, so it
-              sits below every piece of hero content. */}
-          <Suspense fallback={null}>
-            <HeroCanvas className="z-0" />
-          </Suspense>
+          {/* Background handled by HeroSection's built-in waveform now */}
 
           {/* HERO — drifts up and dissolves as the band scrolls away, so the
               hero hands off to the next section instead of being cut from it. */}
@@ -203,19 +198,6 @@ export default function HomePage() {
             <HeroSection />
           </motion.section>
 
-          {/* Blend into the light body below.
-              Hand-placed stops rather than `from-transparent to-page`: a plain
-              two-stop ramp is linear in alpha, and linear alpha over black
-              reads as a flat grey band sitting in the middle of the seam. These
-              stops hold near-zero through the top half, then accelerate, which
-              is what actually looks like one surface becoming another. */}
-          <div
-            aria-hidden="true"
-            className="
-              pointer-events-none absolute inset-x-0 bottom-0 z-20 h-64
-              bg-[linear-gradient(to_bottom,rgba(247,249,252,0)_0%,rgba(247,249,252,0.015)_28%,rgba(247,249,252,0.06)_46%,rgba(247,249,252,0.16)_60%,rgba(247,249,252,0.36)_72%,rgba(247,249,252,0.64)_83%,rgba(247,249,252,0.88)_92%,rgb(247,249,252)_100%)]
-            "
-          />
         </div>
 
         {/* ================= LIGHT BODY — one full-screen slide per section ================= */}
@@ -226,7 +208,11 @@ export default function HomePage() {
         <ProductShowcases />
 
         {/* WHY CHOOSE US */}
-        <section data-nav-tone="light" className={slideClass}>
+        <section data-nav-tone="light" className={`${slideClass} relative`}>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-48 bg-[linear-gradient(to_bottom,rgb(0,0,0)_0%,rgba(0,0,0,0.7)_20%,rgba(0,0,0,0.35)_45%,rgba(0,0,0,0.12)_65%,rgba(0,0,0,0.03)_82%,transparent_100%)]"
+          />
           <motion.div {...slideIn} className="w-full">
             <WhyChooseUs />
           </motion.div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { User } from 'lucide-react';
+import LegalModal from '../components/LegalModal';
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
@@ -13,6 +14,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [legalModal, setLegalModal] = useState(null);
 
   const navigate = useNavigate();
 
@@ -47,6 +50,10 @@ export default function AuthPage() {
       return alert('Passwords do not match');
     }
 
+    if (!agreedToTerms) {
+      return alert('Please agree to the Terms of Service and Privacy Policy');
+    }
+
     try {
       setLoading(true);
 
@@ -58,6 +65,8 @@ export default function AuthPage() {
           data: {
             full_name: fullName,
             avatar_url: '',
+            terms_accepted_at: new Date().toISOString(),
+            privacy_accepted_at: new Date().toISOString(),
           },
         },
       });
@@ -135,7 +144,7 @@ export default function AuthPage() {
     <div className="min-h-screen relative flex items-center justify-center p-3 sm:p-6 bg-gray-50 overflow-hidden">
       {/* PREMIUM BACKGROUND */}
       <div className="absolute inset-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-orange-200/40 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
       </div>
 
@@ -155,7 +164,7 @@ export default function AuthPage() {
                 : 'opacity-100 flex'}`}
         >
           <div className="mb-8">
-            <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">
+            <div className="text-blue-600 text-1xl mb-4 relative top-[-80px]">
               ORYNEngine
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-black">Welcome back</h1>
@@ -173,7 +182,7 @@ export default function AuthPage() {
                 placeholder="Your email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
 
@@ -185,7 +194,7 @@ export default function AuthPage() {
                 placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
               <button
                 type="button"
@@ -239,7 +248,7 @@ export default function AuthPage() {
               Don’t have an account?{' '}
               <span
                 onClick={() => setIsLogin(false)}
-                className="text-orange-500 cursor-pointer hover:underline"
+                className="text-blue-600 cursor-pointer hover:underline"
               >
                 Register →
               </span>
@@ -264,7 +273,7 @@ export default function AuthPage() {
   `}
         >
           <div className="mb-8">
-            <div className="text-orange-500 text-1xl mb-4 relative top-[-80px]">
+            <div className="text-blue-600 text-1xl mb-4 relative top-[-80px]">
               ORYNEngine
             </div>
             <h1 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-black">Create an account</h1>
@@ -280,7 +289,7 @@ export default function AuthPage() {
               placeholder="Full Name"
               value={fullName}
               onChange={e => setFullName(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
             />
           </div>*/}
 
@@ -293,7 +302,7 @@ export default function AuthPage() {
                 placeholder="Your email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
 
@@ -305,7 +314,7 @@ export default function AuthPage() {
                 placeholder="Create password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
               <button
                 type="button"
@@ -328,7 +337,7 @@ export default function AuthPage() {
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
               <button
                 type="button"
@@ -343,11 +352,37 @@ export default function AuthPage() {
               </button>
             </div>
 
+            {/* Terms Agreement */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={e => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-blue-600 rounded"
+              />
+              <span className="text-sm text-gray-600 leading-relaxed">
+                I agree to the{' '}
+                <span
+                  onClick={e => { e.preventDefault(); setLegalModal('terms'); }}
+                  className="text-blue-600 hover:underline cursor-pointer font-medium"
+                >
+                  Terms of Service
+                </span>
+                {' '}and{' '}
+                <span
+                  onClick={e => { e.preventDefault(); setLegalModal('privacy'); }}
+                  className="text-blue-600 hover:underline cursor-pointer font-medium"
+                >
+                  Privacy Policy
+                </span>
+              </span>
+            </label>
+
             {/* Button */}
             <button
               onClick={handleRegister}
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-black to-gray-900 text-white font-semibold shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50"
+              disabled={loading || !agreedToTerms}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-black to-gray-900 text-white font-semibold shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating...' : 'Create account'}
             </button>
@@ -366,13 +401,21 @@ export default function AuthPage() {
               Already have an account?{' '}
               <span
                 onClick={() => setIsLogin(true)}
-                className="text-orange-500 cursor-pointer hover:underline"
+                className="text-blue-600 cursor-pointer hover:underline"
               >
                 Log in →
               </span>
             </p>
           </div>
         </div>
+
+        {/* LEGAL MODAL */}
+        <LegalModal
+          open={legalModal !== null}
+          type={legalModal}
+          onClose={() => setLegalModal(null)}
+          requireAccept
+        />
 
         {/* FLOATING GLASS OVERLAY (FOR DESKTOP) */}
         <motion.div
@@ -385,11 +428,11 @@ export default function AuthPage() {
           <div className="text-center p-10 pointer-events-auto">
             {isLogin ? (
               <>
-                <h2 className="text-4xl lg:text-6xl font-bold mb-5 text-gray-900">
-                  Hello Friend!
+                <h2 className="text-6xl font-bold mb-5 text-gray-900">
+                  Welcome Back!
                 </h2>
                 <p className="mb-8 text-gray-900">
-                  Enter your personal details and start your journey with us
+                  To keep connected with us please login with your personal info
                 </p>
                 <button
                   onClick={() => setIsLogin(false)}
@@ -400,11 +443,11 @@ export default function AuthPage() {
               </>
             ) : (
               <>
-                <h2 className="text-6xl font-bold mb-5 text-gray-900">
-                  Welcome Back!
+                <h2 className="text-4xl lg:text-6xl font-bold mb-5 text-gray-900">
+                  Hello Friend!
                 </h2>
                 <p className="mb-8 text-gray-900">
-                  To keep connected with us please login with your personal info
+                  Enter your personal details and start your journey with us
                 </p>
                 <button
                   onClick={() => setIsLogin(true)}
@@ -460,14 +503,14 @@ function SocialButtons({ onSocialClick }) {
       ),
     },
     {
-      provider: 'apple',
+      provider: 'linkedin_oidc',
       icon: (
         <svg
-          className="w-5 h-5 text-black"
+          className="w-5 h-5"
           viewBox="0 0 24 24"
-          fill="currentColor"
+          fill="#0A66C2"
         >
-          <path d="M16.7 13.2c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.9-1.8-3.5-1.8-1.5-.1-2.9.9-3.7.9s-2-.9-3.3-.9c-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.3.9 1.3 2 2.8 3.5 2.7 1.4-.1 1.9-.9 3.5-.9s2.1.9 3.5.9c1.5 0 2.5-1.4 3.4-2.7 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-3.6zM14.9 5.6c.7-.9 1.2-2.1 1.1-3.3-1 .1-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.6 3-1.5z" />
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       ),
     },

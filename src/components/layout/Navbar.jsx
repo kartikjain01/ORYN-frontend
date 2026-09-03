@@ -1,22 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import Wordmark from './Wordmark';
 import {
-  Bell,
-  Settings,
-  UserCircle2,
   Menu,
   X,
+  Sparkles,
+  Mic2,
+  Waves,
+  SlidersHorizontal,
+  Captions,
 } from 'lucide-react';
 import { useProfile } from "../../context/ProfileContext";
-import FeatureConsole from "../panels/FeatureConsole";
-import ContactConsole from "../panels/ContactConsole";
+import ContactSupportSection from "../home/ContactSupportSection";
 
 const navItems = [
-  { name: 'Home', sectionId: 'home', type: 'scroll' },
   { name: 'About', type: 'about' },
   { name: 'Features', sectionId: 'features', type: 'scroll' },
+  { name: 'Pricing', type: 'pricing' },
   { name: 'Contact', type: 'contact' },
 ];
 
@@ -25,32 +26,11 @@ const navItems = [
    re-tones off what is actually behind it rather than off page position. */
 const NAV_BAND = 96;
 
-const notifications = [
-  {
-    id: 1,
-    title: "Voice clone is ready",
-    message: "Your latest voice clone has finished processing.",
-    time: "2 min ago",
-  },
-  {
-    id: 2,
-    title: "Text to speech completed",
-    message: "Your generated audio file is ready to download.",
-    time: "10 min ago",
-  },
-  {
-    id: 3,
-    title: "New feature available",
-    message: "Settings page has been added to your dashboard.",
-    time: "1 hour ago",
-  },
-];
 
 export default function Navbar({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -70,7 +50,6 @@ export default function Navbar({ user }) {
 
   const reduceMotion = useReducedMotion();
 
-  const notificationRef = useRef(null);
   const { setShowProfile, profile } = useProfile();
 
   const scrollToSection = (sectionId) => {
@@ -93,7 +72,6 @@ export default function Navbar({ user }) {
   };
 
   const handleSectionNavigation = (sectionId) => {
-    setShowNotifications(false);
     setShowAbout(false);
     setShowContact(false);
 
@@ -105,29 +83,11 @@ export default function Navbar({ user }) {
     }
   };
 
-  // ✅ CLOSE NOTIFICATIONS ON OUTSIDE CLICK
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowNotifications(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // ✅ ESC KEY CLOSE
   useEffect(() => {
     function handleEsc(event) {
       if (event.key === "Escape") {
         setShowAbout(false);
         setShowContact(false);
-        setShowNotifications(false);
         setMobileMenu(false);
       }
     }
@@ -239,11 +199,6 @@ export default function Navbar({ user }) {
     return () =>
       window.removeEventListener("resize", handleResize);
   }, []);
-  /* Scroll lock touches overflowY ONLY. The old version wrote the `overflow`
-     shorthand, which also resets overflow-x — and HomePage sets
-     `body.style.overflowX = 'hidden'` to contain the hero's blur bleed. So
-     opening and closing any panel silently re-enabled horizontal scroll for
-     the rest of the session. */
   useEffect(() => {
     if (!showAbout && !showContact && !mobileMenu) return;
 
@@ -265,7 +220,7 @@ export default function Navbar({ user }) {
      section currently under the bar. */
   const activeNavName =
     navItems.find(item => item.sectionId === reading?.section)?.name ?? null;
-  const pillTarget = hoveredNav ?? activeNavName;
+  const pillTarget = activeNavName;
 
 
   const navLinkClass = itemName => {
@@ -358,7 +313,7 @@ export default function Navbar({ user }) {
                       transition={
                         reduceMotion
                           ? { duration: 0 }
-                          : { type: 'spring', stiffness: 450, damping: 34 }
+                          : { type: 'spring', stiffness: 500, damping: 40, mass: 0.8 }
                       }
                       className={`absolute inset-0 -z-0 rounded-full border backdrop-blur-md ${
                         onLight
@@ -383,8 +338,14 @@ export default function Navbar({ user }) {
                       onClick={() => {
                         setShowContact(true);
                         setShowAbout(false);
-                        setShowNotifications(false);
                       }}
+                      className={navLinkClass(item.name)}
+                    >
+                      {item.name}
+                    </button>
+                  ) : item.type === 'pricing' ? (
+                    <button
+                      onClick={() => navigate('/upgrade')}
                       className={navLinkClass(item.name)}
                     >
                       {item.name}
@@ -417,59 +378,8 @@ export default function Navbar({ user }) {
                 <Menu size={24} strokeWidth={1.8} />
               )}
             </button>
-            <button
-              onClick={() => navigate('/settings')}
-              aria-label="Settings"
-              className={iconBtnClass + " flex"}
-            >
-              <Settings size={22} strokeWidth={1.8} />
-            </button>
 
-            <div className="relative" ref={notificationRef}>
-              <button
-                onClick={() => setShowNotifications(prev => !prev)}
-                aria-label="Notifications — unread"
-                aria-expanded={showNotifications}
-                className={iconBtnClass + " relative flex"}
-              >
-                <Bell size={22} strokeWidth={1.8} />
-                <span
-                  aria-hidden="true"
-                  className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-brand-500"
-                />
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 top-14 w-[92vw] max-w-[320px] overflow-hidden rounded-2xl border border-white/25 bg-white/70 shadow-[0_12px_40px_-8px_rgba(16,24,40,0.25),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-2xl backdrop-saturate-150">
-                  <div className="flex justify-between px-4 py-3 border-b border-line">
-                    <h3 className="text-sm text-fg font-semibold">
-                      Notifications
-                    </h3>
-                  </div>
-
-                  <div className="max-h-[300px] overflow-y-auto">
-                    {notifications.map(item => (
-                      <button
-                        key={item.id}
-                        className="w-full px-4 py-4 text-left border-b border-line hover:bg-page"
-                      >
-                        <p className="text-sm text-fg font-medium">
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-fg-muted mt-1">
-                          {item.message}
-                        </p>
-                        <p className="text-[11px] text-fg-muted mt-2">
-                          {item.time}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ✅ PROFILE BUTTON */}
+            {/* PROFILE / SIGN UP */}
             {user ? (
               <button
                 onClick={e => {
@@ -488,12 +398,6 @@ export default function Navbar({ user }) {
               >
                 {profile?.avatar_url ? (
                   <img
-                    /* No ?t=Date.now() cache-buster. It was read during
-                       render, so the src changed on every re-render and the
-                       browser re-fetched the avatar on every hover, scroll
-                       tick and nav tone flip. It was also redundant: uploads
-                       are written to avatar_<timestamp>.<ext>, so a new
-                       avatar is already a new URL. */
                     src={profile.avatar_url}
                     className="w-full h-full object-cover"
                     alt=""
@@ -509,20 +413,9 @@ export default function Navbar({ user }) {
             ) : (
               <button
                 onClick={() => navigate('/register')}
-                aria-label="Sign in or create an account"
-                className={iconBtnClass + " flex"}
+                className="h-10 px-5 rounded-full bg-white text-[14px] font-semibold text-slate-900 shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 cursor-pointer"
               >
-                <UserCircle2 size={22} strokeWidth={1.8} />
-              </button>
-            )}
-
-            {/* ✅ LOGOUT */}
-            {user && (
-              <button
-                onClick={() => navigate('/settings')}
-                className="text-[11px] uppercase tracking-widest text-white/30 hover:text-blue-400 transition"
-              >
-                {/* ✅ if you write anything where then it will come on the home */}
+                Sign Up
               </button>
             )}
           </div>
@@ -556,6 +449,8 @@ export default function Navbar({ user }) {
                   } else if (item.type === 'contact') {
                     setShowContact(true);
                     setShowAbout(false);
+                  } else if (item.type === 'pricing') {
+                    navigate('/upgrade');
                   } else {
                     handleSectionNavigation(item.sectionId);
                   }
@@ -569,17 +464,245 @@ export default function Navbar({ user }) {
         </div>
       </div>
 
-      {/* The About and Contact drawers used to live here as ~230 lines of
-          light card markup. They are consoles now — see
-          ../panels/FeatureConsole and ../panels/ContactConsole. The navbar
-          keeps ownership of open/close state and nothing else. */}
-      <FeatureConsole open={showAbout} onClose={() => setShowAbout(false)} />
+      {/* ABOUT PANEL — slides from right */}
+      <div
+        className={`fixed inset-0 z-[60] transition-all duration-300 ${
+          showAbout
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0'
+        }`}
+      >
+        <div
+          onClick={() => setShowAbout(false)}
+          className={`absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300 ${
+            showAbout ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
 
-      <ContactConsole
-        open={showContact}
-        onClose={() => setShowContact(false)}
-      />
+        <div
+          className={`absolute right-0 top-0 h-full w-full max-w-[720px] transform border-l border-white/10 bg-[#060d1f]/95 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
+            showAbout ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_12%,rgba(37,99,235,0.18),rgba(102,154,247,0.08),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))]" />
+          <div className="absolute right-[-40px] top-[-40px] h-[220px] w-[220px] rounded-full bg-blue-500/15 blur-[90px]" />
+          <div className="absolute right-[120px] top-[80px] h-[160px] w-[160px] rounded-full bg-indigo-500/12 blur-[80px]" />
 
+          <div className="relative z-10 flex h-full flex-col">
+            <div className="flex items-start justify-between border-b border-white/10 px-6 py-5 sm:px-8">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+                  <Sparkles size={14} />
+                  AI Voice Platform
+                </div>
+                <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+                  About Our Platform
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-white/55">
+                  A premium voice AI workspace for creators to clone voices,
+                  generate natural speech, and edit audio with a modern, fast,
+                  and simple experience.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowAbout(false)}
+                className="ml-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close About panel"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition hover:bg-white/[0.06]">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
+                    <Mic2 size={22} className="text-brand-500" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white">
+                    Voice Cloning
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-white/55">
+                    Create high-quality voice replicas from source audio with a
+                    premium creator workflow.
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition hover:bg-white/[0.06]">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
+                    <Waves size={22} className="text-brand-500" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white">
+                    Text to Speech
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-white/55">
+                    Convert text into natural, expressive audio for content,
+                    narration, and creative production.
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition hover:bg-white/[0.06]">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
+                    <SlidersHorizontal size={22} className="text-brand-500" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white">
+                    Voice Editor
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-white/55">
+                    Refine generated speech and audio output with simple editing
+                    controls in one place.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+                <h3 className="text-lg font-semibold text-white">
+                  How it works
+                </h3>
+                <div className="mt-5 grid gap-4 sm:grid-cols-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
+                      Step 01
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-white">
+                      Upload
+                    </p>
+                    <p className="mt-2 text-sm text-white/50">
+                      Add source audio or text input.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
+                      Step 02
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-white">
+                      Process
+                    </p>
+                    <p className="mt-2 text-sm text-white/50">
+                      Prepare voice and optimize quality.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
+                      Step 03
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-white">
+                      Generate
+                    </p>
+                    <p className="mt-2 text-sm text-white/50">
+                      Create realistic audio output.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
+                      Step 04
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-white">
+                      Download
+                    </p>
+                    <p className="mt-2 text-sm text-white/50">
+                      Export and use in your projects.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+                  <p className="text-sm font-medium text-white">
+                    Why creators use it
+                  </p>
+                  <ul className="mt-4 space-y-3 text-sm text-white/55">
+                    <li>Fast generation workflow</li>
+                    <li>Premium dark UI and creator-friendly tools</li>
+                    <li>Realistic voice output and editing flow</li>
+                    <li>Simple structure for scaling into a full SaaS product</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+                  <p className="text-sm font-medium text-white">
+                    Platform details
+                  </p>
+                  <div className="mt-4 space-y-3 text-sm text-white/55">
+                    <p>Product: ORYN Engine</p>
+                    <p>Core Tools: Voice Clone, TTS, Voice Editor, Captions</p>
+                    <p>Version: 2.0</p>
+                    <p>Built for creators and modern audio workflows</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 px-6 py-4 sm:px-8">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-white/35">
+                  Built with a premium creator-first UI.
+                </p>
+                <button
+                  onClick={() => setShowAbout(false)}
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
+                >
+                  Close Panel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTACT PANEL — slides from right */}
+      <div
+        className={`fixed inset-0 z-[60] transition-all duration-300 ${
+          showContact
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0'
+        }`}
+      >
+        <div
+          onClick={() => setShowContact(false)}
+          className={`absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300 ${
+            showContact ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+
+        <div
+          className={`absolute right-0 top-0 h-full w-full max-w-[900px] transform border-l border-white/10 bg-[#060d1f]/95 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
+            showContact ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_12%,rgba(37,99,235,0.12),rgba(102,154,247,0.06),transparent_42%)]" />
+
+          <div className="relative z-10 flex h-full flex-col">
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 sm:px-8">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
+                  Support
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+                  Contact Support
+                </h2>
+              </div>
+
+              <button
+                onClick={() => setShowContact(false)}
+                className="ml-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close Contact panel"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <ContactSupportSection />
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

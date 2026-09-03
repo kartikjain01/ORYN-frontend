@@ -119,6 +119,13 @@ function ProductShowcase({ product, progress, index, last }) {
          The stack's snap stops are separate static markers instead (below). */
       className={`relative flex min-h-screen w-full snap-start items-center overflow-hidden px-4 pt-24 pb-10 sm:px-8 lg:sticky lg:top-0 lg:h-screen lg:snap-align-none lg:px-14 ${t.section}`}
     >
+      {/* Top blend for light slides coming after dark */}
+      {product.tone === 'light' && index === 0 && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-48 bg-[linear-gradient(to_bottom,rgb(0,0,0)_0%,rgba(0,0,0,0.7)_20%,rgba(0,0,0,0.35)_45%,rgba(0,0,0,0.12)_65%,rgba(0,0,0,0.03)_82%,transparent_100%)]"
+        />
+      )}
       {/* ambient wash behind the visual */}
       <div
         aria-hidden="true"
@@ -165,39 +172,27 @@ function ProductShowcase({ product, progress, index, last }) {
               />
             </button>
 
-            {/* The "See it in action" button lived here. It scrolled to the
-               Voice Showcase demo slide, which has been removed — with no
-               target left it would have been a button that silently does
-               nothing. Restore it once there's a demo or video to point at. */}
+            {/* Placeholder for future demo link */}
           </div>
 
           {/* stats */}
-          <ul className="mt-10 flex flex-wrap items-stretch gap-x-5 gap-y-6 sm:gap-x-7">
-            {product.stats.map((stat, i) => {
+          <ul className={`mt-12 grid gap-5 ${product.stats.length === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+            {product.stats.map((stat) => {
               const StatIcon = stat.icon;
 
               return (
-                <li key={stat.title} className="flex items-stretch gap-5 sm:gap-7">
-                  {i > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className={`hidden w-px self-stretch sm:block ${t.divider}`}
-                    />
-                  )}
-
-                  <div className="min-w-[7.5rem] max-w-[11rem]">
-                    <span
-                      className={`mb-3 flex h-11 w-11 items-center justify-center rounded-full border ${t.statIcon}`}
-                    >
-                      <StatIcon size={19} strokeWidth={1.9} />
-                    </span>
-                    <p className={`text-[13.5px] font-bold ${t.statTitle}`}>
-                      {stat.title}
-                    </p>
-                    <p className={`mt-1 text-[12.5px] leading-[1.5] ${t.statText}`}>
-                      {stat.text}
-                    </p>
-                  </div>
+                <li key={stat.title}>
+                  <span
+                    className={`mb-3 flex h-11 w-11 items-center justify-center rounded-full border ${t.statIcon}`}
+                  >
+                    <StatIcon size={19} strokeWidth={1.9} />
+                  </span>
+                  <p className={`text-[13.5px] font-bold ${t.statTitle}`}>
+                    {stat.title}
+                  </p>
+                  <p className={`mt-1 text-[12.5px] leading-[1.5] ${t.statText}`}>
+                    {stat.text}
+                  </p>
                 </li>
               );
             })}
