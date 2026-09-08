@@ -184,16 +184,53 @@ export default function VoiceCloningPage() {
   };
 
   const generatePreview = async () => {
-    if (!voiceId) { alert('Clone voice first'); return; }
-    if (!previewText) { alert('Enter text'); return; }
+    if (!voiceId) {
+      alert('Clone voice first');
+      return;
+    }
+
+    if (!previewText) {
+      alert('Enter text');
+      return;
+    }
+
     try {
-      setIsGenerating(true); setStatusMsg('Generating preview...');
-      const response = await authJsonFetch(`${API_BASE}/v1/tts`, { voice_id: voiceId, text: previewText, language: selectedLanguage, output_format: 'wav' });
-      if (!response.ok) throw new Error(`TTS Error: ${response.status}`);
+      setIsGenerating(true);
+      setStatusMsg('Generating preview...');
+
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error('You must be logged in');
+      }
+
+      const response = await authJsonFetch(`${API_BASE}/v1/tts`, {
+        voice_id: voiceId,
+        text: previewText,
+        language: selectedLanguage,
+        output_format: 'wav',
+        user_id: user.id,
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS Error: ${response.status}`);
+      }
+
       const data = await response.json();
-      if (!data.job_id) throw new Error('No job_id');
+
+      if (!data.job_id) {
+        throw new Error('No job_id');
+      }
+
       checkJobStatus(data.job_id);
-    } catch (err) { console.error(err); setStatusMsg(err.message || 'TTS failed'); setIsGenerating(false); }
+    } catch (err) {
+      console.error(err);
+      setStatusMsg(err.message || 'TTS failed');
+      setIsGenerating(false);
+    }
   };
 
   const checkJobStatus = async jobId => {
