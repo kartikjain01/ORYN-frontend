@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gradio/client": "^2.5.1",
     "@heroicons/react": "^2.2.0",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",

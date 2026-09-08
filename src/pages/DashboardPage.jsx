@@ -1,7 +1,7 @@
 import WelcomeSection from '../components/Dashboard/WelcomeSection';
 import RecentProjects from '../components/Dashboard/RecentProjects';
 import PlanCard from '../components/Dashboard/PlanCard';
-import MyVoices from '../components/Dashboard/MyVoices';
+// import MyVoices from '../components/Dashboard/MyVoices';
 
 export default function DashboardPage() {
   return (
@@ -16,14 +16,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Bottom Section — Projects + Voices */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-9">
-          <RecentProjects />
-        </div>
-        <div className="lg:col-span-3">
-          <MyVoices />
-        </div>
+      {/* Bottom Section — Projects */}
+      <div>
+        <RecentProjects />
       </div>
     </main>
   );

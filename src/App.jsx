@@ -1,27 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
-import AppLayout from "./components/layout/AppLayout";
 import { useProfile } from "./context/ProfileContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import AppLayout from "./components/layout/AppLayout";
 
-// Pages
-import HomePage from "./pages/HomePage"; // Create or import your Home Page
-import RegisterPage from "./pages/RegisterPage";
-import ForgetPassword from "./pages/Forgetpassword";
-import DashboardPage from "./pages/DashboardPage";
-import VoiceCloningPage from "./pages/VoiceCloningPage";
-import TextToSpeechPage from "./pages/TextToSpeechPage";
-import VoiceEditorPage from "./pages/VoiceEditorPage";
-import CaptionGenerationPage from "./pages/CaptionGenerationPage";
-import SettingsPage from "./pages/SettingsPage";
-import ProjectsPage from "./pages/ProjectsPage";
-import MyVoicesPage from "./pages/MyVoicesPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import UpgradePage from "./pages/UpgradePage";
-import ProfilePanel from "./components/layout/ProfilePanel";
+const HomePage = lazy(() => import("./pages/HomePage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ForgetPassword = lazy(() => import("./pages/Forgetpassword"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const VoiceCloningPage = lazy(() => import("./pages/VoiceCloningPage"));
+const TextToSpeechPage = lazy(() => import("./pages/TextToSpeechPage"));
+const VoiceEditorPage = lazy(() => import("./pages/VoiceEditorPage"));
+const CaptionGenerationPage = lazy(() => import("./pages/CaptionGenerationPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const UpgradePage = lazy(() => import("./pages/UpgradePage"));
+const ProfilePanel = lazy(() => import("./components/layout/ProfilePanel"));
 
-
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-[3px] border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        <p className="text-[13px] text-slate-400 font-medium">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [session, setSession] = useState(null);
@@ -52,54 +60,42 @@ function App() {
   if (loading) return null;
 
   return (
-    <>
-      <Routes>
-        {/* 1. PUBLIC HOME PAGE
-            This is always the first page. No redirect here.
-        */}
-        <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <HomePage />} />
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <HomePage />} />
 
-        {/* 2. AUTH PAGE
-            If logged in, send them to Home. If not, show Register/Login.
-        */}
-        <Route
-          path="/register"
-          element={!session ? <RegisterPage /> : <Navigate to="/dashboard" replace />}
-        />
+          <Route
+            path="/register"
+            element={!session ? <RegisterPage /> : <Navigate to="/dashboard" replace />}
+          />
 
-        {/* ✅ Public Forgot Password Route */}
-        <Route path="/forgot-password" element={<ForgetPassword />} />
-        {/* Reset Password (IMPORTANT) */}
-        <Route path="/reset-password" element={<ForgetPassword />} />
+          <Route path="/forgot-password" element={<ForgetPassword />} />
+          <Route path="/reset-password" element={<ForgetPassword />} />
 
-        {/* 3. PROTECTED ROUTES
-            Requires login. If no session, redirect to /register.
-        */}
-        <Route
-          element={
-            session ? <AppLayout /> : <Navigate to="/register" replace />
-          }
-        >
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/voice-clone" element={<VoiceCloningPage />} />
-          <Route path="/text-to-speech" element={<TextToSpeechPage />} />
-          <Route path="/voice-editor" element={<VoiceEditorPage />} />
-          <Route path="/caption-generation" element={<CaptionGenerationPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/my-voices" element={<MyVoicesPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/upgrade" element={<UpgradePage />} />
-        </Route>
+          <Route
+            element={
+              session ? <AppLayout /> : <Navigate to="/register" replace />
+            }
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/voice-clone" element={<VoiceCloningPage />} />
+            <Route path="/text-to-speech" element={<TextToSpeechPage />} />
+            <Route path="/voice-editor" element={<VoiceEditorPage />} />
+            <Route path="/caption-generation" element={<CaptionGenerationPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/upgrade" element={<UpgradePage />} />
+          </Route>
 
-        {/* FALLBACK */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
 
-      {/* 🔥 GLOBAL PROFILE PANEL (ADDED ONLY THIS) */}
-      {showProfile && <ProfilePanel user={session?.user} />}
-    </>
+        {showProfile && <ProfilePanel user={session?.user} />}
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

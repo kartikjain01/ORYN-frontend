@@ -1,7 +1,7 @@
 // src/pages/HomePage.jsx
 import LegalModal from '../components/LegalModal';
 
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { supabase } from "../supabaseClient";
 
@@ -14,10 +14,6 @@ import CtaBanner from "../components/home/CtaBanner";
 import TrustedBy from "../components/home/TrustedBy";
 import Footer from "../components/layout/Footer";
 
-/* three.js is ~600 kB of the bundle and the hero renders perfectly without it.
-   Code-splitting keeps it off the critical path; HeroCanvas additionally waits
-   for an idle frame before creating the GL context. */
-const HeroCanvas = lazy(() => import("../components/three/HeroCanvas"));
 
 /* Entrance animation for each slide.
    IMPORTANT: this must never be applied to the element that carries
@@ -89,7 +85,7 @@ export default function HomePage() {
         if (isMounted && session?.user) {
           setUser(session.user);
 
-          console.log('Logged in as:', session.user.email);
+
         }
       } catch (err) {
         console.error('Error fetching session:', err.message);

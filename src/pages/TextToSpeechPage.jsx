@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Download, HelpCircle, MessageSquare, Globe, Sparkles, Upload, Settings2, X, Maximize2, Minimize2, Volume2, Mic, FolderOpen, MoreVertical, RotateCcw, Share } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { createProject } from '../lib/db';
+import { createProject, getProjectsByType } from '../lib/db';
+import { authFetch, authJsonFetch, downloadName } from '../lib/api';
 
 const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION;
 
@@ -26,7 +27,11 @@ export default function TextToSpeechPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sessionFiles, setSessionFiles] = useState([]);
   const [activeExportIdx, setActiveExportIdx] = useState(null);
+  const [sfMenuIdx, setSfMenuIdx] = useState(null);
+  const [loadingSf, setLoadingSf] = useState(true);
+  const [lastProjectUrl, setLastProjectUrl] = useState(null);
   const exportBoxRef = useRef(null);
+  const sfMenuRef = useRef(null);
 
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedVoice, setSelectedVoice] = useState('michael');
@@ -58,13 +63,39 @@ export default function TextToSpeechPage() {
   };
 
   useEffect(() => {
+    getProjectsByType('tts').then(rows => {
+      const files = rows.map(r => ({
+        id: r.id,
+        url: r.output_url,
+        text: r.title?.slice(0, 40) || 'TTS Output',
+        voice: r.metadata?.voice || 'unknown',
+        duration: r.duration_seconds || 0,
+        timestamp: new Date(r.created_at).getTime(),
+        fromDb: true,
+      }));
+      setSessionFiles(files);
+      setLoadingSf(false);
+      files.forEach((f, idx) => {
+        if (!f.duration && f.url) {
+          const a = new Audio(f.url);
+          a.addEventListener('loadedmetadata', () => {
+            if (isFinite(a.duration) && a.duration > 0) {
+              setSessionFiles(prev => prev.map((sf, i) => i === idx && sf.id === f.id ? { ...sf, duration: a.duration } : sf));
+              supabase.from('projects').update({ duration_seconds: a.duration }).eq('id', f.id).catch(console.error);
+            }
+          });
+        }
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     const handleOutsideClick = event => {
       if (showExportSettings && exportBoxRef.current && !exportBoxRef.current.contains(event.target)) {
         setShowExportSettings(false);
       }
-      if (activeExportIdx !== null) {
-        setActiveExportIdx(null);
-      }
+      if (activeExportIdx !== null) setActiveExportIdx(null);
+      if (sfMenuIdx !== null && sfMenuRef.current && !sfMenuRef.current.contains(event.target)) setSfMenuIdx(null);
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -124,12 +155,33 @@ export default function TextToSpeechPage() {
 
   const timeAgo = ts => {
     const diff = Math.floor((Date.now() - ts) / 1000);
-    if (diff < 5) return 'Just now';
-    if (diff < 60) return `${diff}s ago`;
+    if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
+
+
+  const handleSfPlay = (sf) => { if (sf.url) { setAudioUrl(sf.url); setShowAudio(true); } setSfMenuIdx(null); };
+
+  const handleSfDownload = async (sf) => {
+    if (!sf.url) return;
+    try {
+      const res = await fetch(sf.url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadName('tts', sf.text, 'mp3');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch { /* silent */ }
+    setSfMenuIdx(null);
+  };
+
 
   const handleConfirmExport = async () => {
     if (!audioUrl) { alert('No audio to export'); return; }
@@ -139,7 +191,7 @@ export default function TextToSpeechPage() {
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `speech.${selectedFormat.toLowerCase()}`;
+      link.download = downloadName('tts', text, selectedFormat.toLowerCase());
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -155,25 +207,39 @@ export default function TextToSpeechPage() {
     if (!text.trim()) { alert('Please enter text first'); return; }
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const fullName = user?.user_metadata?.full_name || user?.email || 'unknown_user';
-      const response = await fetch(`${API_BASE}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await authJsonFetch(`${API_BASE}/generate`, {
           text: text.replace(/\n/g, ' '),
           speed,
           voice: selectedVoice,
           language: selectedLanguage,
-          user_id: fullName,
-        }),
       });
       if (!response.ok) throw new Error('Backend Error');
       const data = await response.json();
-      setAudioUrl(data.audio_url);
-      setShowAudio(true);
-      setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, timestamp: Date.now() }, ...prev]);
-      createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: data.audio_url, metadata: { voice: selectedVoice, language: selectedLanguage, speed } }).catch(console.error);
+
+      if (data.job_id) {
+        const poll = async () => {
+          while (true) {
+            await new Promise(r => setTimeout(r, 2000));
+            const statusRes = await authFetch(`${API_BASE}/generate/status/${data.job_id}`);
+            if (!statusRes.ok) throw new Error('Status check failed');
+            const status = await statusRes.json();
+            if (status.status === 'done') return status.audio_url;
+            if (status.status === 'failed') throw new Error(status.error || 'Generation failed');
+          }
+        };
+        const audioUrl = await poll();
+        setAudioUrl(audioUrl);
+        setShowAudio(true);
+        setLastProjectUrl(audioUrl);
+        setSessionFiles(prev => [{ url: audioUrl, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
+        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: audioUrl, metadata: { voice: selectedVoice, language: selectedLanguage, speed } }).catch(err => console.error('createProject failed:', err));
+      } else {
+        setAudioUrl(data.audio_url);
+        setShowAudio(true);
+        setLastProjectUrl(data.audio_url);
+        setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
+        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: data.audio_url, metadata: { voice: selectedVoice, language: selectedLanguage, speed } }).catch(err => console.error('createProject failed:', err));
+      }
     } catch (error) {
       console.error('Connection failed:', error);
       alert('Backend connection failed. Please try again.');
@@ -183,7 +249,6 @@ export default function TextToSpeechPage() {
   };
 
   const handleSubmitFeedback = () => {
-    console.log({ rating: feedbackRating, feedback: feedbackText });
     alert('Thanks for your feedback!');
     setShowFeedbackModal(false);
     setFeedbackText('');
@@ -406,7 +471,7 @@ export default function TextToSpeechPage() {
             </div>
           </div>
 
-          {/* Session Files */}
+          {/* Recent Files */}
           <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!showAudio ? 'lg:col-span-2' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center justify-between">
@@ -414,11 +479,23 @@ export default function TextToSpeechPage() {
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
                   <FolderOpen size={14} className="text-blue-600" />
                 </div>
-                <h2 className="text-[15px] font-bold text-slate-900">Session Files</h2>
+                <h2 className="text-[15px] font-bold text-slate-900">Recent Files</h2>
               </div>
             </div>
             <div className="p-5">
-              {sessionFiles.length === 0 ? (
+              {loadingSf ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50/30 border border-blue-100/20 animate-pulse">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100/50 shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-blue-100/50 rounded w-3/4" />
+                        <div className="h-2.5 bg-blue-100/30 rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sessionFiles.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <FolderOpen size={28} className="text-slate-200 mb-2" />
                   <p className="text-[12px] text-slate-400">No files yet</p>
@@ -427,19 +504,35 @@ export default function TextToSpeechPage() {
               ) : (
                 <div className="space-y-2">
                   {sessionFiles.map((sf, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50/60 border border-slate-100/60 hover:bg-blue-50/30 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                    <div key={sf.id || idx} className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-blue-50/60 border-blue-100/40 transition-all duration-200">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-blue-100">
                           <Volume2 size={13} className="text-blue-600" />
                         </div>
-                        <div>
-                          <p className="text-[12px] font-semibold text-slate-700">{sf.text}...</p>
-                          <p className="text-[10px] text-slate-400">{sf.voice} · {timeAgo(sf.timestamp)}</p>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-slate-700 truncate">{sf.text}...</p>
+                          <p className="text-[10px] text-slate-400">{sf.voice ? `${sf.voice} · ` : ''}{timeAgo(sf.timestamp)}</p>
                         </div>
                       </div>
-                      <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
-                        <MoreVertical size={14} />
-                      </button>
+                      {sf.duration ? <span className="text-[10px] font-medium text-slate-500 bg-slate-100 rounded-md px-1.5 py-0.5 shrink-0">{Math.floor(sf.duration / 60)}:{Math.max(1, Math.round(sf.duration % 60)).toString().padStart(2, '0')}</span> : null}
+                      <div className="relative shrink-0" ref={sfMenuIdx === idx ? sfMenuRef : null}>
+                        <button onClick={() => setSfMenuIdx(sfMenuIdx === idx ? null : idx)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
+                          <MoreVertical size={14} />
+                        </button>
+                        {sfMenuIdx === idx && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setSfMenuIdx(null)} />
+                            <div className="absolute right-0 bottom-8 w-36 bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 py-1.5 z-50">
+                              <button onClick={() => handleSfPlay(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                <Play size={13} /> Open
+                              </button>
+                              <button onClick={() => handleSfDownload(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                <Download size={13} /> Download
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -475,7 +568,17 @@ export default function TextToSpeechPage() {
                   src={audioUrl}
                   onTimeUpdate={handleTimeUpdate}
                   onEnded={() => setIsPlaying(false)}
-                  onLoadedMetadata={e => { if (isFinite(e.target.duration) && e.target.duration > 0) setDuration(e.target.duration); }}
+                  onLoadedMetadata={e => {
+                    const dur = e.target.duration;
+                    if (isFinite(dur) && dur > 0) {
+                      setDuration(dur);
+                      if (lastProjectUrl === audioUrl) {
+                        setSessionFiles(prev => prev.map((sf, i) => i === 0 && sf.url === audioUrl && !sf.duration ? { ...sf, duration: dur } : sf));
+                        supabase.from('projects').update({ duration_seconds: dur }).eq('output_url', audioUrl).then(() => {}).catch(console.error);
+                        setLastProjectUrl(null);
+                      }
+                    }
+                  }}
                   onDurationChange={e => { if (isFinite(e.target.duration) && e.target.duration > 0) setDuration(e.target.duration); }}
                   onCanPlay={e => { if (isFinite(e.target.duration) && e.target.duration > 0) setDuration(e.target.duration); }}
                   onPlay={e => { if (isFinite(e.target.duration) && e.target.duration > 0) setDuration(e.target.duration); }}

@@ -9,30 +9,20 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [legalModal, setLegalModal] = useState(null);
 
   const navigate = useNavigate();
 
-  // ✅ 🔥 EMAIL VERIFICATION HANDLER (ADDED - DO NOT TOUCH)
   useEffect(() => {
     const hash = window.location.hash;
-
     if (hash && hash.includes('access_token')) {
-      alert('Email verified successfully!');
-
-      // clean URL
-      window.history.replaceState({}, document.title, '/login');
-
-      // force login view
+      alert('Email verified successfully! Please sign in.');
+      window.history.replaceState({}, document.title, '/register');
       setIsLogin(true);
-
-      navigate('/login');
     }
   }, []);
 
@@ -42,12 +32,12 @@ export default function AuthPage() {
 
     const cleanEmail = email.trim();
 
-    if (!cleanEmail || !password || !confirmPassword) {
+    if (!fullName.trim() || !cleanEmail || !password) {
       return alert('Please fill all fields');
     }
 
-    if (password !== confirmPassword) {
-      return alert('Passwords do not match');
+    if (password.length < 6) {
+      return alert('Password must be at least 6 characters');
     }
 
     if (!agreedToTerms) {
@@ -61,7 +51,7 @@ export default function AuthPage() {
         email: cleanEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: `${window.location.origin}/register`,
           data: {
             full_name: fullName,
             avatar_url: '',
@@ -76,8 +66,18 @@ export default function AuthPage() {
         return;
       }
 
+      if (data?.user && data.user.identities?.length === 0) {
+        alert('An account with this email already exists. Please sign in.');
+        setFullName('');
+        setEmail('');
+        setPassword('');
+        setAgreedToTerms(false);
+        setIsLogin(true);
+        return;
+      }
+
       if (data?.session) {
-        navigate('/voice-clone');
+        navigate('/settings');
       } else {
         alert('Check your email to verify account');
       }
@@ -112,7 +112,7 @@ export default function AuthPage() {
         return;
       }
 
-      navigate('/voice-clone');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
       alert('Login failed. Try again.');
@@ -161,13 +161,16 @@ export default function AuthPage() {
             ${
               !isLogin
                 ? 'md:opacity-30 md:pointer-events-none hidden md:flex'
-                : 'opacity-100 flex'}`}
+                : 'opacity-100 flex'
+            }`}
         >
           <div className="mb-8">
             <div className="text-blue-600 text-1xl mb-4 relative top-[-80px]">
               ORYNEngine
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-black">Welcome back</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-black">
+              Welcome back
+            </h1>
             <p className="text-black/70 mt-2">
               Sign in to continue managing your tasks, notes, and projects.
             </p>
@@ -234,17 +237,16 @@ export default function AuthPage() {
 
             {/* Social */}
             <div className="pt-1">
-            <SocialButtons onSocialClick={handleSocialLogin} />
+              <SocialButtons onSocialClick={handleSocialLogin} />
             </div>
 
             <p className="text-sm text-gray-600 text-center">
-            <button
-  onClick={() => setIsLogin(false)}
-  className="w-full py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
->
-  Create new account
-</button>     
-              
+              <button
+                onClick={() => setIsLogin(false)}
+                className="w-full py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+              >
+                Create new account
+              </button>
               Don’t have an account?{' '}
               <span
                 onClick={() => setIsLogin(false)}
@@ -258,7 +260,7 @@ export default function AuthPage() {
 
         {/* RIGHT - REGISTER */}
         <div
-  className={`
+          className={`
     px-6 py-10
     sm:px-8
     lg:px-10
@@ -276,24 +278,27 @@ export default function AuthPage() {
             <div className="text-blue-600 text-1xl mb-4 relative top-[-80px]">
               ORYNEngine
             </div>
-            <h1 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-black">Create an account</h1>
+            <h1 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-black">
+              Create an account
+            </h1>
             <p className="text-black/70 mt-2">
               Access your tasks, notes, and projects anytime, anywhere.
             </p>
           </div>
 
-          {/*<div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Full Name"
-              value={fullName}
-              onChange={e => setFullName(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-            />
-          </div>*/}
-
           <div className="space-y-5">
+            {/* Full Name */}
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={fullName}
+                onChange={e => setFullName(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+              />
+            </div>
+
             {/* Email */}
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -329,29 +334,6 @@ export default function AuthPage() {
               </button>
             </div>
 
-            {/* Confirm Password */}
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black focus:outline-none"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-
             {/* Terms Agreement */}
             <label className="flex items-start gap-3 cursor-pointer">
               <input
@@ -363,14 +345,20 @@ export default function AuthPage() {
               <span className="text-sm text-gray-600 leading-relaxed">
                 I agree to the{' '}
                 <span
-                  onClick={e => { e.preventDefault(); setLegalModal('terms'); }}
+                  onClick={e => {
+                    e.preventDefault();
+                    setLegalModal('terms');
+                  }}
                   className="text-blue-600 hover:underline cursor-pointer font-medium"
                 >
                   Terms of Service
-                </span>
-                {' '}and{' '}
+                </span>{' '}
+                and{' '}
                 <span
-                  onClick={e => { e.preventDefault(); setLegalModal('privacy'); }}
+                  onClick={e => {
+                    e.preventDefault();
+                    setLegalModal('privacy');
+                  }}
                   className="text-blue-600 hover:underline cursor-pointer font-medium"
                 >
                   Privacy Policy
@@ -503,13 +491,9 @@ function SocialButtons({ onSocialClick }) {
       ),
     },
     {
-      provider: 'linkedin_oidc',
+      provider: 'linkedin',
       icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="#0A66C2"
-        >
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#0A66C2">
           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       ),

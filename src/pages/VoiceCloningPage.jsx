@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, Upload, Play, Pause, Download, Settings2, CheckCircle2, AudioWaveform, Sparkles, Globe, HelpCircle, MessageSquare, X, RotateCcw, MoreVertical, FolderOpen, Maximize2, Minimize2 } from 'lucide-react';
-import { createProject, createVoice } from '../lib/db';
+import { createProject, createVoice, getProjectsByType } from '../lib/db';
+import { supabase } from '../supabaseClient';
+import { authFetch, authJsonFetch, authUploadFetch, downloadName } from '../lib/api';
 
 const API_BASE = import.meta.env.VITE_API_VOICE_CLONE;
 
@@ -40,7 +42,39 @@ export default function VoiceCloningPage() {
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [sessionFiles, setSessionFiles] = useState([]);
+  const [sfMenuIdx, setSfMenuIdx] = useState(null);
+  const [loadingSf, setLoadingSf] = useState(true);
+  const [lastProjectUrl, setLastProjectUrl] = useState(null);
+  const sfMenuRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    getProjectsByType('voice_clone').then(rows => {
+      const files = rows.map(r => ({
+        id: r.id,
+        url: r.output_url,
+        text: r.title?.slice(0, 30) || 'Voice Clone Output',
+        format: r.metadata?.format || 'MP3',
+        quality: r.metadata?.quality || 'Standard',
+        duration: r.duration_seconds || 0,
+        timestamp: new Date(r.created_at).getTime(),
+        fromDb: true,
+      }));
+      setSessionFiles(files);
+      setLoadingSf(false);
+      files.forEach((f, idx) => {
+        if (!f.duration && f.url) {
+          const a = new Audio(f.url);
+          a.addEventListener('loadedmetadata', () => {
+            if (isFinite(a.duration) && a.duration > 0) {
+              setSessionFiles(prev => prev.map((sf, i) => i === idx && sf.id === f.id ? { ...sf, duration: a.duration } : sf));
+              supabase.from('projects').update({ duration_seconds: a.duration }).eq('id', f.id).catch(console.error);
+            }
+          });
+        }
+      });
+    });
+  }, []);
 
   const inputRef = useRef(null);
   const uploadAudioRef = useRef(null);
@@ -55,10 +89,11 @@ export default function VoiceCloningPage() {
       if (showExportSettings && exportBoxRef.current && !exportBoxRef.current.contains(event.target)) {
         setShowExportSettings(false);
       }
+      if (sfMenuIdx !== null && sfMenuRef.current && !sfMenuRef.current.contains(event.target)) setSfMenuIdx(null);
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [showExportSettings]);
+  }, [showExportSettings, sfMenuIdx]);
 
   useEffect(() => {
     if (!file) { setAudioDuration('0:00'); return; }
@@ -85,28 +120,21 @@ export default function VoiceCloningPage() {
 
   const startRecording = async () => {
     try {
-      setStatusMsg('Connecting recorder...');
-      const WS_BASE = window.location.hostname === 'localhost' ? 'ws://localhost:8000' : import.meta.env.VITE_WS_URL;
-      const ws = new WebSocket(`${WS_BASE}/ws/record`);
-      wsRef.current = ws;
-      ws.onopen = async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaStreamRef.current = stream;
-        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-        mediaRecorderRef.current = mediaRecorder;
-        audioChunksRef.current = [];
-        mediaRecorder.ondataavailable = async event => {
-          if (event.data.size > 0) { audioChunksRef.current.push(event.data); const buffer = await event.data.arrayBuffer(); if (ws.readyState === WebSocket.OPEN) ws.send(buffer); }
-        };
-        mediaRecorder.onstop = () => {
-          ws.close();
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          setRecordedBlob(blob); setAudioPreviewUrl(URL.createObjectURL(blob));
-          setFile(new File([blob], 'recording.webm', { type: 'audio/webm' }));
-          setFileName('recording.webm'); setStatusMsg('Recording completed');
-        };
-        mediaRecorder.start(250); setIsRecording(true); setStatusMsg('Recording...');
+      setStatusMsg('Starting recorder...');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      mediaStreamRef.current = stream;
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setRecordedBlob(blob); setAudioPreviewUrl(URL.createObjectURL(blob));
+        setFile(new File([blob], 'recording.webm', { type: 'audio/webm' }));
+        setFileName('recording.webm'); setStatusMsg('Recording completed');
       };
+      mediaRecorder.start(); setIsRecording(true); setStatusMsg('Recording...');
     } catch (err) { console.error(err); setStatusMsg('Microphone access denied'); }
   };
 
@@ -114,6 +142,23 @@ export default function VoiceCloningPage() {
     if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
     if (mediaStreamRef.current) mediaStreamRef.current.getTracks().forEach(track => track.stop());
     setIsRecording(false);
+  };
+
+  const timeAgo = ts => {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const handleSfPlay = (sf) => { if (sf.url) window.open(sf.url, '_blank'); setSfMenuIdx(null); };
+
+  const handleSfDownload = async (sf) => {
+    if (!sf.url) return;
+    try { const res = await fetch(sf.url); const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = downloadName('clone', sf.text, 'mp3'); document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); } catch { /* silent */ }
+    setSfMenuIdx(null);
   };
 
   const formatTime = t => { if (!t) return '0:00'; return `${Math.floor(t / 60)}:${Math.floor(t % 60).toString().padStart(2, '0')}`; };
@@ -125,12 +170,12 @@ export default function VoiceCloningPage() {
     try {
       setLoading(true); setStatusMsg('Uploading voice...');
       const formData = new FormData(); formData.append('file', file);
-      const response = await fetch(`${API_BASE}/v1/voices`, { method: 'POST', body: formData });
+      const response = await authUploadFetch(`${API_BASE}/v1/voices`, formData);
       if (!response.ok) throw new Error(`Server Error: ${response.status}`);
       const data = await response.json();
       if (!data.voice_id) throw new Error('voice_id missing');
       setVoiceId(data.voice_id); setStatusMsg('Building voice profile...');
-      const buildResponse = await fetch(`${API_BASE}/v1/voices/${data.voice_id}/build`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ remove_noise: removeNoise }) });
+      const buildResponse = await authJsonFetch(`${API_BASE}/v1/voices/${data.voice_id}/build`, { remove_noise: removeNoise });
       if (!buildResponse.ok) throw new Error(`Build Failed: ${buildResponse.status}`);
       setCloneCompleted(true); setStatusMsg('Voice cloned successfully!');
       createVoice({ name: fileName || 'Cloned Voice', type: 'voice_clone', voiceId: data.voice_id, durationSeconds: durationSec, metadata: { removeNoise } }).catch(console.error);
@@ -143,7 +188,7 @@ export default function VoiceCloningPage() {
     if (!previewText) { alert('Enter text'); return; }
     try {
       setIsGenerating(true); setStatusMsg('Generating preview...');
-      const response = await fetch(`${API_BASE}/v1/tts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice_id: voiceId, text: previewText, language: selectedLanguage, output_format: 'wav', user_id: 'kartik_jain' }) });
+      const response = await authJsonFetch(`${API_BASE}/v1/tts`, { voice_id: voiceId, text: previewText, language: selectedLanguage, output_format: 'wav' });
       if (!response.ok) throw new Error(`TTS Error: ${response.status}`);
       const data = await response.json();
       if (!data.job_id) throw new Error('No job_id');
@@ -154,9 +199,9 @@ export default function VoiceCloningPage() {
   const checkJobStatus = async jobId => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_BASE}/v1/tts/${jobId}`);
+        const res = await authFetch(`${API_BASE}/v1/tts/${jobId}`);
         const data = await res.json();
-        if (data.status === 'done') { clearInterval(interval); if (!data.audio_url) { setStatusMsg('No audio URL'); setIsGenerating(false); return; } setAudioUrl(data.audio_url); setGeneratedAudioReady(true); setIsGenerating(false); setStatusMsg('Preview ready!'); setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: previewText.slice(0, 30), timestamp: Date.now() }, ...prev]); createProject({ title: previewText.slice(0, 60) || 'Voice Clone Output', type: 'voice_clone', outputUrl: data.audio_url, metadata: { voiceId, language: selectedLanguage } }).catch(console.error); }
+        if (data.status === 'done') { clearInterval(interval); if (!data.audio_url) { setStatusMsg('No audio URL'); setIsGenerating(false); return; } setAudioUrl(data.audio_url); setGeneratedAudioReady(true); setIsGenerating(false); setStatusMsg('Preview ready!'); setLastProjectUrl(data.audio_url); setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: previewText.slice(0, 30), duration: 0, timestamp: Date.now() }, ...prev]); createProject({ title: previewText.slice(0, 60) || 'Voice Clone Output', type: 'voice_clone', outputUrl: data.audio_url, metadata: { voiceId, language: selectedLanguage } }).catch(console.error); }
         if (data.status === 'failed') { clearInterval(interval); setStatusMsg('Generation failed'); setIsGenerating(false); }
       } catch (err) { console.error(err); clearInterval(interval); setStatusMsg('Error checking status'); setIsGenerating(false); }
     }, 2000);
@@ -166,12 +211,11 @@ export default function VoiceCloningPage() {
     if (!audioUrl) return;
     const response = await fetch(audioUrl); const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = blobUrl; link.download = `clone_output.${selectedFormat.toLowerCase()}`;
+    const link = document.createElement('a'); link.href = blobUrl; link.download = downloadName('clone', previewText, selectedFormat.toLowerCase());
     document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
   };
 
   const handleSubmitFeedback = () => {
-    console.log({ rating: feedbackRating, feedback: feedbackText });
     alert('Thanks for your feedback!');
     setShowFeedbackModal(false);
     setFeedbackText('');
@@ -263,7 +307,7 @@ export default function VoiceCloningPage() {
         {/* 2x2 Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Top Left: Voice Source */}
-          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'h-[380px]' : ''}`}>
+          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'min-h-[380px]' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-0">
               <div className="flex items-center justify-between mb-4">
@@ -393,7 +437,7 @@ export default function VoiceCloningPage() {
           </div>
 
           {/* Top Right: Generate Speech */}
-          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 ${generatedAudioReady ? '' : 'h-[380px]'} ${
+          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 ${generatedAudioReady ? '' : 'min-h-[380px]'} ${
             !cloneCompleted ? 'opacity-50 border-slate-200/60' : 'border-white/80 hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)]'
           }`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
@@ -571,7 +615,7 @@ export default function VoiceCloningPage() {
             </div>
           )}
 
-          {/* Session Files — full width before output, left column after */}
+          {/* Recent Files — full width before output, left column after */}
           <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ${!generatedAudioReady ? 'lg:col-span-2' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-3 border-b border-slate-100/60">
@@ -579,11 +623,23 @@ export default function VoiceCloningPage() {
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
                   <FolderOpen size={14} className="text-blue-600" />
                 </div>
-                <h2 className="text-[15px] font-bold text-slate-900">Session Files</h2>
+                <h2 className="text-[15px] font-bold text-slate-900">Recent Files</h2>
               </div>
             </div>
-            <div className="p-5 max-h-[320px] overflow-y-auto space-y-2">
-              {sessionFiles.length === 0 ? (
+            <div className="p-5 space-y-2">
+              {loadingSf ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/30 border border-blue-100/20 animate-pulse">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100/50 shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-blue-100/50 rounded w-3/4" />
+                        <div className="h-2.5 bg-blue-100/30 rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sessionFiles.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <FolderOpen size={28} className="text-slate-200 mb-2" />
                   <p className="text-[12px] text-slate-400">No files yet</p>
@@ -591,17 +647,33 @@ export default function VoiceCloningPage() {
                 </div>
               ) : (
                 sessionFiles.map((sf, idx) => (
-                  <div key={sf.timestamp} className={`flex items-center gap-3 p-3 rounded-xl border ${idx === 0 ? 'bg-blue-50/60 border-blue-100/40' : 'bg-slate-50/40 border-slate-100/40'}`}>
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${idx === 0 ? 'bg-blue-100' : 'bg-slate-100'}`}>
-                      <AudioWaveform size={14} className={idx === 0 ? 'text-blue-600' : 'text-slate-400'} />
+                  <div key={sf.timestamp} className="flex items-center gap-3 p-3 rounded-xl border bg-blue-50/60 border-blue-100/40">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-blue-100">
+                      <AudioWaveform size={14} className="text-blue-600" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold text-slate-700 truncate">{sf.text || 'output'}...{sf.format.toLowerCase()}</p>
-                      <p className="text-[10px] text-slate-400">{sf.quality} quality</p>
+                      <p className="text-[12px] font-semibold text-slate-700 truncate">{sf.text || 'output'}...{(sf.format || 'mp3').toLowerCase()}</p>
+                      <p className="text-[10px] text-slate-400">{sf.quality || 'Standard'} quality · {timeAgo(sf.timestamp)}</p>
                     </div>
-                    <button className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all shrink-0">
-                      <MoreVertical size={14} />
-                    </button>
+                    {sf.duration ? <span className="text-[10px] font-medium text-slate-500 bg-slate-100 rounded-md px-1.5 py-0.5 shrink-0">{Math.floor(sf.duration / 60)}:{Math.max(1, Math.round(sf.duration % 60)).toString().padStart(2, '0')}</span> : null}
+                    <div className="relative shrink-0" ref={sfMenuIdx === idx ? sfMenuRef : null}>
+                      <button onClick={() => setSfMenuIdx(sfMenuIdx === idx ? null : idx)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all shrink-0">
+                        <MoreVertical size={14} />
+                      </button>
+                      {sfMenuIdx === idx && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setSfMenuIdx(null)} />
+                          <div className="absolute right-0 bottom-8 w-36 bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 py-1.5 z-50">
+                            <button onClick={() => handleSfPlay(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                              <Play size={13} /> Open
+                            </button>
+                            <button onClick={() => handleSfDownload(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                              <Download size={13} /> Download
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -648,7 +720,17 @@ export default function VoiceCloningPage() {
                   </div>
                   <span className="text-[11px] text-slate-400 font-medium tabular-nums shrink-0">{formatTime(currentTime)}/{formatTime(duration)}</span>
                   <audio ref={generatedAudioRef} src={audioUrl || undefined}
-                    onLoadedMetadata={e => setDuration(e.target.duration)}
+                    onLoadedMetadata={e => {
+                      const dur = e.target.duration;
+                      if (isFinite(dur) && dur > 0) {
+                        setDuration(dur);
+                        if (lastProjectUrl === audioUrl) {
+                          setSessionFiles(prev => prev.map((sf, i) => i === 0 && sf.url === audioUrl && !sf.duration ? { ...sf, duration: dur } : sf));
+                          supabase.from('projects').update({ duration_seconds: dur }).eq('output_url', audioUrl).then(() => {}).catch(console.error);
+                          setLastProjectUrl(null);
+                        }
+                      }
+                    }}
                     onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
                     onPause={() => setIsPlaying(false)} onPlay={() => setIsPlaying(true)} onEnded={() => setIsPlaying(false)}
                   />

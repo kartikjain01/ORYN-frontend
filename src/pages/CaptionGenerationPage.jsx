@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, Upload, AudioWaveform, FolderOpen, Download, MoreVertical, Check, Type, Palette, Languages, HelpCircle, MessageSquare, Plus, Share, ChevronDown, SkipBack, SkipForward, Volume2, Maximize2, X, RotateCw } from 'lucide-react';
+import { createProject, getProjectsByType } from '../lib/db';
+import { supabase } from '../supabaseClient';
+import { downloadName } from '../lib/api';
 
-const API_BASE = 'http://localhost:8000';
+const HF_SPACE = import.meta.env.VITE_HF_CAPTION_SPACE || 'https://kartikjain12345-oryn-caption-engine.hf.space';
+const API_BASE = import.meta.env.VITE_API_CAPTIONS || '';
 
 const CAPTION_STYLES = [
   { id: 'capcut', name: 'CapCut', preview: 'Clean white text, cinematic feel', color: '#ffffff', demoVideo: null },
@@ -139,6 +143,47 @@ export default function CaptionGenerationPage() {
   const [progress, setProgress] = useState(0);
   const [generatedCaptions, setGeneratedCaptions] = useState(null);
   const [sessionFiles, setSessionFiles] = useState([]);
+  const [sfMenuIdx, setSfMenuIdx] = useState(null);
+  const [loadingSf, setLoadingSf] = useState(true);
+  const sfMenuRef = useRef(null);
+
+  useEffect(() => {
+    getProjectsByType('captions').then(rows => {
+      const files = rows.map(r => ({
+        id: r.id,
+        url: r.output_url,
+        name: r.title || 'Caption Output',
+        format: r.metadata?.format || 'SRT',
+        style: r.metadata?.style || 'Default',
+        duration: r.duration_seconds || 0,
+        timestamp: new Date(r.created_at).getTime(),
+        fromDb: true,
+      }));
+      setSessionFiles(files);
+      setLoadingSf(false);
+      files.forEach((f, idx) => {
+        if (!f.duration && f.url) {
+          const v = document.createElement('video');
+          v.preload = 'metadata';
+          v.src = f.url;
+          v.addEventListener('loadedmetadata', () => {
+            if (isFinite(v.duration) && v.duration > 0) {
+              setSessionFiles(prev => prev.map((sf, i) => i === idx && sf.id === f.id ? { ...sf, duration: v.duration } : sf));
+              supabase.from('projects').update({ duration_seconds: v.duration }).eq('id', f.id).catch(console.error);
+            }
+          });
+        }
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    const handle = (e) => {
+      if (sfMenuIdx !== null && sfMenuRef.current && !sfMenuRef.current.contains(e.target)) setSfMenuIdx(null);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [sfMenuIdx]);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -160,30 +205,45 @@ export default function CaptionGenerationPage() {
 
   const timeAgo = ts => {
     const diff = Math.floor((Date.now() - ts) / 1000);
-    if (diff < 5) return 'Just now';
-    if (diff < 60) return `${diff}s ago`;
+    if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const MAX_DURATION = 120;
+
+  const validateAndSetFile = (f) => {
+    const url = URL.createObjectURL(f);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.src = url;
+    v.onloadedmetadata = () => {
+      if (isFinite(v.duration) && v.duration > MAX_DURATION) {
+        alert(`Video is too long (${Math.floor(v.duration / 60)}m ${Math.round(v.duration % 60)}s). Maximum allowed is 2 minutes.`);
+        URL.revokeObjectURL(url);
+        return;
+      }
+      setFile(f);
+      setFileName(f.name);
+      setAudioPreviewUrl(url);
+      setGeneratedCaptions(null);
+      setRotation(0);
+    };
   };
 
   const onFileChange = e => {
     const f = e.target.files?.[0];
     if (!f) return;
-    setFile(f);
-    setFileName(f.name);
-    setAudioPreviewUrl(URL.createObjectURL(f));
-    setGeneratedCaptions(null);
-    setRotation(0);
+    validateAndSetFile(f);
   };
 
   const onDrop = e => {
     e.preventDefault();
     const f = e.dataTransfer.files?.[0];
     if (!f) return;
-    setFile(f);
-    setFileName(f.name);
-    setAudioPreviewUrl(URL.createObjectURL(f));
-    setGeneratedCaptions(null);
+    validateAndSetFile(f);
   };
 
   const togglePlay = () => {
@@ -204,77 +264,163 @@ export default function CaptionGenerationPage() {
     setDuration(0);
   };
 
+  const handleSfPlay = (sf) => { if (sf.url) window.open(sf.url, '_blank'); setSfMenuIdx(null); };
+
+  const handleSfDownload = async (sf) => {
+    if (!sf.url) return;
+    try {
+      const res = await fetch(sf.url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadName('captions', sf.name, 'mp4');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch { /* silent */ }
+    setSfMenuIdx(null);
+  };
+
+
   const generateCaptions = async () => {
     if (!file) return;
     setGenerating(true);
     setProgress(0);
 
     try {
-      // Upload + generate in one call
-      setProgress(5);
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('template', captionStyle);
-      formData.append('language', language);
-      formData.append('position', position);
-      formData.append('font_size', fontSize.toString());
-      formData.append('max_words', maxWords.toString());
-      if (rotation !== 0) formData.append('rotation', rotation.toString());
+      const spaceUrl = HF_SPACE.replace(/\/$/, '');
 
-      const res = await fetch(`${API_BASE}/api/caption/generate`, {
+      // Step 1: Upload file to Gradio
+      setProgress(5);
+      console.log('Uploading to HF Space:', spaceUrl, 'file:', file?.name, file?.size);
+      const uploadForm = new FormData();
+      uploadForm.append('files', file);
+      const uploadRes = await fetch(`${spaceUrl}/gradio_api/upload`, {
         method: 'POST',
-        body: formData,
+        body: uploadForm,
+      });
+      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
+      const uploadedFiles = await uploadRes.json();
+      console.log('Uploaded:', uploadedFiles);
+
+      // Step 2: Submit job
+      setProgress(10);
+      const submitRes = await fetch(`${spaceUrl}/gradio_api/call/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: [
+            { video: { path: uploadedFiles[0], meta: { _type: 'gradio.FileData' } } },
+            captionStyle,
+            language,
+            position,
+            fontSize,
+            maxWords,
+          ],
+        }),
+      });
+      if (!submitRes.ok) {
+        const errText = await submitRes.text();
+        console.error('Submit error:', errText);
+        throw new Error(`Submit failed: ${submitRes.status} - ${errText}`);
+      }
+      const { event_id } = await submitRes.json();
+      console.log('Job submitted, event_id:', event_id);
+
+      // Step 3: Stream results via SSE
+      setProgress(15);
+      const resultData = await new Promise((resolve, reject) => {
+        const es = new EventSource(`${spaceUrl}/gradio_api/call/generate/${event_id}`);
+        let settled = false;
+        const done = (fn) => { if (!settled) { settled = true; es.close(); fn(); } };
+
+        es.addEventListener('complete', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            console.log('Complete:', data);
+            done(() => resolve(data));
+          } catch {
+            done(() => reject(new Error('Invalid response from server')));
+          }
+        });
+        es.addEventListener('error', (e) => {
+          let msg = 'Server processing failed';
+          try {
+            const data = JSON.parse(e.data);
+            console.error('Server error:', data);
+            if (typeof data === 'string') msg = data;
+          } catch { /* no parseable data */ }
+          done(() => reject(new Error(msg)));
+        });
+        es.addEventListener('progress', () => {
+          setProgress(prev => Math.min(prev + 5, 85));
+        });
+        es.addEventListener('heartbeat', () => {
+          setProgress(prev => Math.min(prev + 1, 85));
+        });
+        es.onerror = () => {
+          done(() => reject(new Error('Connection to caption server lost')));
+        };
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Upload/generation failed');
+      setProgress(95);
+      console.log('Full result:', JSON.stringify(resultData));
+
+      const [videoResult, metadata] = resultData;
+
+      if (metadata?.error) {
+        const errMsg = metadata.error === 'no_speech' ? 'No speech was detected in the video.'
+          : metadata.error === 'no_captions' ? 'Could not generate captions from the audio.'
+          : metadata.message || metadata.error;
+        throw new Error(errMsg);
       }
 
-      const data = await res.json();
-      const jobId = data.job_id;
-      setProgress(15);
-
-      // Step 3: Poll for status
-      let completed = false;
-      while (!completed) {
-        await new Promise(r => setTimeout(r, 1500));
-
-        const statusRes = await fetch(`${API_BASE}/api/caption/status/${jobId}`);
-        const statusData = await statusRes.json();
-
-        if (statusData.status === 'completed') {
-          completed = true;
-          setProgress(100);
-
-          const result = statusData.result;
-          const videoUrl = `${API_BASE}/api/caption/download/${jobId}`;
-
-          setGeneratedCaptions({
-            videoUrl,
-            language: result.language,
-            words: result.total_words,
-            captions: result.total_captions,
-            duration: result.duration,
-            processingTime: result.processing_time_seconds,
-            template: captionStyle,
-          });
-          setSessionFiles(prev => [{
-            name: fileName,
-            format: 'MP4',
-            style: captionStyle,
-            timestamp: Date.now(),
-            jobId,
-            videoUrl,
-          }, ...prev]);
-        } else if (statusData.status === 'failed') {
-          throw new Error(statusData.message || 'Generation failed');
-        } else {
-          setProgress(Math.min(statusData.progress || 20, 95));
-        }
+      let videoUrl = metadata?.supabase_url || '';
+      if (!videoUrl) {
+        const rawUrl = videoResult?.video?.url || videoResult?.url || videoResult?.video?.path || videoResult?.path || (typeof videoResult === 'string' ? videoResult : '');
+        if (rawUrl.startsWith('http')) videoUrl = rawUrl;
+        else if (rawUrl.startsWith('/')) videoUrl = `${spaceUrl}${rawUrl}`;
+        else if (rawUrl) videoUrl = `${spaceUrl}/gradio_api/file=${rawUrl}`;
       }
+
+      if (!videoUrl) throw new Error('No output video was returned');
+
+      setProgress(100);
+
+      setGeneratedCaptions({
+        videoUrl,
+        language: metadata.language,
+        words: metadata.total_words,
+        captions: metadata.total_captions,
+        duration: metadata.duration,
+        processingTime: metadata.processing_time_seconds,
+        template: captionStyle,
+      });
+      setSessionFiles(prev => [{
+        name: fileName,
+        format: 'MP4',
+        style: captionStyle,
+        duration: metadata.duration || 0,
+        timestamp: Date.now(),
+        videoUrl,
+      }, ...prev]);
+      createProject({ title: fileName || 'Caption Output', type: 'captions', outputUrl: videoUrl, durationSeconds: metadata.duration || 0, metadata: { style: captionStyle, language: metadata.language, words: metadata.total_words, captions: metadata.total_captions } }).catch(console.error);
     } catch (err) {
-      alert(`Caption generation failed: ${err.message}`);
+      console.error('Caption generation error:', err);
+      const msg = err.message || '';
+      if (msg.includes('No speech') || msg.includes('no_speech')) {
+        alert('No speech was detected in the video. Please upload a video with audible speech.');
+      } else if (msg.includes('401') || msg.includes('could not be accessed')) {
+        alert('Caption server is temporarily unavailable. Please try again later.');
+      } else if (msg.includes('GPU') || msg.includes('queue')) {
+        alert('Server is busy. Please wait a moment and try again.');
+      } else if (msg.includes('Connection') || msg.includes('lost')) {
+        alert('Lost connection to the caption server. Please try again.');
+      } else {
+        alert(msg || 'Caption generation failed. Please try again.');
+      }
     } finally {
       setGenerating(false);
     }
@@ -283,33 +429,35 @@ export default function CaptionGenerationPage() {
   const handleExport = async (format) => {
     if (!generatedCaptions) return;
 
-    const latestJob = sessionFiles[0];
-    if (!latestJob?.jobId) {
-      const blob = new Blob([generatedCaptions], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `captions.${format.toLowerCase()}`;
-      a.click();
-      URL.revokeObjectURL(url);
+    const videoUrl = generatedCaptions.videoUrl;
+    if (!videoUrl) {
+      alert('No output video available');
       setShowExportMenu(false);
       return;
     }
 
-    const endpoint = format === 'MP4'
-      ? `${API_BASE}/api/caption/download/${latestJob.jobId}`
-      : `${API_BASE}/api/caption/download-srt/${latestJob.jobId}`;
-
-    const a = document.createElement('a');
-    a.href = endpoint;
-    a.download = format === 'MP4' ? 'captioned_video.mp4' : 'captions.ass';
-    a.click();
+    try {
+      const res = await fetch(videoUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadName('captions', fileName, format === 'MP4' ? 'mp4' : 'ass');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      const a = document.createElement('a');
+      a.href = videoUrl;
+      a.download = downloadName('captions', fileName, 'mp4');
+      a.click();
+    }
     setShowExportMenu(false);
   };
 
   const handleSubmitFeedback = () => {
     if (!feedbackText.trim()) { alert('Please write feedback'); return; }
-    console.log({ rating: feedbackRating, feedback: feedbackText });
     alert('Thanks for your feedback!');
     setFeedbackText(''); setFeedbackRating(5); setShowFeedbackModal(false);
   };
@@ -522,7 +670,7 @@ export default function CaptionGenerationPage() {
           )}
           </div>
 
-          {/* Right Column: Settings + Session Files stacked */}
+          {/* Right Column: Settings + Recent Files stacked */}
           <div className="flex flex-col gap-5">
           <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 max-h-[520px] flex flex-col overflow-hidden">
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80 z-20" />
@@ -636,7 +784,7 @@ export default function CaptionGenerationPage() {
             </div>
           </div>
 
-          {/* Session Files - below Settings (right column) when file is selected */}
+          {/* Recent Files - below Settings (right column) when file is selected */}
           {file && (
               <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300">
                 <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
@@ -644,10 +792,22 @@ export default function CaptionGenerationPage() {
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
                     <FolderOpen size={14} className="text-blue-600" />
                   </div>
-                  <h2 className="text-[15px] font-bold text-slate-900">Session Files</h2>
+                  <h2 className="text-[15px] font-bold text-slate-900">Recent Files</h2>
                 </div>
                 <div className="p-5">
-                  {sessionFiles.length === 0 ? (
+                  {loadingSf ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50/30 border border-blue-100/20 animate-pulse">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100/50 shrink-0" />
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3 bg-blue-100/50 rounded w-3/4" />
+                            <div className="h-2.5 bg-blue-100/30 rounded w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : sessionFiles.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <FolderOpen size={28} className="text-slate-200 mb-2" />
                       <p className="text-[12px] text-slate-400">No files yet</p>
@@ -656,19 +816,35 @@ export default function CaptionGenerationPage() {
                   ) : (
                     <div className="space-y-2">
                       {sessionFiles.map((sf, idx) => (
-                        <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50/60 border border-slate-100/60 hover:bg-blue-50/30 transition-all duration-200">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                        <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-blue-50/60 border-blue-100/40 transition-all duration-200">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
                               <Type size={13} className="text-blue-600" />
                             </div>
-                            <div>
-                              <p className="text-[12px] font-semibold text-slate-700">{sf.name} <span className="text-slate-400 font-normal">· {sf.format} · {sf.style}</span></p>
+                            <div className="min-w-0">
+                              <p className="text-[12px] font-semibold text-slate-700 truncate">{sf.name} <span className="text-slate-400 font-normal">· {sf.format || 'SRT'} · {sf.style || 'Default'}</span></p>
                               <p className="text-[10px] text-slate-400">{timeAgo(sf.timestamp)}</p>
                             </div>
                           </div>
-                          <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
-                            <MoreVertical size={14} />
-                          </button>
+                          {sf.duration ? <span className="text-[10px] font-medium text-slate-500 bg-slate-100 rounded-md px-1.5 py-0.5 shrink-0">{Math.floor(sf.duration / 60)}:{Math.max(1, Math.round(sf.duration % 60)).toString().padStart(2, '0')}</span> : null}
+                          <div className="relative shrink-0" ref={sfMenuIdx === idx ? sfMenuRef : null}>
+                            <button onClick={() => setSfMenuIdx(sfMenuIdx === idx ? null : idx)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
+                              <MoreVertical size={14} />
+                            </button>
+                            {sfMenuIdx === idx && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setSfMenuIdx(null)} />
+                                <div className="absolute right-0 bottom-8 w-36 bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 py-1.5 z-50">
+                                  <button onClick={() => handleSfPlay(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                    <Play size={13} /> Open
+                                  </button>
+                                  <button onClick={() => handleSfDownload(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                    <Download size={13} /> Download
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -678,7 +854,7 @@ export default function CaptionGenerationPage() {
           )}
           </div>
 
-          {/* No file selected: Session Files full width */}
+          {/* No file selected: Recent Files full width */}
           {!file && (
             <div className="lg:col-span-2 relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300">
               <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
@@ -686,10 +862,22 @@ export default function CaptionGenerationPage() {
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
                   <FolderOpen size={14} className="text-blue-600" />
                 </div>
-                <h2 className="text-[15px] font-bold text-slate-900">Session Files</h2>
+                <h2 className="text-[15px] font-bold text-slate-900">Recent Files</h2>
               </div>
               <div className="p-5">
-                {sessionFiles.length === 0 ? (
+                {loadingSf ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50/30 border border-blue-100/20 animate-pulse">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100/50 shrink-0" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3 bg-blue-100/50 rounded w-3/4" />
+                          <div className="h-2.5 bg-blue-100/30 rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : sessionFiles.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <FolderOpen size={28} className="text-slate-200 mb-2" />
                     <p className="text-[12px] text-slate-400">No files yet</p>
@@ -698,19 +886,35 @@ export default function CaptionGenerationPage() {
                 ) : (
                   <div className="space-y-2">
                     {sessionFiles.map((sf, idx) => (
-                      <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50/60 border border-slate-100/60 hover:bg-blue-50/30 transition-all duration-200">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                      <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-blue-50/60 border-blue-100/40 transition-all duration-200">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
                             <Type size={13} className="text-blue-600" />
                           </div>
-                          <div>
-                            <p className="text-[12px] font-semibold text-slate-700">{sf.name} <span className="text-slate-400 font-normal">· {sf.format} · {sf.style}</span></p>
+                          <div className="min-w-0">
+                            <p className="text-[12px] font-semibold text-slate-700 truncate">{sf.name} <span className="text-slate-400 font-normal">· {sf.format || 'SRT'} · {sf.style || 'Default'}</span></p>
                             <p className="text-[10px] text-slate-400">{timeAgo(sf.timestamp)}</p>
                           </div>
                         </div>
-                        <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
-                          <MoreVertical size={14} />
-                        </button>
+                        {sf.duration ? <span className="text-[10px] font-medium text-slate-500 bg-slate-100 rounded-md px-1.5 py-0.5 shrink-0">{Math.floor(sf.duration / 60)}:{Math.max(1, Math.round(sf.duration % 60)).toString().padStart(2, '0')}</span> : null}
+                        <div className="relative shrink-0" ref={sfMenuIdx === idx ? sfMenuRef : null}>
+                          <button onClick={() => setSfMenuIdx(sfMenuIdx === idx ? null : idx)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
+                            <MoreVertical size={14} />
+                          </button>
+                          {sfMenuIdx === idx && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setSfMenuIdx(null)} />
+                              <div className="absolute right-0 bottom-8 w-36 bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 py-1.5 z-50">
+                                <button onClick={() => handleSfPlay(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                  <Play size={13} /> Open
+                                </button>
+                                <button onClick={() => handleSfDownload(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                  <Download size={13} /> Download
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

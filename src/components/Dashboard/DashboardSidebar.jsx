@@ -29,8 +29,8 @@ const topMenu = [
 
 const bottomMenu = [
   { name: "Projects", icon: Folder, path: "/projects" },
-  { name: "My Voices", icon: AudioLines, path: "/my-voices" },
-  { name: "Analytics", icon: BarChart3, path: "/analytics" },
+  // { name: "My Voices", icon: AudioLines, path: "/my-voices" },
+  { name: "Analytics", icon: BarChart3, path: "/analytics", badge: "Soon" },
   { name: "Settings", icon: Settings, path: "/settings" },
 ];
 
@@ -114,6 +114,7 @@ export default function DashboardSidebar() {
                   <>
                     <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} className="shrink-0" />
                     {!collapsed && <span className="text-[14px] whitespace-nowrap">{item.name}</span>}
+                    {!collapsed && item.badge && <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">{item.badge}</span>}
                   </>
                 )}
               </NavLink>

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, Download, HelpCircle, MessageSquare, Upload, Mic, Settings2, AudioWaveform, Volume2, FolderOpen, MoreVertical, RotateCcw, Share, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { createProject } from '../lib/db';
+import { createProject, getProjectsByType } from '../lib/db';
+import { authFetch, authUploadFetch, downloadName } from '../lib/api';
 
 const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR || '';
 const WS_EDITOR = import.meta.env.VITE_WS_EDITOR || '';
@@ -36,6 +37,36 @@ export default function VoiceEditorPage() {
   const [genCurrentTime, setGenCurrentTime] = useState(0);
   const [genDuration, setGenDuration] = useState(0);
   const [sessionFiles, setSessionFiles] = useState([]);
+  const [sfMenuIdx, setSfMenuIdx] = useState(null);
+  const [loadingSf, setLoadingSf] = useState(true);
+  const [lastProjectUrl, setLastProjectUrl] = useState(null);
+  const sfMenuRef = useRef(null);
+
+  useEffect(() => {
+    getProjectsByType('voice_editor').then(rows => {
+      const files = rows.map(r => ({
+        id: r.id,
+        url: r.output_url,
+        name: r.title || 'Voice Editor Output',
+        duration: r.duration_seconds || 0,
+        timestamp: new Date(r.created_at).getTime(),
+        fromDb: true,
+      }));
+      setSessionFiles(files);
+      setLoadingSf(false);
+      files.forEach((f, idx) => {
+        if (!f.duration && f.url) {
+          const a = new Audio(f.url);
+          a.addEventListener('loadedmetadata', () => {
+            if (isFinite(a.duration) && a.duration > 0) {
+              setSessionFiles(prev => prev.map((sf, i) => i === idx && sf.id === f.id ? { ...sf, duration: a.duration } : sf));
+              supabase.from('projects').update({ duration_seconds: a.duration }).eq('id', f.id).catch(console.error);
+            }
+          });
+        }
+      });
+    });
+  }, []);
 
   const inputRef = useRef(null);
   const uploadAudioRef = useRef(null);
@@ -52,10 +83,11 @@ export default function VoiceEditorPage() {
       if (showExportSettings && exportBoxRef.current && !exportBoxRef.current.contains(event.target)) {
         setShowExportSettings(false);
       }
+      if (sfMenuIdx !== null && sfMenuRef.current && !sfMenuRef.current.contains(event.target)) setSfMenuIdx(null);
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [showExportSettings]);
+  }, [showExportSettings, sfMenuIdx]);
 
   const formatTime = secs => {
     if (!secs || isNaN(secs)) return '0:00';
@@ -64,16 +96,16 @@ export default function VoiceEditorPage() {
 
   const timeAgo = ts => {
     const diff = Math.floor((Date.now() - ts) / 1000);
-    if (diff < 5) return 'Just now';
-    if (diff < 60) return `${diff}s ago`;
+    if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
       recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
@@ -129,7 +161,7 @@ export default function VoiceEditorPage() {
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `editor_output.${selectedFormat.toLowerCase()}`;
+      link.download = downloadName('editor', fileName, selectedFormat.toLowerCase());
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -140,9 +172,16 @@ export default function VoiceEditorPage() {
 
   const handleSubmitFeedback = () => {
     if (!feedbackText.trim()) { alert('Please write feedback'); return; }
-    console.log({ rating: feedbackRating, feedback: feedbackText });
     alert('Thanks for your feedback!');
     setFeedbackText(''); setFeedbackRating(5); setShowFeedbackModal(false);
+  };
+
+  const handleSfPlay = (sf) => { if (sf.url) window.open(sf.url, '_blank'); setSfMenuIdx(null); };
+
+  const handleSfDownload = async (sf) => {
+    if (!sf.url) return;
+    try { const res = await fetch(sf.url); const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = downloadName('editor', sf.name, 'mp3'); document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); } catch { /* silent */ }
+    setSfMenuIdx(null);
   };
 
   const processAudio = async () => {
@@ -152,28 +191,47 @@ export default function VoiceEditorPage() {
     let progressInterval;
     try {
       setLoading(true); setProgress(0);
-      progressInterval = setInterval(() => { setProgress(prev => prev >= 95 ? prev : prev + 4); }, 300);
+      progressInterval = setInterval(() => { setProgress(prev => prev >= 95 ? prev : prev + 2); }, 500);
       setProcessedAudio(null);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      const fullName = user?.user_metadata?.full_name || user?.email || 'unknown_user';
 
       const formData = new FormData();
       if (mode === 'upload') { formData.append('file', file); }
       else { formData.append('file', new File([recordedBlob], 'recording.webm', { type: 'audio/webm' })); }
-      formData.append('user_id', fullName);
       if (enableNoiseRemoval) { formData.append('mode', processingMode); }
       formData.append('youtube_polish', String(enablePolishingAudio));
 
-      const response = await fetch(`${API_BASE}/api/upload-audio/full-enhance`, { method: 'POST', body: formData });
+      const response = await authUploadFetch(`${API_BASE}/api/upload-audio/full-enhance`, formData);
       if (!response.ok) throw new Error(`Processing failed: ${response.status}`);
       const data = await response.json();
-      clearInterval(progressInterval);
-      setProgress(100);
-      const url = data.supabase_url || `${API_BASE}${data.download_url}`;
-      setProcessedAudio(url);
-      setSessionFiles(prev => [{ url, format: selectedFormat, quality: selectedQuality, name: fileName, timestamp: Date.now() }, ...prev]);
-      createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval, polish: enablePolishingAudio } }).catch(console.error);
+
+      if (data.job_id) {
+        const poll = async () => {
+          while (true) {
+            await new Promise(r => setTimeout(r, 2000));
+            const statusRes = await authFetch(`${API_BASE}/api/upload-audio/status/${data.job_id}`);
+            if (!statusRes.ok) throw new Error('Status check failed');
+            const status = await statusRes.json();
+            if (status.status === 'done') return status;
+            if (status.status === 'failed') throw new Error(status.error || 'Processing failed');
+          }
+        };
+        const result = await poll();
+        clearInterval(progressInterval);
+        setProgress(100);
+        const url = result.supabase_url || `${API_BASE}${result.download_url}`;
+        setProcessedAudio(url);
+        setLastProjectUrl(url);
+        setSessionFiles(prev => [{ url, format: selectedFormat, quality: selectedQuality, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
+        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval, polish: enablePolishingAudio } }).catch(console.error);
+      } else {
+        clearInterval(progressInterval);
+        setProgress(100);
+        const url = data.supabase_url || `${API_BASE}${data.download_url}`;
+        setProcessedAudio(url);
+        setLastProjectUrl(url);
+        setSessionFiles(prev => [{ url, format: selectedFormat, quality: selectedQuality, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
+        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval, polish: enablePolishingAudio } }).catch(console.error);
+      }
     } catch (error) {
       console.error(error); alert('Error processing audio');
     } finally { clearInterval(progressInterval); setLoading(false); }
@@ -250,7 +308,7 @@ export default function VoiceEditorPage() {
         {/* Main 2x2 Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Top Left: Audio Source */}
-          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'h-[380px]' : ''}`}>
+          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'min-h-[380px]' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-0">
               <div className="flex items-center justify-between mb-4">
@@ -359,7 +417,7 @@ export default function VoiceEditorPage() {
           </div>
 
           {/* Top Right: Processing Settings */}
-          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'h-[380px]' : ''}`}>
+          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'min-h-[380px]' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
@@ -433,17 +491,29 @@ export default function VoiceEditorPage() {
             </div>
           </div>
 
-          {/* Bottom Left: Session Files */}
+          {/* Bottom Left: Recent Files */}
           <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'lg:col-span-2' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
                 <FolderOpen size={14} className="text-blue-600" />
               </div>
-              <h2 className="text-[15px] font-bold text-slate-900">Session Files</h2>
+              <h2 className="text-[15px] font-bold text-slate-900">Recent Files</h2>
             </div>
             <div className="p-5">
-              {sessionFiles.length === 0 ? (
+              {loadingSf ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50/30 border border-blue-100/20 animate-pulse">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100/50 shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-blue-100/50 rounded w-3/4" />
+                        <div className="h-2.5 bg-blue-100/30 rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sessionFiles.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <FolderOpen size={28} className="text-slate-200 mb-2" />
                   <p className="text-[12px] text-slate-400">No files yet</p>
@@ -452,19 +522,35 @@ export default function VoiceEditorPage() {
               ) : (
                 <div className="space-y-2">
                   {sessionFiles.map((sf, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50/60 border border-slate-100/60 hover:bg-blue-50/30 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                    <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-blue-50/60 border-blue-100/40 transition-all duration-200">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-blue-100">
                           <Volume2 size={13} className="text-blue-600" />
                         </div>
-                        <div>
-                          <p className="text-[12px] font-semibold text-slate-700">{sf.name}</p>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-slate-700 truncate">{sf.name}</p>
                           <p className="text-[10px] text-slate-400">{timeAgo(sf.timestamp)}</p>
                         </div>
                       </div>
-                      <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
-                        <MoreVertical size={14} />
-                      </button>
+                      {sf.duration ? <span className="text-[10px] font-medium text-slate-500 bg-slate-100 rounded-md px-1.5 py-0.5 shrink-0">{Math.floor(sf.duration / 60)}:{Math.max(1, Math.round(sf.duration % 60)).toString().padStart(2, '0')}</span> : null}
+                      <div className="relative shrink-0" ref={sfMenuIdx === idx ? sfMenuRef : null}>
+                        <button onClick={() => setSfMenuIdx(sfMenuIdx === idx ? null : idx)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all">
+                          <MoreVertical size={14} />
+                        </button>
+                        {sfMenuIdx === idx && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setSfMenuIdx(null)} />
+                            <div className="absolute right-0 bottom-8 w-36 bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 py-1.5 z-50">
+                              <button onClick={() => handleSfPlay(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                <Play size={13} /> Open
+                              </button>
+                              <button onClick={() => handleSfDownload(sf)} className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-600 hover:bg-slate-50 transition">
+                                <Download size={13} /> Download
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -495,7 +581,17 @@ export default function VoiceEditorPage() {
               </div>
               <div className="p-5">
                 <audio ref={generatedAudioRef} src={processedAudio || undefined}
-                  onLoadedMetadata={e => { if (isFinite(e.target.duration)) setGenDuration(e.target.duration); }}
+                  onLoadedMetadata={e => {
+                    const dur = e.target.duration;
+                    if (isFinite(dur) && dur > 0) {
+                      setGenDuration(dur);
+                      if (lastProjectUrl === processedAudio) {
+                        setSessionFiles(prev => prev.map((sf, i) => i === 0 && sf.url === processedAudio && !sf.duration ? { ...sf, duration: dur } : sf));
+                        supabase.from('projects').update({ duration_seconds: dur }).eq('output_url', processedAudio).then(() => {}).catch(console.error);
+                        setLastProjectUrl(null);
+                      }
+                    }
+                  }}
                   onDurationChange={e => { if (isFinite(e.target.duration) && e.target.duration > 0) setGenDuration(e.target.duration); }}
                   onCanPlay={e => { if (isFinite(e.target.duration) && e.target.duration > 0) setGenDuration(e.target.duration); }}
                   onTimeUpdate={e => { setGenCurrentTime(e.target.currentTime); if (isFinite(e.target.duration) && e.target.duration > 0 && genDuration === 0) setGenDuration(e.target.duration); }}

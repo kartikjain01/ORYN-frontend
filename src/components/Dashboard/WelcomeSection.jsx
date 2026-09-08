@@ -154,9 +154,12 @@ export default function WelcomeSection() {
             <div className="h-[80px] flex items-center">
               <Icon3D type={item.icon} />
             </div>
-            <h3 className="text-[15px] font-bold text-slate-900">
-              {item.title}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-[15px] font-bold text-slate-900">
+                {item.title}
+              </h3>
+              {item.badge && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">{item.badge}</span>}
+            </div>
             <p className="mt-1 text-[12px] leading-[18px] text-slate-500 line-clamp-2">
               {item.description}
             </p>

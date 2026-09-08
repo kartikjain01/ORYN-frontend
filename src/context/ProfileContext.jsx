@@ -48,6 +48,26 @@ export function ProfileProvider({ children }) {
       return;
     }
 
+    if (data?.deleted_at) {
+      await supabase.auth.signOut({ scope: 'global' });
+      setUser(null);
+      setProfile(null);
+      window.location.href = '/register';
+      return;
+    }
+
+    if (!data.full_name) {
+      const meta = user?.user_metadata || {};
+      const oauthName = meta.full_name || meta.name || '';
+      const oauthAvatar = meta.avatar_url || meta.picture || '';
+      if (oauthName) {
+        const updates = { full_name: oauthName };
+        if (oauthAvatar && !data.avatar_url) updates.avatar_url = oauthAvatar;
+        await supabase.from('profiles').update(updates).eq('id', userId);
+        Object.assign(data, updates);
+      }
+    }
+
     setProfile(data);
   };
 
@@ -57,7 +77,7 @@ export function ProfileProvider({ children }) {
     if (user) {
       fetchProfile(user.id);
     } else {
-      setProfile(null); // logout cleanup
+      setProfile(null);
     }
   }, [user]);
 
@@ -70,7 +90,7 @@ export function ProfileProvider({ children }) {
         setProfile,
         fetchProfile,
         user,
-        loading, // 🔥 important
+        loading,
       }}
     >
       {children}

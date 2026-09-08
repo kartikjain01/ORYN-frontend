@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient";
-import { ArrowLeft, User, CreditCard, Shield, Bell, Link2, Trash2, Check, X, Lock } from 'lucide-react';
+import { resetAccount, getUsageStats } from "../lib/db";
+import { ArrowLeft, User, CreditCard, Shield, Bell, Link2, Trash2, Check, X, Lock, AlertTriangle, Loader2 } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useProfile } from "../context/ProfileContext";
@@ -114,6 +115,13 @@ export default function SettingsPage() {
   const [countrySearch, setCountrySearch] = useState('');
   const countryDropdownRef = useRef(null);
   const [initialValues, setInitialValues] = useState({});
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [usageStats, setUsageStats] = useState(null);
+
+  useEffect(() => { getUsageStats().then(setUsageStats); }, []);
 
   useEffect(() => {
     const handleClickOutside = e => {
@@ -238,6 +246,21 @@ export default function SettingsPage() {
   const scrollToSection = (id) => {
     setActiveSection(id);
     document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeleting(true);
+    try {
+      await resetAccount();
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Account reset failed:', err);
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setDeleteConfirmText('');
+      showToast('Failed to delete account data. Please try again.', 'error');
+    }
   };
 
   const authProvider = user?.app_metadata?.provider || 'email';
@@ -467,44 +490,30 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-5 p-4 bg-slate-50 rounded-xl">
                 <div>
                   <p className="text-[15px] font-semibold text-slate-800">Free Plan</p>
-                  <p className="text-[12px] text-slate-400 mt-0.5">Basic features with limited usage</p>
+                  <p className="text-[12px] text-slate-400 mt-0.5">Unlimited access during early access</p>
                 </div>
-                <button
-                  onClick={() => navigate('/upgrade')}
-                  className="h-[36px] px-5 rounded-xl bg-gradient-to-r from-[#2563eb] to-[#4f46e5] text-white text-[13px] font-semibold shadow-md hover:shadow-lg transition cursor-pointer"
-                >
-                  Upgrade Plan
-                </button>
+                <span className="h-[36px] px-5 rounded-xl bg-slate-100 text-slate-400 text-[13px] font-semibold flex items-center">
+                  Plans Coming Soon
+                </span>
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-[13px] mb-1.5">
-                    <span className="text-slate-600">Voice Clones</span>
-                    <span className="font-medium text-slate-800">2 / 10</span>
+                {[
+                  { label: "Voice Clones", value: usageStats?.voiceClone ?? 0, color: "bg-blue-500" },
+                  { label: "TTS Generated", value: usageStats?.tts ?? 0, color: "bg-indigo-500" },
+                  { label: "Voice Editor", value: usageStats?.voiceEditor ?? 0, color: "bg-cyan-500" },
+                  { label: "Captions", value: usageStats?.captions ?? 0, color: "bg-amber-500" },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between text-[13px] mb-1.5">
+                      <span className="text-slate-600">{item.label}</span>
+                      <span className="font-medium text-slate-800">{item.value} {item.value === 1 ? 'project' : 'projects'}</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full">
+                      <div className={`h-full rounded-full ${item.color}`} style={{ width: `${usageStats?.total ? Math.max((item.value / usageStats.total) * 100, item.value > 0 ? 5 : 0) : 0}%` }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full">
-                    <div className="h-full rounded-full bg-blue-500" style={{ width: '20%' }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[13px] mb-1.5">
-                    <span className="text-slate-600">Characters Used</span>
-                    <span className="font-medium text-slate-800">12,000 / 50,000</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full">
-                    <div className="h-full rounded-full bg-indigo-500" style={{ width: '24%' }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[13px] mb-1.5">
-                    <span className="text-slate-600">Projects</span>
-                    <span className="font-medium text-slate-800">3 / 20</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full">
-                    <div className="h-full rounded-full bg-teal-500" style={{ width: '15%' }} />
-                  </div>
-                </div>
+                ))}
               </div>
             </SectionCard>
           </div>
@@ -581,21 +590,24 @@ export default function SettingsPage() {
                     {isOAuth ? 'Not Available' : 'Change'}
                   </button>
                 </SettingRow>
-                <SettingRow label="Logout All Devices" description="Sign out from every active session">
+                <SettingRow label="Logout" description="Sign out from this device">
                   <button
                     onClick={async () => {
-                      await supabase.auth.signOut({ scope: 'global' });
+                      await supabase.auth.signOut();
                       window.location.href = '/';
                     }}
                     className="h-[34px] px-4 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition cursor-pointer"
                   >
-                    Logout All
+                    Logout
                   </button>
                 </SettingRow>
               </div>
               <div className="mt-5 p-4 bg-slate-50 rounded-xl">
                 <p className="text-[13px] text-slate-500">
-                  <span className="font-medium text-slate-700">Last login:</span> Today from Chrome on macOS
+                  <span className="font-medium text-slate-700">Last login:</span>{' '}
+                  {user?.last_sign_in_at
+                    ? new Date(user.last_sign_in_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+                    : 'Unknown'}
                 </p>
               </div>
             </SectionCard>
@@ -614,13 +626,79 @@ export default function SettingsPage() {
                     <p className="text-[14px] font-medium text-red-700">Delete Account</p>
                     <p className="text-[12px] text-red-400 mt-0.5">Permanently delete your account and all data</p>
                   </div>
-                  <button className="h-[34px] px-4 rounded-lg border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 hover:bg-red-100 transition cursor-pointer">
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="h-[34px] px-4 rounded-lg border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 hover:bg-red-100 transition cursor-pointer"
+                  >
                     Delete
                   </button>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Delete Account Confirmation Modal */}
+          {showDeleteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!isDeleting) { setShowDeleteModal(false); setDeleteConfirmText(''); } }} />
+              <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[440px] mx-4 p-6 animate-fadeSlide">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                    <AlertTriangle size={20} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-[16px] font-bold text-slate-900">Delete Account</h3>
+                    <p className="text-[12px] text-slate-400">This action cannot be undone</p>
+                  </div>
+                </div>
+
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-5">
+                  <p className="text-[13px] text-red-700 leading-relaxed">
+                    This will permanently erase all your <span className="font-semibold">projects</span>, <span className="font-semibold">cloned voices</span>, <span className="font-semibold">files</span>, and <span className="font-semibold">profile info</span>. Your account will stay active with a fresh environment — but your data cannot be recovered.
+                  </p>
+                </div>
+
+                <div className="mb-5">
+                  <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">
+                    Type <span className="font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">DELETE</span> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={e => setDeleteConfirmText(e.target.value)}
+                    disabled={isDeleting}
+                    placeholder="DELETE"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 focus:border-red-400 focus:ring-2 focus:ring-red-400/10 outline-none transition placeholder:text-slate-300"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setShowDeleteModal(false); setDeleteConfirmText(''); }}
+                    disabled={isDeleting}
+                    className="flex-1 h-[42px] rounded-xl border border-slate-200 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                    className="flex-1 h-[42px] rounded-xl bg-red-600 text-[13px] font-semibold text-white hover:bg-red-700 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Wiping Data...
+                      </>
+                    ) : (
+                      'Erase All Data'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom spacer */}
           <div className="h-8" />
