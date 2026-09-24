@@ -100,9 +100,8 @@ export default function RecentProjects() {
       detectDurations(freshData);
     }).then(data => {
       setProjects(data);
-      setLoading(false);
       detectDurations(data);
-    });
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [detectDurations]);
 
   useEffect(() => {

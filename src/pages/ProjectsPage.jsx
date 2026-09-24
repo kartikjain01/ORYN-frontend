@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Folder, Search, Grid3X3, List, Play, Pause, MoreHorizontal, Download, Pencil, Trash2, Loader2, X, SkipBack, SkipForward, Volume2, Maximize2 } from "lucide-react";
+import { Folder, Search, Grid3X3, List, Play, Pause, MoreHorizontal, Download, Pencil, Trash2, Loader2, X, SkipBack, SkipForward, Volume2, Maximize2, CheckSquare, Square } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getProjects, deleteProject, renameProject, formatDuration } from "../lib/db";
 import { supabase } from "../supabaseClient";
@@ -61,8 +61,43 @@ export default function ProjectsPage() {
     setProgress(0);
   }, []);
 
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [toast, setToast] = useState('');
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === projects.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(projects.map(p => p.id)));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    if (!window.confirm(`Delete ${count} project${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
+    let deleted = 0;
+    for (const id of selectedIds) {
+      try {
+        await deleteProject(id);
+        deleted++;
+      } catch (err) {
+        console.error('Failed to delete project:', id, err);
+      }
+    }
+    setProjects(prev => prev.filter(p => !selectedIds.has(p.id)));
+    setSelectedIds(new Set());
+    showToast(deleted === count ? `Deleted ${count} project${count > 1 ? 's' : ''}` : `Deleted ${deleted}/${count} projects`);
+  };
+
   const togglePlay = useCallback((project) => {
-    if (!project.outputUrl) return;
+    if (!project.outputUrl) { showToast('No output file available for this project'); return; }
     const isVideo = project.type === 'captions' || project.type === 'video';
 
     if (isVideo) {
@@ -77,6 +112,8 @@ export default function ProjectsPage() {
     if (playingId === project.id) { stopPlayback(); return; }
     stopPlayback();
     const el = new Audio();
+    el.crossOrigin = 'anonymous';
+    el.preload = 'auto';
     el.src = project.outputUrl;
     mediaRef.current = el;
     setPlayingId(project.id);
@@ -90,7 +127,14 @@ export default function ProjectsPage() {
       setProgress(1);
       setTimeout(() => { setPlayingId(null); setProgress(0); }, 600);
     });
-    el.play().catch(() => { setPlayingId(null); });
+    el.addEventListener('error', () => {
+      stopPlayback();
+      showToast('Could not play this file — the URL may have expired');
+    });
+    el.play().catch(() => {
+      stopPlayback();
+      showToast('Playback failed — file may no longer be available');
+    });
   }, [playingId, stopPlayback, videoModal, closeVideoModal]);
 
   useEffect(() => () => stopPlayback(), [stopPlayback]);
@@ -119,20 +163,23 @@ export default function ProjectsPage() {
 
   const fetchData = useCallback(async () => {
     if (projects.length > 0) setRefreshing(true); else setLoading(true);
-    const data = await getProjects({
-      type: activeFilter,
-      search: debouncedSearch,
-      sort: sortBy,
-      onRefresh: (freshData) => {
-        setProjects(freshData);
-        setRefreshing(false);
-        detectDurations(freshData);
-      },
-    });
-    setProjects(data);
-    setLoading(false);
-    setRefreshing(false);
-    detectDurations(data);
+    try {
+      const data = await getProjects({
+        type: activeFilter,
+        search: debouncedSearch,
+        sort: sortBy,
+        onRefresh: (freshData) => {
+          setProjects(freshData);
+          setRefreshing(false);
+          detectDurations(freshData);
+        },
+      });
+      setProjects(data);
+      detectDurations(data);
+    } catch { /* silent */ } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, [activeFilter, debouncedSearch, sortBy, detectDurations]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -241,6 +288,25 @@ export default function ProjectsPage() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl px-5 py-3 flex items-center justify-between animate-[fadeIn_0.2s_ease]">
+          <div className="flex items-center gap-3">
+            <button onClick={selectAll} className="flex items-center gap-2 text-[12px] font-semibold text-blue-700 hover:text-blue-900 transition">
+              {selectedIds.size === projects.length ? <CheckSquare size={16} /> : <Square size={16} />}
+              {selectedIds.size === projects.length ? 'Deselect All' : 'Select All'}
+            </button>
+            <span className="text-[12px] text-blue-600 font-medium">{selectedIds.size} selected</span>
+          </div>
+          <button
+            onClick={handleBulkDelete}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-white bg-red-500 hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <Trash2 size={12} />
+            Delete Selected
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map(i => (
@@ -270,7 +336,7 @@ export default function ProjectsPage() {
               image = placeholder;
             }
             return (
-              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`group cursor-pointer bg-white rounded-2xl border hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-500 relative ${highlightId === project.id ? 'border-blue-400 ring-2 ring-blue-200 shadow-[0_0_20px_rgba(59,130,246,0.25)]' : 'border-slate-200'}`}>
+              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`group cursor-pointer bg-white rounded-2xl border hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-500 relative ${selectedIds.has(project.id) ? 'border-blue-400 ring-2 ring-blue-200' : highlightId === project.id ? 'border-blue-400 ring-2 ring-blue-200 shadow-[0_0_20px_rgba(59,130,246,0.25)]' : 'border-slate-200'}`}>
                 <div className="relative h-[160px] overflow-hidden rounded-t-2xl">
                   <img
                     src={image}
@@ -279,6 +345,12 @@ export default function ProjectsPage() {
                     className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleSelect(project.id); }}
+                    className={`absolute right-3 top-3 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 z-10 ${selectedIds.has(project.id) ? 'bg-blue-500 text-white' : 'bg-black/30 text-white opacity-0 group-hover:opacity-100 hover:bg-black/50'}`}
+                  >
+                    {selectedIds.has(project.id) ? <CheckSquare size={14} /> : <Square size={14} />}
+                  </button>
                   <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-lg text-white text-[10px] font-semibold ${project.tagColor}`}>
                     {project.tag}
                   </span>
@@ -358,7 +430,10 @@ export default function ProjectsPage() {
               image = placeholder;
             }
             return (
-              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`flex items-center gap-4 px-5 py-4 hover:bg-slate-50/50 transition-all duration-500 cursor-pointer group ${highlightId === project.id ? 'bg-blue-50/60 ring-1 ring-blue-200' : ''}`}>
+              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`flex items-center gap-4 px-5 py-4 hover:bg-slate-50/50 transition-all duration-500 cursor-pointer group ${selectedIds.has(project.id) ? 'bg-blue-50/60' : highlightId === project.id ? 'bg-blue-50/60 ring-1 ring-blue-200' : ''}`}>
+                <button onClick={(e) => { e.stopPropagation(); toggleSelect(project.id); }} className={`shrink-0 w-5 h-5 rounded flex items-center justify-center transition ${selectedIds.has(project.id) ? 'text-blue-500' : 'text-slate-300 hover:text-slate-500'}`}>
+                  {selectedIds.has(project.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                </button>
                 <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0 relative">
                   <img src={image} alt={project.title} onError={(e) => { e.currentTarget.src = placeholder; }} className="w-full h-full object-cover" />
                   {project.outputUrl && (
@@ -423,6 +498,12 @@ export default function ProjectsPage() {
         </div>
       )}
 
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 bg-slate-900 text-white text-[13px] font-medium rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] animate-[fadeIn_0.2s_ease-out]">
+          {toast}
+        </div>
+      )}
+
       {videoModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={closeVideoModal}>
           <div className="relative w-full max-w-3xl mx-4 bg-slate-900 rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -440,9 +521,11 @@ export default function ProjectsPage() {
                 ref={el => { videoModalRef.current = el; }}
                 src={videoModal.outputUrl}
                 className="w-full max-h-[70vh] object-contain"
+                preload="auto"
                 autoPlay
                 controls
                 onEnded={closeVideoModal}
+                onError={() => { closeVideoModal(); showToast('Could not load video — the URL may have expired'); }}
               />
             </div>
             <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">

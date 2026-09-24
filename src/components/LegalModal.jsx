@@ -152,7 +152,7 @@ function TermsContent() {
         13. Contact
       </h4>
       <p>
-        For questions about these Terms, contact us at <strong>support@orynengine.com</strong>.
+        For questions about these Terms, contact us at <strong>the Suggestion Box on our website</strong>.
       </p>
     </>
   );
@@ -273,7 +273,7 @@ function PrivacyContent() {
         <li><strong>Withdraw Consent:</strong> Revoke consent for optional data processing at any time</li>
       </ul>
       <p className="mt-3">
-        To exercise any of these rights, contact us at <strong>support@orynengine.com</strong> or use the account settings page.
+        To exercise any of these rights, contact us at <strong>the Suggestion Box on our website</strong> or use the account settings page.
       </p>
 
       <h4 className="mt-8 text-xl font-semibold text-black">
@@ -311,7 +311,7 @@ function PrivacyContent() {
         For privacy-related questions, data requests, or concerns:
       </p>
       <ul className="ml-6 mt-3 list-disc space-y-1">
-        <li>Email: <strong>support@orynengine.com</strong></li>
+        <li>Email: <strong>the Suggestion Box on our website</strong></li>
         <li>Platform: Use the Contact Support panel in the navigation</li>
       </ul>
     </>

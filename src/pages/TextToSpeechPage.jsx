@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Download, HelpCircle, MessageSquare, Globe, Sparkles, Upload, Settings2, X, Maximize2, Minimize2, Volume2, Mic, FolderOpen, MoreVertical, RotateCcw, Share } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Pause, Download, HelpCircle, MessageSquare, Globe, Sparkles, Upload, Settings2, X, Maximize2, Minimize2, Volume2, Mic, FolderOpen, MoreVertical, RotateCcw, Share, ChevronDown, Check } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { createProject, getProjectsByType } from '../lib/db';
 import { authFetch, authJsonFetch, downloadName } from '../lib/api';
@@ -7,6 +8,7 @@ import { authFetch, authJsonFetch, downloadName } from '../lib/api';
 const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION;
 
 export default function TextToSpeechPage() {
+  const navigate = useNavigate();
   const [text, setText] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,12 +37,21 @@ export default function TextToSpeechPage() {
 
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedVoice, setSelectedVoice] = useState('michael');
+  const [ttsLangOpen, setTtsLangOpen] = useState(false);
+  const [ttsVoiceOpen, setTtsVoiceOpen] = useState(false);
+  useEffect(() => { const h = () => { setTtsLangOpen(false); setTtsVoiceOpen(false); }; document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, []);
   const [speed, setSpeed] = useState(1);
-  const [stability, setStability] = useState(0.5);
-  const [similarity, setSimilarity] = useState(0.5);
-  const [styleExaggeration, setStyleExaggeration] = useState(0.5);
+  const [pitch, setPitch] = useState(1.0);
+
+  const [toast, setToast] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const [waveHeights] = useState(() => Array.from({ length: 120 }, () => Math.random() * 20 + 6));
+
+  const MAX_TEXT_LENGTH = 2000;
+  const MAX_TXT_FILE_SIZE = 500 * 1024;
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
   const voices = {
     en: [
@@ -86,7 +97,7 @@ export default function TextToSpeechPage() {
           });
         }
       });
-    });
+    }).catch(() => setLoadingSf(false));
   }, []);
 
   useEffect(() => {
@@ -114,13 +125,25 @@ export default function TextToSpeechPage() {
   const handleFileChange = e => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.type === 'text/plain') {
-      const reader = new FileReader();
-      reader.onload = event => setText(event.target.result);
-      reader.readAsText(file);
-    } else {
-      alert('Only .txt files supported');
+    if (file.type !== 'text/plain') {
+      showToast('Only .txt files supported');
+      return;
     }
+    if (file.size > MAX_TXT_FILE_SIZE) {
+      showToast(`File too large (${(file.size / 1024).toFixed(0)} KB). Max 500 KB.`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = event => {
+      const content = event.target.result;
+      if (content.length > MAX_TEXT_LENGTH) {
+        showToast(`Text too long (${content.length.toLocaleString()} chars). Max ${MAX_TEXT_LENGTH.toLocaleString()}.`);
+        setText(content.slice(0, MAX_TEXT_LENGTH));
+      } else {
+        setText(content);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const togglePlay = () => {
@@ -163,7 +186,7 @@ export default function TextToSpeechPage() {
   };
 
 
-  const handleSfPlay = (sf) => { if (sf.url) { setAudioUrl(sf.url); setShowAudio(true); } setSfMenuIdx(null); };
+  const handleSfPlay = (sf) => { navigate(sf.id ? `/projects?highlight=${sf.id}` : '/projects'); setSfMenuIdx(null); };
 
   const handleSfDownload = async (sf) => {
     if (!sf.url) return;
@@ -184,7 +207,7 @@ export default function TextToSpeechPage() {
 
 
   const handleConfirmExport = async () => {
-    if (!audioUrl) { alert('No audio to export'); return; }
+    if (!audioUrl) { showToast('No audio to export'); return; }
     try {
       const response = await fetch(audioUrl);
       const blob = await response.blob();
@@ -199,17 +222,18 @@ export default function TextToSpeechPage() {
       setShowExportSettings(false);
     } catch (err) {
       console.error('Download failed:', err);
-      alert('Failed to download audio');
+      showToast('Failed to download audio');
     }
   };
 
   const handleGenerate = async () => {
-    if (!text.trim()) { alert('Please enter text first'); return; }
+    if (!text.trim()) { showToast('Please enter text first'); return; }
     setIsLoading(true);
     try {
       const response = await authJsonFetch(`${API_BASE}/generate`, {
           text: text.replace(/\n/g, ' '),
           speed,
+          pitch,
           voice: selectedVoice,
           language: selectedLanguage,
       });
@@ -232,32 +256,49 @@ export default function TextToSpeechPage() {
         setShowAudio(true);
         setLastProjectUrl(audioUrl);
         setSessionFiles(prev => [{ url: audioUrl, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: audioUrl, metadata: { voice: selectedVoice, language: selectedLanguage, speed } }).catch(err => console.error('createProject failed:', err));
+        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: audioUrl, metadata: { voice: selectedVoice, language: selectedLanguage, speed, pitch } }).catch(err => console.error('createProject failed:', err));
       } else {
         setAudioUrl(data.audio_url);
         setShowAudio(true);
         setLastProjectUrl(data.audio_url);
         setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: data.audio_url, metadata: { voice: selectedVoice, language: selectedLanguage, speed } }).catch(err => console.error('createProject failed:', err));
+        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: data.audio_url, metadata: { voice: selectedVoice, language: selectedLanguage, speed, pitch } }).catch(err => console.error('createProject failed:', err));
       }
     } catch (error) {
       console.error('Connection failed:', error);
-      alert('Backend connection failed. Please try again.');
+      showToast('Backend connection failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmitFeedback = () => {
-    alert('Thanks for your feedback!');
-    setShowFeedbackModal(false);
-    setFeedbackText('');
-    setFeedbackRating(5);
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim()) { showToast('Please write your feedback'); return; }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from('feedbacks').insert({
+        tool: 'tts',
+        rating: feedbackRating,
+        message: feedbackText.trim(),
+        user_id: session?.user?.id || null,
+      });
+      setFeedbackSent(true);
+      setFeedbackText('');
+      setFeedbackRating(5);
+      setTimeout(() => { setShowFeedbackModal(false); setFeedbackSent(false); }, 1500);
+    } catch {
+      showToast('Failed to send feedback');
+    }
   };
 
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="relative min-h-full p-6 lg:p-8 space-y-5 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl bg-slate-900 text-white text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease]">
+          {toast}
+        </div>
+      )}
+      <div className="relative min-h-full p-6 lg:p-8 space-y-5" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Decorative floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
         <div className="pointer-events-none absolute top-[60%] -left-32 w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-blue-200/25 to-indigo-200/15 blur-[70px] animate-breathe" style={{ animationDelay: '1.2s' }} />
@@ -323,7 +364,7 @@ export default function TextToSpeechPage() {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5" style={{ overflow: 'visible' }}>
           {/* Left: Text Input */}
           <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 flex flex-col">
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
@@ -342,9 +383,6 @@ export default function TextToSpeechPage() {
                   </button>
                 )}
                 <div className="flex items-center gap-2">
-                  {text && (
-                    <span className="text-[10px] text-slate-400 font-medium tabular-nums bg-slate-100/60 px-2 py-0.5 rounded">{text.length}/500</span>
-                  )}
                   <button
                     onClick={() => setIsFullscreen(true)}
                     className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all"
@@ -360,15 +398,19 @@ export default function TextToSpeechPage() {
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
+                maxLength={MAX_TEXT_LENGTH}
                 placeholder={selectedLanguage === 'hi' ? 'हिंदी में लिखें...' : 'Type or paste your text here...'}
                 className="flex-1 w-full resize-none bg-transparent text-[14px] text-slate-700 outline-none placeholder:text-slate-300 leading-relaxed"
               />
 
               {/* Bottom bar */}
-              <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100/60">
+              <div className="mt-2 mb-1">
+                <span className={`text-[11px] font-medium ${text.length >= MAX_TEXT_LENGTH ? 'text-red-500' : text.length >= MAX_TEXT_LENGTH * 0.9 ? 'text-amber-500' : 'text-slate-400'}`}>{text.length.toLocaleString()} / {MAX_TEXT_LENGTH.toLocaleString()} characters</span>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100/60">
                 <div className="flex items-center gap-2">
-                  <button onClick={handleFileUploadClick} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-slate-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,1)] hover:text-blue-600 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
-                    <Upload size={12} />
+                  <button onClick={handleFileUploadClick} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 shadow-[0_2px_8px_rgba(37,99,235,0.1)] hover:bg-blue-100 hover:border-blue-300 hover:shadow-[0_4px_14px_rgba(37,99,235,0.15)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+                    <Upload size={13} />
                     Upload .txt
                   </button>
                   <button onClick={() => setText('')} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-slate-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.1),inset_0_1px_0_rgba(255,255,255,1)] hover:text-red-500 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
@@ -393,7 +435,7 @@ export default function TextToSpeechPage() {
           </div>
 
           {/* Right: Voice Settings */}
-          <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300">
+          <div className="relative bg-white rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 overflow-visible">
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
@@ -404,46 +446,61 @@ export default function TextToSpeechPage() {
 
             <div className="p-5 space-y-4">
               {/* Language */}
-              <div>
+              <div className="relative">
                 <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                   <Globe size={11} />
                   Language
                 </label>
-                <select
-                  value={selectedLanguage}
-                  onChange={e => setSelectedLanguage(e.target.value)}
-                  className="w-full bg-slate-50/60 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3.5 py-2.5 text-[12px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 transition-all duration-200 appearance-none cursor-pointer"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                <button
+                  onClick={e => { e.stopPropagation(); setTtsLangOpen(o => !o); setTtsVoiceOpen(false); }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400"
                 >
-                  <option value="en">English</option>
-                  <option value="hi">Hindi</option>
-                </select>
+                  <span>{{ en: 'English', hi: 'Hindi' }[selectedLanguage]}</span>
+                  <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${ttsLangOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {ttsLangOpen && (
+                  <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden">
+                    {[{ id: 'en', name: 'English' }, { id: 'hi', name: 'Hindi' }].map(l => (
+                      <button key={l.id} onClick={e => { e.stopPropagation(); setSelectedLanguage(l.id); setTtsLangOpen(false); }}
+                        className={`w-full px-4 py-3 text-left text-[13px] font-semibold transition-colors duration-150 flex items-center gap-2.5 ${selectedLanguage === l.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                        {selectedLanguage === l.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                        <span className={selectedLanguage !== l.id ? 'ml-[21px]' : ''}>{l.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Voice */}
-              <div>
+              <div className="relative">
                 <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                   <Mic size={11} />
                   Voice
                 </label>
-                <select
-                  value={selectedVoice}
-                  onChange={e => setSelectedVoice(e.target.value)}
-                  className="w-full bg-slate-50/60 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3.5 py-2.5 text-[12px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 transition-all duration-200 appearance-none cursor-pointer"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                <button
+                  onClick={e => { e.stopPropagation(); setTtsVoiceOpen(o => !o); setTtsLangOpen(false); }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400"
                 >
-                  {voices[selectedLanguage].map(voice => (
-                    <option key={voice.id} value={voice.id}>{voice.label} ({voice.gender})</option>
-                  ))}
-                </select>
+                  <span>{voices[selectedLanguage].find(v => v.id === selectedVoice)?.label || selectedVoice} ({voices[selectedLanguage].find(v => v.id === selectedVoice)?.gender || ''})</span>
+                  <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${ttsVoiceOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {ttsVoiceOpen && (
+                  <div className="absolute z-[100] mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden max-h-[240px] overflow-y-auto">
+                    {voices[selectedLanguage].map(voice => (
+                      <button key={voice.id} onClick={e => { e.stopPropagation(); setSelectedVoice(voice.id); setTtsVoiceOpen(false); }}
+                        className={`w-full px-4 py-3 text-left text-[13px] font-semibold transition-colors duration-150 flex items-center gap-2.5 ${selectedVoice === voice.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                        {selectedVoice === voice.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                        <span className={selectedVoice !== voice.id ? 'ml-[21px]' : ''}>{voice.label} ({voice.gender})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Sliders with value in thumb */}
               {[
                 { label: 'Speed', value: speed, setValue: setSpeed, min: 0.5, max: 2, step: 0.1, display: `${speed.toFixed(1)}x` },
-                { label: 'Stability', value: stability, setValue: setStability, min: 0, max: 1, step: 0.01, display: Math.round(stability * 100) },
-                { label: 'Similarity', value: similarity, setValue: setSimilarity, min: 0, max: 1, step: 0.01, display: Math.round(similarity * 100) },
-                { label: 'Style Exaggeration', value: styleExaggeration, setValue: setStyleExaggeration, min: 0, max: 1, step: 0.01, display: Math.round(styleExaggeration * 100) },
+                { label: 'Pitch', value: pitch, setValue: setPitch, min: 0.85, max: 1.15, step: 0.05, display: pitch === 1 ? '0' : pitch < 1 ? `−${Math.round((1 - pitch) * 100)}` : `+${Math.round((pitch - 1) * 100)}` },
               ].map(slider => {
                 const percent = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
                 return (
@@ -551,14 +608,36 @@ export default function TextToSpeechPage() {
                   </div>
                   <h2 className="text-[15px] font-bold text-slate-900">Generated Audio</h2>
                 </div>
-                <div className="relative flex items-center gap-3">
+                <div ref={exportBoxRef} className="relative flex items-center gap-2">
                   <button
                     onClick={() => setShowExportSettings(!showExportSettings)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                   >
                     <Download size={12} />
                     Export
+                    <ChevronDown size={10} className={`transition-transform duration-200 ${showExportSettings ? 'rotate-180' : ''}`} />
                   </button>
+
+                  {showExportSettings && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-20 p-3.5 space-y-3">
+                      <div>
+                        <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Format</label>
+                        <div className="flex gap-1.5">
+                          {['WAV', 'MP3'].map(f => (
+                            <button key={f} onClick={() => setSelectedFormat(f)}
+                              className={`flex-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 ${selectedFormat === f ? 'bg-blue-500 text-white shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'}`}
+                            >{f}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={handleConfirmExport}
+                        className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                      >
+                        <Download size={11} className="inline mr-1.5 -mt-0.5" />
+                        Download {selectedFormat}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -640,12 +719,13 @@ export default function TextToSpeechPage() {
                 <textarea
                   value={text}
                   onChange={e => setText(e.target.value)}
+                  maxLength={MAX_TEXT_LENGTH}
                   placeholder={selectedLanguage === 'hi' ? 'हिंदी में लिखें...' : 'Type or paste your text here...'}
                   className="w-full h-full resize-none bg-transparent text-[15px] text-slate-700 outline-none placeholder:text-slate-300 leading-relaxed"
                 />
               </div>
               <div className="px-6 py-4 border-t border-slate-100/60 flex items-center justify-between shrink-0">
-                <span className="text-[11px] text-slate-400 font-medium">{text.length} characters</span>
+                <span className={`text-[11px] font-medium ${text.length >= MAX_TEXT_LENGTH ? 'text-red-500' : 'text-slate-400'}`}>{text.length.toLocaleString()} / {MAX_TEXT_LENGTH.toLocaleString()}</span>
                 <button
                   onClick={() => { setIsFullscreen(false); handleGenerate(); }}
                   disabled={isLoading || !text.trim()}
@@ -658,40 +738,6 @@ export default function TextToSpeechPage() {
           </div>
         )}
 
-        {/* Export Settings Modal */}
-        {showExportSettings && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={() => setShowExportSettings(false)}>
-            <div className="relative w-full max-w-[320px] bg-white rounded-2xl border border-slate-200/80 shadow-[0_32px_80px_rgba(0,0,0,0.12)] p-6" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setShowExportSettings(false)} className="absolute top-4 right-4 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-                <X size={16} />
-              </button>
-              <h3 className="text-[16px] font-bold text-slate-900 mb-5">Export Settings</h3>
-              <div className="mb-4">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Format</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['MP3', 'WAV'].map(fmt => (
-                    <button key={fmt} onClick={() => setSelectedFormat(fmt)}
-                      className={`py-2.5 rounded-xl text-[12px] font-semibold border transition-all duration-200 ${selectedFormat === fmt ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
-                    >{fmt}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="mb-5">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Quality</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Low', 'High'].map(q => (
-                    <button key={q} onClick={() => setSelectedQuality(q)}
-                      className={`py-2.5 rounded-xl text-[12px] font-semibold border transition-all duration-200 ${selectedQuality === q ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
-                    >{q}</button>
-                  ))}
-                </div>
-              </div>
-              <button onClick={() => { handleConfirmExport(); setShowExportSettings(false); }}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[13px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 transition-all duration-200"
-              >Download {selectedFormat}</button>
-            </div>
-          </div>
-        )}
 
         {/* Help Modal */}
         {showHelpModal && (
@@ -706,11 +752,11 @@ export default function TextToSpeechPage() {
               <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">1. Enter Text</p>
-                  <p>Type your text or upload a .txt file. Choose your preferred language and voice.</p>
+                  <p>Type your text or upload a .txt file (max 2,000 characters). Choose your preferred language and voice.</p>
                 </div>
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">2. Configure Settings</p>
-                  <p>Adjust speed to match your desired output. Select output format (MP3 or WAV) and quality.</p>
+                  <p>Adjust speed to match your desired output. Audio is exported as high-quality WAV.</p>
                 </div>
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">3. Generate & Export</p>
@@ -718,7 +764,7 @@ export default function TextToSpeechPage() {
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
-                  <p>Email: support@orynengine.com</p>
+                  <p>Use the Suggestion Box on the landing page to reach us.</p>
                 </div>
               </div>
             </div>
@@ -735,29 +781,40 @@ export default function TextToSpeechPage() {
                   <X size={18} />
                 </button>
               </div>
-              <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience using Text to Speech</p>
-              <div className="mb-5">
-                <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
-                      ★
-                    </button>
-                  ))}
+              {feedbackSent ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900">Thanks for your feedback!</p>
                 </div>
-              </div>
-              <div className="mb-5">
-                <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
-                <textarea
-                  value={feedbackText}
-                  onChange={e => setFeedbackText(e.target.value)}
-                  placeholder="Tell us what you liked or what we can improve..."
-                  className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
-                />
-              </div>
-              <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
-                Submit Feedback
-              </button>
+              ) : (
+                <>
+                  <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience using Text to Speech</p>
+                  <div className="mb-5">
+                    <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-5">
+                    <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
+                    <textarea
+                      value={feedbackText}
+                      onChange={e => setFeedbackText(e.target.value)}
+                      placeholder="Tell us what you liked or what we can improve..."
+                      className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
+                    />
+                  </div>
+                  <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
+                    Submit Feedback
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

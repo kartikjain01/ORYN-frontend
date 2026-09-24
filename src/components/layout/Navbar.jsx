@@ -480,7 +480,7 @@ export default function Navbar({ user }) {
         />
 
         <div
-          className={`absolute right-0 top-0 h-full w-full max-w-[720px] transform border-l border-white/10 bg-[#060d1f]/95 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
+          className={`absolute right-0 top-0 h-full w-full max-w-[720px] transform border-l border-white/10 bg-black/95 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
             showAbout ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
@@ -515,17 +515,45 @@ export default function Navbar({ user }) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
-              <div className="grid gap-4 sm:grid-cols-3">
+
+              {/* MISSION */}
+              <div className="mb-8 rounded-3xl border border-white/10 bg-gradient-to-br from-brand-500/10 to-transparent p-6">
+                <p className="text-xs uppercase tracking-[0.18em] text-brand-400">Our Mission</p>
+                <p className="mt-3 text-[15px] leading-7 text-white/75">
+                  ORYN Engine is built for the next generation of creators. We believe
+                  every voice deserves to be heard — whether you're producing podcasts,
+                  building characters for games, localizing content across languages, or
+                  bringing stories to life. Our AI-powered tools give you studio-grade
+                  voice production without the studio.
+                </p>
+              </div>
+
+              {/* STATS */}
+              <div className="mb-8 grid grid-cols-4 gap-3">
+                {[
+                  { value: '4', label: 'AI Tools' },
+                  { value: '50+', label: 'Voice Models' },
+                  { value: '99.9%', label: 'Uptime' },
+                  { value: '<2s', label: 'Generation' },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                    <p className="text-xl font-bold text-brand-400">{s.value}</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-wider text-white/45">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* CORE TOOLS — 4 cards including Captions */}
+              <p className="mb-4 text-xs uppercase tracking-[0.18em] text-white/40">Core Tools</p>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition hover:bg-white/[0.06]">
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
                     <Mic2 size={22} className="text-brand-500" />
                   </div>
-                  <h3 className="text-base font-semibold text-white">
-                    Voice Cloning
-                  </h3>
+                  <h3 className="text-base font-semibold text-white">Voice Cloning</h3>
                   <p className="mt-2 text-sm leading-6 text-white/55">
-                    Create high-quality voice replicas from source audio with a
-                    premium creator workflow.
+                    Clone any voice from a short audio sample. Produce realistic replicas
+                    for dubbing, narration, or character design — all from your browser.
                   </p>
                 </div>
 
@@ -533,12 +561,10 @@ export default function Navbar({ user }) {
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
                     <Waves size={22} className="text-brand-500" />
                   </div>
-                  <h3 className="text-base font-semibold text-white">
-                    Text to Speech
-                  </h3>
+                  <h3 className="text-base font-semibold text-white">Text to Speech</h3>
                   <p className="mt-2 text-sm leading-6 text-white/55">
-                    Convert text into natural, expressive audio for content,
-                    narration, and creative production.
+                    Turn any script into natural, expressive speech. Choose from dozens
+                    of voices and fine-tune tone, pace, and emotion to match your content.
                   </p>
                 </div>
 
@@ -546,94 +572,88 @@ export default function Navbar({ user }) {
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
                     <SlidersHorizontal size={22} className="text-brand-500" />
                   </div>
-                  <h3 className="text-base font-semibold text-white">
-                    Voice Editor
-                  </h3>
+                  <h3 className="text-base font-semibold text-white">Voice Editor</h3>
                   <p className="mt-2 text-sm leading-6 text-white/55">
-                    Refine generated speech and audio output with simple editing
-                    controls in one place.
+                    Fine-tune pitch, speed, emphasis, and pauses. Polish any generated
+                    audio until it sounds exactly the way you want — no external software needed.
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition hover:bg-white/[0.06]">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15">
+                    <Captions size={22} className="text-brand-500" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white">Caption Generation</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/55">
+                    Auto-generate accurate, timed captions from any audio or video file.
+                    Export in SRT, VTT, or plain text for social media, YouTube, or production.
                   </p>
                 </div>
               </div>
 
+              {/* HOW IT WORKS */}
               <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-                <h3 className="text-lg font-semibold text-white">
-                  How it works
-                </h3>
+                <h3 className="text-lg font-semibold text-white">How it works</h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-4">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
-                      Step 01
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">
-                      Upload
-                    </p>
-                    <p className="mt-2 text-sm text-white/50">
-                      Add source audio or text input.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
-                      Step 02
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">
-                      Process
-                    </p>
-                    <p className="mt-2 text-sm text-white/50">
-                      Prepare voice and optimize quality.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
-                      Step 03
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">
-                      Generate
-                    </p>
-                    <p className="mt-2 text-sm text-white/50">
-                      Create realistic audio output.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
-                      Step 04
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">
-                      Download
-                    </p>
-                    <p className="mt-2 text-sm text-white/50">
-                      Export and use in your projects.
-                    </p>
-                  </div>
+                  {[
+                    { step: '01', title: 'Upload', desc: 'Drop in audio, video, or type your script directly.' },
+                    { step: '02', title: 'Configure', desc: 'Pick a voice, set tone and style, adjust parameters.' },
+                    { step: '03', title: 'Generate', desc: 'AI processes your input and produces studio-quality output.' },
+                    { step: '04', title: 'Export', desc: 'Download, share, or send directly to your project.' },
+                  ].map((s) => (
+                    <div key={s.step} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">Step {s.step}</p>
+                      <p className="mt-2 text-sm font-medium text-white">{s.title}</p>
+                      <p className="mt-2 text-sm text-white/50">{s.desc}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
+              {/* WHO IT'S FOR + WHAT'S NEXT */}
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-                  <p className="text-sm font-medium text-white">
-                    Why creators use it
-                  </p>
+                  <p className="text-sm font-medium text-white">Built for</p>
                   <ul className="mt-4 space-y-3 text-sm text-white/55">
-                    <li>Fast generation workflow</li>
-                    <li>Premium dark UI and creator-friendly tools</li>
-                    <li>Realistic voice output and editing flow</li>
-                    <li>Simple structure for scaling into a full SaaS product</li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500/60" />
+                      Content creators and YouTubers
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500/60" />
+                      Podcast producers and audio teams
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500/60" />
+                      Game developers and storytellers
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500/60" />
+                      Agencies and localization teams
+                    </li>
                   </ul>
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-                  <p className="text-sm font-medium text-white">
-                    Platform details
-                  </p>
-                  <div className="mt-4 space-y-3 text-sm text-white/55">
-                    <p>Product: ORYN Engine</p>
-                    <p>Core Tools: Voice Clone, TTS, Voice Editor, Captions</p>
-                    <p>Version: 2.0</p>
-                    <p>Built for creators and modern audio workflows</p>
-                  </div>
+                  <p className="text-sm font-medium text-white">Coming soon</p>
+                  <ul className="mt-4 space-y-3 text-sm text-white/55">
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60" />
+                      AI video generation from text prompts
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60" />
+                      Multi-language voice support
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60" />
+                      Real-time voice emotion control
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60" />
+                      Voice-to-voice style transfer
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -641,7 +661,7 @@ export default function Navbar({ user }) {
             <div className="border-t border-white/10 px-6 py-4 sm:px-8">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-white/35">
-                  Built with a premium creator-first UI.
+                  ORYN Engine v{__APP_VERSION__} — Creator-first AI voice studio
                 </p>
                 <button
                   onClick={() => setShowAbout(false)}
@@ -671,7 +691,7 @@ export default function Navbar({ user }) {
         />
 
         <div
-          className={`absolute right-0 top-0 h-full w-full max-w-[900px] transform border-l border-white/10 bg-[#060d1f]/95 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
+          className={`absolute right-0 top-0 h-full w-full max-w-[900px] transform border-l border-white/10 bg-black/95 shadow-[-30px_0_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-transform duration-500 ease-out ${
             showContact ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
@@ -681,10 +701,10 @@ export default function Navbar({ user }) {
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 sm:px-8">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-500/70">
-                  Support
+                  Feedback
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-                  Contact Support
+                  Suggestion Box
                 </h2>
               </div>
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Upload, AudioWaveform, FolderOpen, Download, MoreVertical, Check, Type, Palette, Languages, HelpCircle, MessageSquare, Plus, Share, ChevronDown, SkipBack, SkipForward, Volume2, Maximize2, X, RotateCw } from 'lucide-react';
 import { createProject, getProjectsByType } from '../lib/db';
 import { supabase } from '../supabaseClient';
@@ -8,12 +9,13 @@ const HF_SPACE = import.meta.env.VITE_HF_CAPTION_SPACE || 'https://kartikjain123
 const API_BASE = import.meta.env.VITE_API_CAPTIONS || '';
 
 const CAPTION_STYLES = [
-  { id: 'capcut', name: 'CapCut', preview: 'Clean white text, cinematic feel', color: '#ffffff', demoVideo: null },
-  { id: 'hormozi', name: 'Hormozi', preview: 'Bold pop text with emphasis', color: '#3b82f6', demoVideo: null },
-  { id: 'minimal', name: 'Minimal', preview: 'Small subtle text', color: '#64748b', demoVideo: null },
-  { id: 'podcast', name: 'Podcast', preview: 'Podcast-style captions', color: '#8b5cf6', demoVideo: null },
-  { id: 'cinematic_multilayer', name: 'Cinematic', preview: 'Layered cinematic captions', color: '#06b6d4', demoVideo: null },
-  { id: 'glass', name: 'Glass', preview: 'Frosted glass with word highlight', color: '#f59e0b', demoVideo: null },
+  { id: 'capcut', name: 'CapCut', preview: 'Clean white text, cinematic feel', color: '#ffffff', demoVideo: '/demos/capcut-demo.mp4' },
+  { id: 'hormozi', name: 'Hormozi', preview: 'Bold pop text with emphasis', color: '#3b82f6', demoVideo: '/demos/hormozi-demo.mp4' },
+  { id: 'minimal', name: 'Minimal', preview: 'Small subtle text', color: '#64748b', demoVideo: '/demos/minimal-demo.mp4' },
+  { id: 'podcast', name: 'Podcast', preview: 'Podcast-style captions', color: '#8b5cf6', demoVideo: '/demos/podcast-demo.mp4' },
+  { id: 'cinematic_multilayer', name: 'Cinematic', preview: 'Layered cinematic captions', color: '#06b6d4', demoVideo: '/demos/cinematic-demo.mp4' },
+  { id: 'glass', name: 'Glass', preview: 'Frosted glass with word highlight', color: '#f59e0b', demoVideo: '/demos/glass-demo.mp4' },
+  { id: 'archive', name: 'Reveal', preview: 'Outline text fills letter by letter', color: '#e2e8f0', demoVideo: '/demos/reveal-demo.mp4' },
 ];
 
 const LANGUAGES = [
@@ -23,12 +25,110 @@ const LANGUAGES = [
   { id: 'hinglish', name: 'Hinglish' },
 ];
 
+const EXTRA_COLORS = [
+  { id: '#ffffff', name: 'White', color: '#ffffff' },
+  { id: '#e2e8f0', name: 'Silver', color: '#e2e8f0' },
+  { id: '#ffff00', name: 'Yellow', color: '#ffff00' },
+  { id: '#ffe000', name: 'Gold', color: '#ffe000' },
+  { id: '#ffa500', name: 'Orange', color: '#ffa500' },
+  { id: '#ff6b6b', name: 'Red', color: '#ff6b6b' },
+  { id: '#ff0000', name: 'Bright Red', color: '#ff0000' },
+  { id: '#ff69b4', name: 'Pink', color: '#ff69b4' },
+  { id: '#ff80d5', name: 'Hot Pink', color: '#ff80d5' },
+  { id: '#a78bfa', name: 'Purple', color: '#a78bfa' },
+  { id: '#8b5cf6', name: 'Violet', color: '#8b5cf6' },
+  { id: '#3b82f6', name: 'Blue', color: '#3b82f6' },
+  { id: '#66ccff', name: 'Sky Blue', color: '#66ccff' },
+  { id: '#00ffff', name: 'Cyan', color: '#00ffff' },
+  { id: '#00ff88', name: 'Mint', color: '#00ff88' },
+  { id: '#22c55e', name: 'Green', color: '#22c55e' },
+  { id: '#84cc16', name: 'Lime', color: '#84cc16' },
+  { id: '#64748b', name: 'Slate', color: '#64748b' },
+  { id: '#1e293b', name: 'Dark', color: '#1e293b' },
+  { id: '#000000', name: 'Black', color: '#000000' },
+];
+
+const STYLE_COLORS = {
+  capcut: { defaultText: '#f8f8f8', defaultHighlight: '#ffffff' },
+  hormozi: { defaultText: '#ffe000', defaultHighlight: '#ffffff' },
+  minimal: { defaultText: '#ffffff', defaultHighlight: '#ff80d5' },
+  podcast: { defaultText: '#ffffff', defaultHighlight: '#66ccff' },
+  cinematic_multilayer: { defaultText: '#ffffff', defaultHighlight: '#ffe000' },
+  glass: { defaultText: '#ffffff', defaultHighlight: '#ffffff' },
+  archive: { defaultText: '#ffffff', defaultHighlight: '#ffffff' },
+};
+
+const FONT_OPTIONS = [
+  { id: '', label: 'Default', desc: 'Style default font' },
+  { id: 'Montserrat ExtraBold', label: 'Montserrat', desc: 'Bold & impactful' },
+  { id: 'Bebas Neue', label: 'Bebas Neue', desc: 'Tall condensed' },
+  { id: 'Caveat', label: 'Caveat', desc: 'Handwritten casual' },
+  { id: 'Shadows Into Light', label: 'Shadows', desc: 'Hand-drawn light' },
+  { id: 'Permanent Marker', label: 'Marker', desc: 'Marker graffiti' },
+  { id: 'Inter', label: 'Inter', desc: 'Clean modern sans' },
+  { id: 'Playfair Display', label: 'Playfair', desc: 'Elegant serif' },
+];
+
+const activeStyleVideoRef = { current: null };
+
+function StyleVideoPreview({ src }) {
+  const ref = useRef(null);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.currentTime = 0.5;
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (activeStyleVideoRef.current && activeStyleVideoRef.current !== ref.current) {
+      activeStyleVideoRef.current.pause();
+      activeStyleVideoRef.current.currentTime = 0.5;
+    }
+    activeStyleVideoRef.current = ref.current;
+    ref.current?.play();
+    setPlaying(true);
+  };
+
+  const handleMouseLeave = () => {
+    ref.current?.pause();
+    if (ref.current) ref.current.currentTime = 0.5;
+    setPlaying(false);
+    if (activeStyleVideoRef.current === ref.current) activeStyleVideoRef.current = null;
+  };
+
+  return (
+    <div
+      className="absolute inset-0"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <video
+        ref={ref}
+        src={src}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      <div className={`absolute inset-0 flex items-center justify-center z-[5] transition-opacity duration-200 ${playing ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+          <Play size={14} className="text-white ml-0.5" fill="white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function VideoPreview({ src, rotation = 0 }) {
   const videoRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [vidCurrentTime, setVidCurrentTime] = useState(0);
   const [vidDuration, setVidDuration] = useState(0);
   const [videoAspect, setVideoAspect] = useState(16 / 9);
+  const lastTimeUpdate = useRef(0);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -87,10 +187,17 @@ function VideoPreview({ src, rotation = 0 }) {
           ref={videoRef}
           src={src}
           className="w-full h-full object-contain"
+          preload="auto"
           style={{ transform: `rotate(${rotation}deg)`, maxWidth: isRotatedSideways ? '56.25%' : '100%', maxHeight: isRotatedSideways ? '177.78%' : '100%' }}
           onLoadedMetadata={handleLoadedMetadata}
-          onTimeUpdate={e => setVidCurrentTime(e.target.currentTime)}
-          onEnded={() => setPlaying(false)}
+          onTimeUpdate={e => {
+            const now = Date.now();
+            if (now - lastTimeUpdate.current > 250) {
+              lastTimeUpdate.current = now;
+              setVidCurrentTime(e.target.currentTime);
+            }
+          }}
+          onEnded={() => { setPlaying(false); setVidCurrentTime(videoRef.current?.duration || 0); }}
         />
       </div>
 
@@ -125,6 +232,7 @@ function VideoPreview({ src, rotation = 0 }) {
 }
 
 export default function CaptionGenerationPage() {
+  const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [audioPreviewUrl, setAudioPreviewUrl] = useState('');
@@ -134,14 +242,23 @@ export default function CaptionGenerationPage() {
 
   const [captionStyle, setCaptionStyle] = useState('capcut');
   const [language, setLanguage] = useState('auto');
-  const [fontSize, setFontSize] = useState(18);
+  const [langOpen, setLangOpen] = useState(false);
+  useEffect(() => { const h = () => { setLangOpen(false); setFontOpen(false); }; document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, []);
+  const [fontSize, setFontSize] = useState(22);
   const [position, setPosition] = useState('bottom');
   const [maxWords, setMaxWords] = useState(6);
   const [rotation, setRotation] = useState(0);
+  const [textColor, setTextColor] = useState('');
+  const [highlightColor, setHighlightColor] = useState('');
+  const [fontName, setFontName] = useState('');
+  const [fontOpen, setFontOpen] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generatedCaptions, setGeneratedCaptions] = useState(null);
+  const [editingCaptions, setEditingCaptions] = useState(false);
+  const [editedWords, setEditedWords] = useState([]);
+  const [reRendering, setReRendering] = useState(false);
   const [sessionFiles, setSessionFiles] = useState([]);
   const [sfMenuIdx, setSfMenuIdx] = useState(null);
   const [loadingSf, setLoadingSf] = useState(true);
@@ -174,7 +291,7 @@ export default function CaptionGenerationPage() {
           });
         }
       });
-    });
+    }).catch(() => setLoadingSf(false));
   }, []);
 
   useEffect(() => {
@@ -186,10 +303,15 @@ export default function CaptionGenerationPage() {
   }, [sfMenuIdx]);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackRating, setFeedbackRating] = useState(5);
+  const [toast, setToast] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
   const audioRef = useRef(null);
   const inputRef = useRef(null);
@@ -213,15 +335,20 @@ export default function CaptionGenerationPage() {
   };
 
   const MAX_DURATION = 120;
+  const MAX_FILE_SIZE = 200 * 1024 * 1024;
 
   const validateAndSetFile = (f) => {
+    if (f.size > MAX_FILE_SIZE) {
+      showToast(`File too large (${(f.size / 1024 / 1024).toFixed(0)} MB). Max 200 MB.`);
+      return;
+    }
     const url = URL.createObjectURL(f);
     const v = document.createElement('video');
     v.preload = 'metadata';
     v.src = url;
     v.onloadedmetadata = () => {
       if (isFinite(v.duration) && v.duration > MAX_DURATION) {
-        alert(`Video is too long (${Math.floor(v.duration / 60)}m ${Math.round(v.duration % 60)}s). Maximum allowed is 2 minutes.`);
+        showToast(`Video is too long (${Math.floor(v.duration / 60)}m ${Math.round(v.duration % 60)}s). Max 2 minutes.`);
         URL.revokeObjectURL(url);
         return;
       }
@@ -262,24 +389,23 @@ export default function CaptionGenerationPage() {
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+    setEditingCaptions(false);
+    setEditedWords([]);
+    setReRendering(false);
   };
 
-  const handleSfPlay = (sf) => { if (sf.url) window.open(sf.url, '_blank'); setSfMenuIdx(null); };
+  const handleSfPlay = (sf) => { navigate(sf.id ? `/projects?highlight=${sf.id}` : '/projects'); setSfMenuIdx(null); };
 
-  const handleSfDownload = async (sf) => {
+  const handleSfDownload = (sf) => {
     if (!sf.url) return;
-    try {
-      const res = await fetch(sf.url);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = downloadName('captions', sf.name, 'mp4');
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch { /* silent */ }
+    const a = document.createElement('a');
+    a.href = sf.url;
+    a.download = downloadName('captions', sf.name, 'mp4');
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     setSfMenuIdx(null);
   };
 
@@ -318,6 +444,12 @@ export default function CaptionGenerationPage() {
             position,
             fontSize,
             maxWords,
+            rotation,
+            textColor,
+            highlightColor,
+            false,
+            editedWords ? JSON.stringify(editedWords) : '',
+            fontName,
           ],
         }),
       });
@@ -391,12 +523,14 @@ export default function CaptionGenerationPage() {
 
       setGeneratedCaptions({
         videoUrl,
+        assUrl: metadata.ass_url || '',
         language: metadata.language,
         words: metadata.total_words,
         captions: metadata.total_captions,
         duration: metadata.duration,
         processingTime: metadata.processing_time_seconds,
         template: captionStyle,
+        transcript: metadata.transcript || [],
       });
       setSessionFiles(prev => [{
         name: fileName,
@@ -411,55 +545,163 @@ export default function CaptionGenerationPage() {
       console.error('Caption generation error:', err);
       const msg = err.message || '';
       if (msg.includes('No speech') || msg.includes('no_speech')) {
-        alert('No speech was detected in the video. Please upload a video with audible speech.');
+        showToast('No speech detected in the video. Upload a video with audible speech.');
       } else if (msg.includes('401') || msg.includes('could not be accessed')) {
-        alert('Caption server is temporarily unavailable. Please try again later.');
+        showToast('Caption server is temporarily unavailable. Please try again later.');
       } else if (msg.includes('GPU') || msg.includes('queue')) {
-        alert('Server is busy. Please wait a moment and try again.');
+        showToast('Server is busy. Please wait a moment and try again.');
       } else if (msg.includes('Connection') || msg.includes('lost')) {
-        alert('Lost connection to the caption server. Please try again.');
+        showToast('Lost connection to the caption server. Please try again.');
       } else {
-        alert(msg || 'Caption generation failed. Please try again.');
+        showToast(msg || 'Caption generation failed. Please try again.');
       }
     } finally {
       setGenerating(false);
     }
   };
 
-  const handleExport = async (format) => {
-    if (!generatedCaptions) return;
+  const reRenderCaptions = async () => {
+    if (!file || !editedWords.length || reRendering) return;
+    setReRendering(true);
+    setProgress(0);
 
-    const videoUrl = generatedCaptions.videoUrl;
-    if (!videoUrl) {
-      alert('No output video available');
+    try {
+      const spaceUrl = HF_SPACE.replace(/\/$/, '');
+
+      setProgress(5);
+      const uploadForm = new FormData();
+      uploadForm.append('files', file);
+      const uploadRes = await fetch(`${spaceUrl}/gradio_api/upload`, {
+        method: 'POST',
+        body: uploadForm,
+      });
+      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
+      const uploadedFiles = await uploadRes.json();
+
+      setProgress(15);
+      const submitRes = await fetch(`${spaceUrl}/gradio_api/call/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: [
+            { video: { path: uploadedFiles[0], meta: { _type: 'gradio.FileData' } } },
+            captionStyle,
+            language,
+            position,
+            fontSize,
+            maxWords,
+            rotation,
+            textColor,
+            highlightColor,
+            false,
+            JSON.stringify(editedWords),
+          ],
+        }),
+      });
+      if (!submitRes.ok) throw new Error(`Submit failed: ${submitRes.status}`);
+      const { event_id } = await submitRes.json();
+
+      setProgress(25);
+      const resultData = await new Promise((resolve, reject) => {
+        const es = new EventSource(`${spaceUrl}/gradio_api/call/generate/${event_id}`);
+        let settled = false;
+        const done = (fn) => { if (!settled) { settled = true; es.close(); fn(); } };
+        es.addEventListener('complete', (e) => {
+          try { done(() => resolve(JSON.parse(e.data))); }
+          catch { done(() => reject(new Error('Invalid response'))); }
+        });
+        es.addEventListener('error', (e) => {
+          let msg = 'Re-render failed';
+          try { const d = JSON.parse(e.data); if (typeof d === 'string') msg = d; } catch {}
+          done(() => reject(new Error(msg)));
+        });
+        es.addEventListener('progress', () => setProgress(p => Math.min(p + 5, 85)));
+        es.addEventListener('heartbeat', () => setProgress(p => Math.min(p + 1, 85)));
+        es.onerror = () => done(() => reject(new Error('Connection lost')));
+      });
+
+      setProgress(95);
+      const [videoResult, metadata] = resultData;
+      if (metadata?.error) throw new Error(metadata.message || metadata.error);
+
+      let videoUrl = metadata?.supabase_url || '';
+      if (!videoUrl) {
+        const rawUrl = videoResult?.video?.url || videoResult?.url || videoResult?.video?.path || videoResult?.path || (typeof videoResult === 'string' ? videoResult : '');
+        if (rawUrl.startsWith('http')) videoUrl = rawUrl;
+        else if (rawUrl.startsWith('/')) videoUrl = `${spaceUrl}${rawUrl}`;
+        else if (rawUrl) videoUrl = `${spaceUrl}/gradio_api/file=${rawUrl}`;
+      }
+
+      if (!videoUrl) throw new Error('No output video returned');
+      setProgress(100);
+
+      setGeneratedCaptions(prev => ({
+        ...prev,
+        videoUrl,
+        assUrl: metadata.ass_url || prev.assUrl,
+        transcript: metadata.transcript || prev.transcript,
+      }));
+      setEditingCaptions(false);
+      showToast('Captions updated successfully');
+    } catch (err) {
+      showToast(err.message || 'Re-render failed');
+    } finally {
+      setReRendering(false);
+    }
+  };
+
+  const handleExport = async (format) => {
+    if (!generatedCaptions || exporting) return;
+
+    const url = format === 'ASS' ? generatedCaptions.assUrl : generatedCaptions.videoUrl;
+    if (!url) {
+      showToast(format === 'ASS' ? 'No subtitle file available' : 'No output video available');
       setShowExportMenu(false);
       return;
     }
 
+    setShowExportMenu(false);
+    setExporting(true);
+    showToast('Preparing download...');
+
+    const ext = format === 'ASS' ? 'ass' : 'mp4';
     try {
-      const res = await fetch(videoUrl);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Download failed');
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = downloadName('captions', fileName, format === 'MP4' ? 'mp4' : 'ass');
+      a.href = blobUrl;
+      a.download = downloadName('captions', fileName, ext);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(blobUrl);
+      showToast('Download started');
     } catch {
-      const a = document.createElement('a');
-      a.href = videoUrl;
-      a.download = downloadName('captions', fileName, 'mp4');
-      a.click();
+      showToast('Download failed. Try right-clicking the video and "Save as".');
+    } finally {
+      setExporting(false);
     }
-    setShowExportMenu(false);
   };
 
-  const handleSubmitFeedback = () => {
-    if (!feedbackText.trim()) { alert('Please write feedback'); return; }
-    alert('Thanks for your feedback!');
-    setFeedbackText(''); setFeedbackRating(5); setShowFeedbackModal(false);
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim()) { showToast('Please write your feedback'); return; }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from('feedbacks').insert({
+        tool: 'caption_generation',
+        rating: feedbackRating,
+        message: feedbackText.trim(),
+        user_id: session?.user?.id || null,
+      });
+      setFeedbackSent(true);
+      setFeedbackText('');
+      setFeedbackRating(5);
+      setTimeout(() => { setShowFeedbackModal(false); setFeedbackSent(false); }, 1500);
+    } catch {
+      showToast('Failed to send feedback');
+    }
   };
 
   const fontSizePercent = ((fontSize - 12) / (48 - 12)) * 100;
@@ -469,6 +711,11 @@ export default function CaptionGenerationPage() {
 
   return (
     <main className="flex-1 overflow-y-auto">
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl bg-slate-900 text-white text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease]">
+          {toast}
+        </div>
+      )}
       <div className="relative min-h-full p-6 lg:p-8 space-y-5 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
@@ -495,7 +742,7 @@ export default function CaptionGenerationPage() {
           <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #3b82f6 0.5px, transparent 0)', backgroundSize: '20px 20px' }} />
           <div className="flex items-center justify-between flex-1">
             {[
-              { n: 1, label: 'Upload audio' },
+              { n: 1, label: 'Upload video' },
               { n: 2, label: 'Configure style' },
               { n: 3, label: 'Generate' },
               { n: 4, label: 'Export' },
@@ -570,7 +817,7 @@ export default function CaptionGenerationPage() {
                         <Upload size={22} className="text-blue-500" />
                       </div>
                       <p className="text-[13px] font-semibold text-slate-700">Drop audio/video here or <span className="text-blue-600">browse</span></p>
-                      <p className="text-[11px] text-slate-400 mt-1">MP4, WebM, MOV supported (video only)</p>
+                      <p className="text-[11px] text-slate-400 mt-1">MP4, WebM, MOV — max 2 min, max 200 MB</p>
                     </>
                   )}
                 </div>
@@ -625,9 +872,9 @@ export default function CaptionGenerationPage() {
                     )}
                   {generatedCaptions && (
                     <div className="relative">
-                      <button onClick={() => setShowExportMenu(!showExportMenu)} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-[0_4px_12px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 transition-all duration-200">
+                      <button onClick={() => exporting ? null : setShowExportMenu(!showExportMenu)} disabled={exporting} className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-[0_4px_12px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 transition-all duration-200 ${exporting ? 'opacity-70 cursor-wait' : ''}`}>
                         <Download size={12} />
-                        Export
+                        {exporting ? 'Downloading...' : 'Export'}
                       </button>
                       {showExportMenu && (
                         <>
@@ -686,39 +933,138 @@ export default function CaptionGenerationPage() {
               <div>
                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2.5 block">Caption Style</label>
                 <div className="grid grid-cols-2 gap-2.5">
-                  {CAPTION_STYLES.map(style => (
-                    <button key={style.id} onClick={() => setCaptionStyle(style.id)}
-                      className={`group/card relative flex flex-col rounded-xl text-left transition-all duration-200 ${captionStyle === style.id ? 'ring-[1.5px] ring-blue-400' : 'ring-1 ring-slate-200/60 bg-white/60 hover:ring-blue-200/60 hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)]'}`}>
-                      <div className="relative w-full aspect-[16/10] overflow-hidden rounded-t-xl bg-slate-50/80">
-                        {style.demoVideo ? (
-                          <video src={style.demoVideo} muted loop autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity duration-200">
-                            <div className="w-8 h-8 rounded-full bg-white/90 border border-slate-200/60 flex items-center justify-center shadow-sm">
-                              <Play size={12} className="text-slate-500 ml-0.5" />
+                  {CAPTION_STYLES.map(style => {
+                    const isSelected = captionStyle === style.id;
+                    return (
+                      <div key={style.id} className={`group/card relative flex flex-col rounded-xl text-left transition-all duration-200 overflow-hidden ${isSelected ? 'ring-2 ring-blue-400 shadow-[0_4px_20px_rgba(59,130,246,0.18)]' : 'ring-1 ring-slate-200/60 bg-white hover:ring-blue-200/60 hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5'}`}>
+                        <div
+                          className={`relative w-full aspect-[16/10] overflow-hidden cursor-pointer ${style.demoVideo ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100/80'}`}
+                          onClick={() => { setCaptionStyle(style.id); setTextColor(''); setHighlightColor(''); setFontName(''); }}
+                        >
+                          {style.demoVideo ? (
+                            <StyleVideoPreview src={style.demoVideo} />
+                          ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+                              <div className="w-9 h-9 rounded-full bg-white/80 border border-blue-200/60 flex items-center justify-center shadow-sm">
+                                <Play size={13} className="text-blue-400 ml-0.5" />
+                              </div>
+                              <span className="text-[9px] text-blue-300 font-medium">Preview Soon</span>
                             </div>
-                          </div>
-                        )}
+                          )}
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shadow-lg z-10">
+                              <Check size={10} className="text-white" strokeWidth={3} />
+                            </div>
+                          )}
+                        </div>
+                        <button onClick={() => { setCaptionStyle(style.id); setTextColor(''); setHighlightColor(''); setFontName(''); }} className="px-2.5 py-2 text-left w-full">
+                          <span className="text-[12px] font-bold text-slate-800">{style.name}</span>
+                          <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{style.preview}</p>
+                        </button>
                       </div>
-                      <div className="px-2.5 py-2">
-                        <span className="text-[11px] font-semibold text-slate-800">{style.name}</span>
-                        <p className="text-[9px] text-slate-400 mt-0.5 leading-tight">{style.preview}</p>
-                      </div>
-                    </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Text Color */}
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2 block">Text Color</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button onClick={() => setTextColor('')}
+                    className={`w-7 h-7 rounded-full transition-all duration-200 relative overflow-hidden ${textColor === '' ? 'ring-2 ring-blue-500 ring-offset-2' : 'ring-1 ring-slate-200/60 hover:scale-110'}`}
+                    style={{ background: STYLE_COLORS[captionStyle]?.defaultText || '#e2e8f0' }}
+                    title={`Default (${STYLE_COLORS[captionStyle]?.defaultText || 'auto'})`}
+                  >
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[6px] text-white font-bold text-center leading-[12px]">DEF</span>
+                  </button>
+                  {EXTRA_COLORS.map(c => (
+                    <button key={`tc-${c.id}`} onClick={() => setTextColor(c.id)}
+                      className={`w-7 h-7 rounded-full transition-all duration-200 ${textColor === c.id ? 'ring-2 ring-blue-500 ring-offset-2' : 'ring-1 ring-slate-200/60 hover:scale-110'} ${c.id === '#000000' ? 'ring-1 ring-slate-300' : ''}`}
+                      style={{ background: c.color }}
+                      title={c.name}
+                    />
                   ))}
                 </div>
               </div>
 
-              {/* Language */}
+              {/* Highlight Color — hidden for single-color styles */}
+              {captionStyle !== 'capcut' && (
               <div>
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2 block">Highlight Color</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button onClick={() => setHighlightColor('')}
+                    className={`w-7 h-7 rounded-full transition-all duration-200 relative overflow-hidden ${highlightColor === '' ? 'ring-2 ring-blue-500 ring-offset-2' : 'ring-1 ring-slate-200/60 hover:scale-110'}`}
+                    style={{ background: STYLE_COLORS[captionStyle]?.defaultHighlight || '#e2e8f0' }}
+                    title={`Default (${STYLE_COLORS[captionStyle]?.defaultHighlight || 'auto'})`}
+                  >
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[6px] text-white font-bold text-center leading-[12px]">DEF</span>
+                  </button>
+                  {EXTRA_COLORS.map(c => (
+                    <button key={`hc-${c.id}`} onClick={() => setHighlightColor(c.id)}
+                      className={`w-7 h-7 rounded-full transition-all duration-200 ${highlightColor === c.id ? 'ring-2 ring-blue-500 ring-offset-2' : 'ring-1 ring-slate-200/60 hover:scale-110'} ${c.id === '#000000' ? 'ring-1 ring-slate-300' : ''}`}
+                      style={{ background: c.color }}
+                      title={c.name}
+                    />
+                  ))}
+                </div>
+              </div>
+              )}
+
+
+              {/* Font Style — CapCut only */}
+              {captionStyle === 'capcut' && <div className="relative">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                  <Type size={11} /> Font Style
+                </label>
+                <button
+                  onClick={e => { e.stopPropagation(); setFontOpen(o => !o); }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400"
+                >
+                  <span style={fontName ? { fontFamily: `"${fontName}", sans-serif` } : undefined}>
+                    {FONT_OPTIONS.find(f => f.id === fontName)?.label || 'Default'}
+                  </span>
+                  <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${fontOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {fontOpen && (
+                  <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden max-h-[320px] overflow-y-auto">
+                    {FONT_OPTIONS.map(f => (
+                      <button key={f.id} onClick={e => { e.stopPropagation(); setFontName(f.id); setFontOpen(false); }}
+                        className={`w-full px-4 py-3 text-left transition-colors duration-150 flex items-center gap-2.5 ${fontName === f.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                        {fontName === f.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                        <div className={fontName !== f.id ? 'ml-[21px]' : ''}>
+                          <span className="text-[13px] font-semibold block" style={f.id ? { fontFamily: `"${f.id}", sans-serif` } : undefined}>{f.label}</span>
+                          <span className="text-[10px] text-slate-400">{f.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>}
+
+              {/* Language */}
+              <div className="relative">
                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                   <Languages size={11} /> Language
                 </label>
-                <select value={language} onChange={e => setLanguage(e.target.value)}
-                  className="w-full bg-slate-50/60 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3.5 py-2.5 text-[12px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 transition-all duration-200 appearance-none cursor-pointer"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-                  {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
+                <button
+                  onClick={e => { e.stopPropagation(); setLangOpen(o => !o); }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400"
+                >
+                  <span>{LANGUAGES.find(l => l.id === language)?.name || 'Auto Detect'}</span>
+                  <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {langOpen && (
+                  <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden">
+                    {LANGUAGES.map(l => (
+                      <button key={l.id} onClick={e => { e.stopPropagation(); setLanguage(l.id); setLangOpen(false); }}
+                        className={`w-full px-4 py-3 text-left text-[13px] font-semibold transition-colors duration-150 flex items-center gap-2.5 ${language === l.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                        {language === l.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                        <span className={language !== l.id ? 'ml-[21px]' : ''}>{l.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Font Size Slider */}
@@ -753,12 +1099,68 @@ export default function CaptionGenerationPage() {
                 <div className="grid grid-cols-3 gap-2">
                   {['top', 'center', 'bottom'].map(pos => (
                     <button key={pos} onClick={() => setPosition(pos)}
-                      className={`py-2 rounded-lg text-[11px] font-semibold border capitalize transition-all ${position === pos ? 'bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-200/60 text-blue-700' : 'border-slate-200/60 bg-white/60 text-slate-600 hover:border-blue-200/60'}`}>
+                      className={`py-3 rounded-xl text-[13px] font-semibold border capitalize transition-all shadow-sm ${position === pos ? 'bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-300 text-blue-700' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400'}`}>
                       {pos}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Caption Editing */}
+              {generatedCaptions?.transcript?.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Caption Editing</label>
+                    {!editingCaptions ? (
+                      <button onClick={() => { setEditedWords([...generatedCaptions.transcript]); setEditingCaptions(true); }}
+                        className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                        Edit Transcript
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setEditingCaptions(false)}
+                          className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition-colors">
+                          Cancel
+                        </button>
+                        <button onClick={reRenderCaptions} disabled={reRendering}
+                          className="text-[10px] font-semibold text-white bg-blue-500 hover:bg-blue-600 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                          {reRendering ? 'Re-rendering...' : 'Re-render'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {editingCaptions ? (
+                    <div className="space-y-1.5 max-h-[200px] overflow-y-auto rounded-xl border border-slate-200/60 bg-slate-50/60 p-3">
+                      {editedWords.map((w, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-[9px] text-slate-300 font-mono w-10 shrink-0 text-right">{w.start?.toFixed(1)}s</span>
+                          <input
+                            type="text"
+                            value={w.word}
+                            onChange={e => {
+                              const updated = [...editedWords];
+                              updated[i] = { ...updated[i], word: e.target.value };
+                              setEditedWords(updated);
+                            }}
+                            className="flex-1 px-2 py-1 rounded-lg border border-slate-200/60 bg-white text-[11px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-1 focus:ring-blue-100"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-slate-200/60 bg-slate-50/40 px-3 py-2.5 max-h-[80px] overflow-y-auto">
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        {generatedCaptions.transcript.map(w => w.word).join(' ')}
+                      </p>
+                    </div>
+                  )}
+                  {reRendering && (
+                    <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden mt-2">
+                      <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Sticky Generate Button */}
@@ -815,7 +1217,7 @@ export default function CaptionGenerationPage() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {sessionFiles.map((sf, idx) => (
+                      {sessionFiles.slice(0, 4).map((sf, idx) => (
                         <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-blue-50/60 border-blue-100/40 transition-all duration-200">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
@@ -885,7 +1287,7 @@ export default function CaptionGenerationPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {sessionFiles.map((sf, idx) => (
+                    {sessionFiles.slice(0, 4).map((sf, idx) => (
                       <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-blue-50/60 border-blue-100/40 transition-all duration-200">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
@@ -937,7 +1339,7 @@ export default function CaptionGenerationPage() {
               <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">1. Upload Video</p>
-                  <p>Upload your video file (MP4, WebM, MOV). The audio will be extracted for captioning.</p>
+                  <p>Upload your video file (MP4, WebM, MOV — max 2 min, 200 MB). The audio will be extracted for captioning.</p>
                 </div>
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">2. Configure Style</p>
@@ -949,7 +1351,7 @@ export default function CaptionGenerationPage() {
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
-                  <p>Email: support@orynengine.com</p>
+                  <p>Use the Suggestion Box on the landing page to reach us.</p>
                 </div>
               </div>
             </div>
@@ -966,29 +1368,40 @@ export default function CaptionGenerationPage() {
                   <X size={18} />
                 </button>
               </div>
-              <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience with Caption Generation</p>
-              <div className="mb-5">
-                <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
-                      ★
-                    </button>
-                  ))}
+              {feedbackSent ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900">Thanks for your feedback!</p>
                 </div>
-              </div>
-              <div className="mb-5">
-                <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
-                <textarea
-                  value={feedbackText}
-                  onChange={e => setFeedbackText(e.target.value)}
-                  placeholder="Tell us what you liked or what we can improve..."
-                  className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
-                />
-              </div>
-              <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
-                Submit Feedback
-              </button>
+              ) : (
+                <>
+                  <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience with Caption Generation</p>
+                  <div className="mb-5">
+                    <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-5">
+                    <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
+                    <textarea
+                      value={feedbackText}
+                      onChange={e => setFeedbackText(e.target.value)}
+                      placeholder="Tell us what you liked or what we can improve..."
+                      className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
+                    />
+                  </div>
+                  <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
+                    Submit Feedback
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

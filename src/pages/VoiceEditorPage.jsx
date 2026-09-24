@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, Download, HelpCircle, MessageSquare, Upload, Mic, Settings2, AudioWaveform, Volume2, FolderOpen, MoreVertical, RotateCcw, Share, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Pause, Download, HelpCircle, MessageSquare, Upload, Mic, Settings2, AudioWaveform, Volume2, FolderOpen, MoreVertical, RotateCcw, Share, X, Scissors, ChevronDown, Check } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { createProject, getProjectsByType } from '../lib/db';
 import { authFetch, authUploadFetch, downloadName } from '../lib/api';
+import WaveformTrimmer from '../components/WaveformTrimmer';
 
 const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR || '';
 const WS_EDITOR = import.meta.env.VITE_WS_EDITOR || '';
 
 export default function VoiceEditorPage() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState('upload');
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState(null);
@@ -18,11 +21,12 @@ export default function VoiceEditorPage() {
   const [loading, setLoading] = useState(false);
   const [processedAudio, setProcessedAudio] = useState(null);
   const [processingMode, setProcessingMode] = useState('advanced');
+  const [modeOpen, setModeOpen] = useState(false);
+  useEffect(() => { const h = () => setModeOpen(false); document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, []);
   const [enableNoiseRemoval, setEnableNoiseRemoval] = useState(true);
-  const [enablePolishingAudio, setEnablePolishingAudio] = useState(false);
+  const [enableSmartTrim, setEnableSmartTrim] = useState(false);
   const [showExportSettings, setShowExportSettings] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState('MP3');
-  const [selectedQuality, setSelectedQuality] = useState('High');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
@@ -41,6 +45,10 @@ export default function VoiceEditorPage() {
   const [loadingSf, setLoadingSf] = useState(true);
   const [lastProjectUrl, setLastProjectUrl] = useState(null);
   const sfMenuRef = useRef(null);
+  const [toast, setToast] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
   useEffect(() => {
     getProjectsByType('voice_editor').then(rows => {
@@ -65,7 +73,7 @@ export default function VoiceEditorPage() {
           });
         }
       });
-    });
+    }).catch(() => setLoadingSf(false));
   }, []);
 
   const inputRef = useRef(null);
@@ -75,6 +83,9 @@ export default function VoiceEditorPage() {
 
   const accepted = useMemo(() => '.mp3,.wav,audio/mpeg,audio/wav', []);
   const [waveHeights] = useState(() => Array.from({ length: 120 }, () => Math.random() * 20 + 6));
+
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+  const MAX_DURATION = 300;
 
   const generatedAudioReady = !!processedAudio;
 
@@ -128,17 +139,30 @@ export default function VoiceEditorPage() {
     setIsRecording(false);
   };
 
-  const onFileChange = e => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    setFileName(f.name);
+  const validateAndSetFile = (f) => {
+    if (f.size > MAX_FILE_SIZE) {
+      showToast(`File too large (${(f.size / 1024 / 1024).toFixed(1)} MB). Max 50 MB.`);
+      return;
+    }
     const url = URL.createObjectURL(f);
-    setAudioPreviewUrl(url);
-    setProcessedAudio(null);
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = url;
+    a.onloadedmetadata = () => {
+      if (isFinite(a.duration) && a.duration > MAX_DURATION) {
+        showToast(`Audio too long (${Math.floor(a.duration / 60)}m ${Math.round(a.duration % 60)}s). Max 5 minutes.`);
+        URL.revokeObjectURL(url);
+        return;
+      }
+      setFile(f);
+      setFileName(f.name);
+      setAudioPreviewUrl(url);
+      setProcessedAudio(null);
+    };
   };
 
-  const onDrop = e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (!f) return; setFile(f); setFileName(f.name); setAudioPreviewUrl(URL.createObjectURL(f)); setProcessedAudio(null); };
+  const onFileChange = e => { const f = e.target.files?.[0]; if (!f) return; validateAndSetFile(f); };
+  const onDrop = e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (!f) return; validateAndSetFile(f); };
   const onDragOver = e => e.preventDefault();
 
   const toggleSourcePlay = () => {
@@ -154,7 +178,7 @@ export default function VoiceEditorPage() {
   };
 
   const handleConfirmExport = async () => {
-    if (!processedAudio) { alert('Please generate audio first'); return; }
+    if (!processedAudio) { showToast('Please generate audio first'); return; }
     try {
       const response = await fetch(processedAudio);
       const blob = await response.blob();
@@ -167,16 +191,29 @@ export default function VoiceEditorPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
       setShowExportSettings(false);
-    } catch (err) { console.error(err); alert('Export failed'); }
+    } catch (err) { console.error(err); showToast('Export failed'); }
   };
 
-  const handleSubmitFeedback = () => {
-    if (!feedbackText.trim()) { alert('Please write feedback'); return; }
-    alert('Thanks for your feedback!');
-    setFeedbackText(''); setFeedbackRating(5); setShowFeedbackModal(false);
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim()) { showToast('Please write your feedback'); return; }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from('feedbacks').insert({
+        tool: 'voice_editor',
+        rating: feedbackRating,
+        message: feedbackText.trim(),
+        user_id: session?.user?.id || null,
+      });
+      setFeedbackSent(true);
+      setFeedbackText('');
+      setFeedbackRating(5);
+      setTimeout(() => { setShowFeedbackModal(false); setFeedbackSent(false); }, 1500);
+    } catch {
+      showToast('Failed to send feedback');
+    }
   };
 
-  const handleSfPlay = (sf) => { if (sf.url) window.open(sf.url, '_blank'); setSfMenuIdx(null); };
+  const handleSfPlay = (sf) => { navigate(sf.id ? `/projects?highlight=${sf.id}` : '/projects'); setSfMenuIdx(null); };
 
   const handleSfDownload = async (sf) => {
     if (!sf.url) return;
@@ -185,8 +222,8 @@ export default function VoiceEditorPage() {
   };
 
   const processAudio = async () => {
-    if (mode === 'upload' && !file) { alert('Please upload an audio file first'); return; }
-    if (mode === 'record' && !recordedBlob) { alert('Please record audio first'); return; }
+    if (mode === 'upload' && !file) { showToast('Please upload an audio file first'); return; }
+    if (mode === 'record' && !recordedBlob) { showToast('Please record audio first'); return; }
 
     let progressInterval;
     try {
@@ -198,7 +235,7 @@ export default function VoiceEditorPage() {
       if (mode === 'upload') { formData.append('file', file); }
       else { formData.append('file', new File([recordedBlob], 'recording.webm', { type: 'audio/webm' })); }
       if (enableNoiseRemoval) { formData.append('mode', processingMode); }
-      formData.append('youtube_polish', String(enablePolishingAudio));
+      if (enableSmartTrim) { formData.append('smart_trim', 'true'); }
 
       const response = await authUploadFetch(`${API_BASE}/api/upload-audio/full-enhance`, formData);
       if (!response.ok) throw new Error(`Processing failed: ${response.status}`);
@@ -221,19 +258,19 @@ export default function VoiceEditorPage() {
         const url = result.supabase_url || `${API_BASE}${result.download_url}`;
         setProcessedAudio(url);
         setLastProjectUrl(url);
-        setSessionFiles(prev => [{ url, format: selectedFormat, quality: selectedQuality, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval, polish: enablePolishingAudio } }).catch(console.error);
+        setSessionFiles(prev => [{ url, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
+        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval } }).catch(console.error);
       } else {
         clearInterval(progressInterval);
         setProgress(100);
         const url = data.supabase_url || `${API_BASE}${data.download_url}`;
         setProcessedAudio(url);
         setLastProjectUrl(url);
-        setSessionFiles(prev => [{ url, format: selectedFormat, quality: selectedQuality, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval, polish: enablePolishingAudio } }).catch(console.error);
+        setSessionFiles(prev => [{ url, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
+        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval } }).catch(console.error);
       }
     } catch (error) {
-      console.error(error); alert('Error processing audio');
+      console.error(error); showToast('Error processing audio');
     } finally { clearInterval(progressInterval); setLoading(false); }
   };
 
@@ -241,6 +278,11 @@ export default function VoiceEditorPage() {
 
   return (
     <main className="flex-1 overflow-y-auto">
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl bg-slate-900 text-white text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease]">
+          {toast}
+        </div>
+      )}
       <div className="relative min-h-full p-6 lg:p-8 space-y-5 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Decorative floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
@@ -364,7 +406,7 @@ export default function VoiceEditorPage() {
                           <Upload size={20} className="text-blue-500" />
                         </div>
                         <p className="text-[13px] font-semibold text-slate-700">Drop audio here or <span className="text-blue-600">browse</span></p>
-                        <p className="text-[11px] text-slate-400 mt-1">MP3 or WAV, 1-10 min, max 100 MB</p>
+                        <p className="text-[11px] text-slate-400 mt-1">MP3 or WAV, max 5 min, max 50 MB</p>
                       </>
                     )}
                   </div>
@@ -374,7 +416,7 @@ export default function VoiceEditorPage() {
                       <Mic size={20} className={isRecording ? 'text-red-500' : 'text-slate-400'} />
                     </div>
                     <p className="text-[13px] font-semibold text-slate-700 mb-1">{isRecording ? 'Recording...' : 'Record your voice'}</p>
-                    <p className="text-[11px] text-slate-400 mb-4">Speak clearly for 1-5 minutes</p>
+                    <p className="text-[11px] text-slate-400 mb-4">Speak clearly for up to 5 minutes</p>
                     {!isRecording ? (
                       <button onClick={startRecording} className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 transition-all duration-200">Start Recording</button>
                     ) : (
@@ -414,6 +456,24 @@ export default function VoiceEditorPage() {
                 />
               </div>
             )}
+
+            {/* Waveform Trim for source audio */}
+            {((mode === 'upload' && file) || (mode === 'record' && recordedBlob)) && audioPreviewUrl && (
+              <div className="mx-5 mb-4">
+                <div className="border-t border-dashed border-slate-200/70 mb-3" />
+                <WaveformTrimmer
+                  audioUrl={audioPreviewUrl}
+                  label="source"
+                  onTrimApplied={(newUrl, blob) => {
+                    if (uploadAudioRef.current) uploadAudioRef.current.pause();
+                    setIsSourcePlaying(false);
+                    setAudioPreviewUrl(newUrl);
+                    setFile(new File([blob], fileName || 'trimmed.wav', { type: 'audio/wav' }));
+                    setCurrentTime(0);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Top Right: Processing Settings */}
@@ -441,30 +501,38 @@ export default function VoiceEditorPage() {
 
               {/* Processing Mode */}
               {enableNoiseRemoval && (
-                <div>
+                <div className="relative">
                   <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Processing Mode</label>
-                  <select
-                    value={processingMode}
-                    onChange={e => setProcessingMode(e.target.value)}
-                    className="w-full bg-slate-50/60 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3.5 py-2.5 text-[12px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 transition-all duration-200 appearance-none cursor-pointer"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                  <button
+                    onClick={e => { e.stopPropagation(); setModeOpen(o => !o); }}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400"
                   >
-                    <option value="basic">Basic</option>
-                    <option value="advanced">Advanced</option>
-                    <option value="deepfilter">DeepFilter</option>
-                  </select>
+                    <span>{{ basic: 'Basic', advanced: 'Advanced', deepfilter: 'DeepFilter' }[processingMode]}</span>
+                    <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${modeOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {modeOpen && (
+                    <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden">
+                      {[{ id: 'basic', name: 'Basic' }, { id: 'advanced', name: 'Advanced' }, { id: 'deepfilter', name: 'DeepFilter' }].map(m => (
+                        <button key={m.id} onClick={e => { e.stopPropagation(); setProcessingMode(m.id); setModeOpen(false); }}
+                          className={`w-full px-4 py-3 text-left text-[13px] font-semibold transition-colors duration-150 flex items-center gap-2.5 ${processingMode === m.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                          {processingMode === m.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                          <span className={processingMode !== m.id ? 'ml-[21px]' : ''}>{m.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Polishing Audio */}
+              {/* Smart Trim */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[13px] font-semibold text-slate-800">Audio Polishing</p>
-                  <p className="text-[11px] text-slate-400">Premium voice enhancement</p>
+                  <p className="text-[13px] font-semibold text-slate-800">Smart Trim</p>
+                  <p className="text-[11px] text-slate-400">Auto-remove repeated takes</p>
                 </div>
-                <button onClick={() => setEnablePolishingAudio(!enablePolishingAudio)}
-                  className={`relative w-10 h-[22px] rounded-full transition-all duration-200 ${enablePolishingAudio ? 'bg-blue-500' : 'bg-slate-300'}`}>
-                  <div className={`absolute top-[3px] left-[3px] w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${enablePolishingAudio ? 'translate-x-[18px]' : 'translate-x-0'}`} />
+                <button onClick={() => setEnableSmartTrim(!enableSmartTrim)}
+                  className={`relative w-10 h-[22px] rounded-full transition-all duration-200 ${enableSmartTrim ? 'bg-blue-500' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-[3px] left-[3px] w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${enableSmartTrim ? 'translate-x-[18px]' : 'translate-x-0'}`} />
                 </button>
               </div>
 
@@ -569,14 +637,36 @@ export default function VoiceEditorPage() {
                   </div>
                   <h2 className="text-[15px] font-bold text-slate-900">Enhanced Audio</h2>
                 </div>
-                <div className="relative flex items-center gap-3">
+                <div ref={exportBoxRef} className="relative flex items-center gap-2">
                   <button
                     onClick={() => setShowExportSettings(!showExportSettings)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                   >
                     <Download size={12} />
                     Export
+                    <ChevronDown size={10} className={`transition-transform duration-200 ${showExportSettings ? 'rotate-180' : ''}`} />
                   </button>
+
+                  {showExportSettings && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-20 p-3.5 space-y-3">
+                      <div>
+                        <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Format</label>
+                        <div className="flex gap-1.5">
+                          {['WAV', 'MP3'].map(f => (
+                            <button key={f} onClick={() => setSelectedFormat(f)}
+                              className={`flex-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 ${selectedFormat === f ? 'bg-blue-500 text-white shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'}`}
+                            >{f}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={handleConfirmExport}
+                        className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                      >
+                        <Download size={11} className="inline mr-1.5 -mt-0.5" />
+                        Download {selectedFormat}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="p-5">
@@ -617,45 +707,25 @@ export default function VoiceEditorPage() {
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium tabular-nums shrink-0">{formatTime(genCurrentTime)}/{formatTime(genDuration)}</span>
                 </div>
+
+                {/* Waveform Trim for enhanced audio */}
+                <div className="border-t border-dashed border-slate-200/70 mt-1" />
+                <WaveformTrimmer
+                  audioUrl={processedAudio}
+                  label="enhanced"
+                  onTrimApplied={(newUrl) => {
+                    if (generatedAudioRef.current) generatedAudioRef.current.pause();
+                    setIsPlaying(false);
+                    setProcessedAudio(newUrl);
+                    setGenCurrentTime(0);
+                    setGenDuration(0);
+                  }}
+                />
               </div>
             </div>
           )}
         </div>
 
-        {/* Export Settings Modal */}
-        {showExportSettings && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={() => setShowExportSettings(false)}>
-            <div className="relative w-full max-w-[320px] bg-white rounded-2xl border border-slate-200/80 shadow-[0_32px_80px_rgba(0,0,0,0.12)] p-6" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setShowExportSettings(false)} className="absolute top-4 right-4 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-                <X size={16} />
-              </button>
-              <h3 className="text-[16px] font-bold text-slate-900 mb-5">Export Settings</h3>
-              <div className="mb-4">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Format</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['MP3', 'WAV'].map(fmt => (
-                    <button key={fmt} onClick={() => setSelectedFormat(fmt)}
-                      className={`py-2.5 rounded-xl text-[12px] font-semibold border transition-all duration-200 ${selectedFormat === fmt ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
-                    >{fmt}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="mb-5">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Quality</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Low', 'High'].map(q => (
-                    <button key={q} onClick={() => setSelectedQuality(q)}
-                      className={`py-2.5 rounded-xl text-[12px] font-semibold border transition-all duration-200 ${selectedQuality === q ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
-                    >{q}</button>
-                  ))}
-                </div>
-              </div>
-              <button onClick={() => { handleConfirmExport(); setShowExportSettings(false); }}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[13px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 transition-all duration-200"
-              >Download {selectedFormat}</button>
-            </div>
-          </div>
-        )}
 
         {/* Help Modal */}
         {showHelpModal && (
@@ -670,7 +740,7 @@ export default function VoiceEditorPage() {
               <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">1. Upload Audio</p>
-                  <p>Upload your MP3 or WAV audio file that you want to enhance.</p>
+                  <p>Upload your MP3 or WAV audio file (max 5 min, 50 MB) that you want to enhance.</p>
                 </div>
                 <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">2. Configure Processing</p>
@@ -682,7 +752,7 @@ export default function VoiceEditorPage() {
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
-                  <p>Email: support@orynengine.com</p>
+                  <p>Use the Suggestion Box on the landing page to reach us.</p>
                 </div>
               </div>
             </div>
@@ -699,29 +769,40 @@ export default function VoiceEditorPage() {
                   <X size={18} />
                 </button>
               </div>
-              <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience with Voice Editor</p>
-              <div className="mb-5">
-                <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
-                      ★
-                    </button>
-                  ))}
+              {feedbackSent ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900">Thanks for your feedback!</p>
                 </div>
-              </div>
-              <div className="mb-5">
-                <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
-                <textarea
-                  value={feedbackText}
-                  onChange={e => setFeedbackText(e.target.value)}
-                  placeholder="Tell us what you liked or what we can improve..."
-                  className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
-                />
-              </div>
-              <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
-                Submit Feedback
-              </button>
+              ) : (
+                <>
+                  <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience with Voice Editor</p>
+                  <div className="mb-5">
+                    <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-5">
+                    <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
+                    <textarea
+                      value={feedbackText}
+                      onChange={e => setFeedbackText(e.target.value)}
+                      placeholder="Tell us what you liked or what we can improve..."
+                      className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
+                    />
+                  </div>
+                  <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
+                    Submit Feedback
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

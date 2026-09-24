@@ -46,7 +46,10 @@ const VOICE_COLS_STATS = 'type,duration_seconds';
 let _userPromise = null;
 let _userTime = 0;
 async function getUser() {
-  if (_userPromise && Date.now() - _userTime < 30000) return _userPromise;
+  if (_userPromise && Date.now() - _userTime < 30000) {
+    const cached = await _userPromise;
+    if (cached) return cached;
+  }
   _userTime = Date.now();
   _userPromise = supabase.auth.getSession().then(({ data: { session } }) => session?.user ?? null);
   return _userPromise;

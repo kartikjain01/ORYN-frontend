@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Mic, Upload, Play, Pause, Download, Settings2, CheckCircle2, AudioWaveform, Sparkles, Globe, HelpCircle, MessageSquare, X, RotateCcw, MoreVertical, FolderOpen, Maximize2, Minimize2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Mic, Upload, Play, Pause, Download, Settings2, CheckCircle2, AudioWaveform, Sparkles, Globe, HelpCircle, MessageSquare, X, RotateCcw, MoreVertical, FolderOpen, Maximize2, Minimize2, ChevronDown, Check } from 'lucide-react';
 import { createProject, createVoice, getProjectsByType } from '../lib/db';
 import { supabase } from '../supabaseClient';
 import { authFetch, authJsonFetch, authUploadFetch, downloadName } from '../lib/api';
@@ -7,6 +8,7 @@ import { authFetch, authJsonFetch, authUploadFetch, downloadName } from '../lib/
 const API_BASE = import.meta.env.VITE_API_VOICE_CLONE;
 
 export default function VoiceCloningPage() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState('upload');
   const [removeNoise, setRemoveNoise] = useState(true);
   const [file, setFile] = useState(null);
@@ -37,6 +39,8 @@ export default function VoiceCloningPage() {
   const [audioDuration, setAudioDuration] = useState('0:00');
   const [durationSec, setDurationSec] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [vcLangOpen, setVcLangOpen] = useState(false);
+  useEffect(() => { const h = () => setVcLangOpen(false); document.addEventListener('click', h); return () => document.removeEventListener('click', h); }, []);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
@@ -47,6 +51,8 @@ export default function VoiceCloningPage() {
   const [lastProjectUrl, setLastProjectUrl] = useState(null);
   const sfMenuRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [toast, setToast] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   useEffect(() => {
     getProjectsByType('voice_clone').then(rows => {
@@ -73,7 +79,7 @@ export default function VoiceCloningPage() {
           });
         }
       });
-    });
+    }).catch(() => setLoadingSf(false));
   }, []);
 
   const inputRef = useRef(null);
@@ -83,6 +89,9 @@ export default function VoiceCloningPage() {
 
   const accepted = useMemo(() => '.mp3,.wav,audio/mpeg,audio/wav', []);
   const [waveHeights] = useState(() => Array.from({ length: 120 }, () => Math.random() * 20 + 6));
+
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
+  const MAX_DURATION = 120;
 
   useEffect(() => {
     const handleOutsideClick = event => {
@@ -114,8 +123,29 @@ export default function VoiceCloningPage() {
     setCurrentTime(0); setDuration(0); setIsPlaying(false);
   };
 
-  const onFileChange = e => { const f = e.target.files?.[0]; if (!f) return; setFile(f); setAudioPreviewUrl(URL.createObjectURL(f)); setFileName(f.name); resetAllStates(); };
-  const onDrop = e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (!f) return; setFile(f); setAudioPreviewUrl(URL.createObjectURL(f)); setFileName(f.name); resetAllStates(); };
+  const validateAndSetFile = (f) => {
+    if (f.size > MAX_FILE_SIZE) {
+      showToast(`File too large (${(f.size / 1024 / 1024).toFixed(1)} MB). Max 25 MB.`);
+      return;
+    }
+    const url = URL.createObjectURL(f);
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = url;
+    a.onloadedmetadata = () => {
+      if (isFinite(a.duration) && a.duration > MAX_DURATION) {
+        showToast(`Audio too long (${Math.floor(a.duration / 60)}m ${Math.round(a.duration % 60)}s). Max 2 minutes.`);
+        URL.revokeObjectURL(url);
+        return;
+      }
+      setFile(f);
+      setAudioPreviewUrl(url);
+      setFileName(f.name);
+      resetAllStates();
+    };
+  };
+  const onFileChange = e => { const f = e.target.files?.[0]; if (!f) return; validateAndSetFile(f); };
+  const onDrop = e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (!f) return; validateAndSetFile(f); };
   const onDragOver = e => e.preventDefault();
 
   const startRecording = async () => {
@@ -153,7 +183,7 @@ export default function VoiceCloningPage() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
-  const handleSfPlay = (sf) => { if (sf.url) window.open(sf.url, '_blank'); setSfMenuIdx(null); };
+  const handleSfPlay = (sf) => { navigate(sf.id ? `/projects?highlight=${sf.id}` : '/projects'); setSfMenuIdx(null); };
 
   const handleSfDownload = async (sf) => {
     if (!sf.url) return;
@@ -165,8 +195,10 @@ export default function VoiceCloningPage() {
   const toggleSourcePlay = () => { if (!uploadAudioRef.current) return; uploadAudioRef.current.paused ? (uploadAudioRef.current.play(), setIsSourcePlaying(true)) : (uploadAudioRef.current.pause(), setIsSourcePlaying(false)); };
   const toggleGeneratedPlay = () => { if (!generatedAudioRef.current) return; generatedAudioRef.current.paused ? (generatedAudioRef.current.play(), setIsPlaying(true)) : (generatedAudioRef.current.pause(), setIsPlaying(false)); };
 
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
+
   const uploadVoice = async () => {
-    if (!file) { alert('Please upload an audio file first'); return; }
+    if (!file) { showToast('Please upload an audio file first'); return; }
     try {
       setLoading(true); setStatusMsg('Uploading voice...');
       const formData = new FormData(); formData.append('file', file);
@@ -185,12 +217,12 @@ export default function VoiceCloningPage() {
 
   const generatePreview = async () => {
     if (!voiceId) {
-      alert('Clone voice first');
+      showToast('Clone voice first');
       return;
     }
 
     if (!previewText) {
-      alert('Enter text');
+      showToast('Enter text');
       return;
     }
 
@@ -250,21 +282,39 @@ export default function VoiceCloningPage() {
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a'); link.href = blobUrl; link.download = downloadName('clone', previewText, selectedFormat.toLowerCase());
     document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
+    setShowExportSettings(false);
   };
 
-  const handleSubmitFeedback = () => {
-    alert('Thanks for your feedback!');
-    setShowFeedbackModal(false);
-    setFeedbackText('');
-    setFeedbackRating(5);
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim()) { showToast('Please write your feedback'); return; }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from('feedbacks').insert({
+        tool: 'voice_clone',
+        rating: feedbackRating,
+        message: feedbackText.trim(),
+        user_id: session?.user?.id || null,
+      });
+      setFeedbackSent(true);
+      setFeedbackText('');
+      setFeedbackRating(5);
+      setTimeout(() => { setShowFeedbackModal(false); setFeedbackSent(false); }, 1500);
+    } catch {
+      showToast('Failed to send feedback');
+    }
   };
 
   const currentStep = !file ? 1 : !cloneCompleted ? 2 : !previewText ? 3 : !generatedAudioReady ? 3 : 4;
 
   return (
     <main className="flex-1 overflow-y-auto">
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl bg-slate-900 text-white text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease]">
+          {toast}
+        </div>
+      )}
       {/* Gradient background with floating orbs */}
-      <div className="relative min-h-full p-6 lg:p-8 space-y-5 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
+      <div className="relative min-h-full p-6 lg:p-8 space-y-5" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Decorative floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
         <div className="pointer-events-none absolute top-[60%] -left-32 w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-blue-200/25 to-indigo-200/15 blur-[70px] animate-breathe" style={{ animationDelay: '1.2s' }} />
@@ -399,7 +449,7 @@ export default function VoiceCloningPage() {
                           <Upload size={22} className="text-blue-500" />
                         </div>
                         <p className="text-[13px] font-semibold text-slate-700">Drop audio here or <span className="text-blue-600">browse</span></p>
-                        <p className="text-[11px] text-slate-400 mt-1">MP3 or WAV, 1-10 min, max 100 MB</p>
+                        <p className="text-[11px] text-slate-400 mt-1">MP3 or WAV, max 2 min, max 25 MB</p>
                       </>
                     )}
                   </div>
@@ -409,7 +459,7 @@ export default function VoiceCloningPage() {
                       <Mic size={22} className={isRecording ? 'text-red-500' : 'text-slate-400'} />
                     </div>
                     <p className="text-[13px] font-semibold text-slate-700 mb-1">{isRecording ? 'Recording...' : 'Record your voice'}</p>
-                    <p className="text-[11px] text-slate-400 mb-4">Speak clearly for 1-5 minutes</p>
+                    <p className="text-[11px] text-slate-400 mb-4">Speak clearly for up to 2 minutes</p>
                     {!isRecording ? (
                       <button onClick={startRecording} className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 transition-all duration-200">Start Recording</button>
                     ) : (
@@ -474,7 +524,7 @@ export default function VoiceCloningPage() {
           </div>
 
           {/* Top Right: Generate Speech */}
-          <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 ${generatedAudioReady ? '' : 'min-h-[380px]'} ${
+          <div className={`relative bg-white rounded-2xl border shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-visible ${generatedAudioReady ? '' : 'min-h-[380px]'} ${
             !cloneCompleted ? 'opacity-50 border-slate-200/60' : 'border-white/80 hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)]'
           }`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
@@ -499,36 +549,29 @@ export default function VoiceCloningPage() {
               </div>
             </div>
             <div className="p-5">
-              <div className="mb-3">
+              <div className="mb-3 relative">
                 <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                   <Globe size={11} />
                   Output Language
                 </label>
-                <select
-                  value={selectedLanguage}
-                  onChange={e => setSelectedLanguage(e.target.value)}
-                  disabled={!cloneCompleted}
-                  className="w-full bg-slate-50/60 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3.5 py-2 text-[12px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed appearance-none cursor-pointer"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
+                <button
+                  onClick={e => { e.stopPropagation(); cloneCompleted && setVcLangOpen(o => !o); }}
+                  className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400 ${!cloneCompleted ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
-                  <option value="en">English</option>
-                  <option value="hi">Hindi</option>
-                  <option value="gu">Gujarati</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
-                  <option value="ja">Japanese</option>
-                  <option value="ko">Korean</option>
-                  <option value="zh">Chinese</option>
-                  <option value="ar">Arabic</option>
-                  <option value="pt">Portuguese</option>
-                  <option value="ru">Russian</option>
-                  <option value="it">Italian</option>
-                  <option value="ta">Tamil</option>
-                  <option value="te">Telugu</option>
-                  <option value="bn">Bengali</option>
-                  <option value="mr">Marathi</option>
-                </select>
+                  <span>{{ en:'English',hi:'Hindi',gu:'Gujarati',es:'Spanish',fr:'French',de:'German',ja:'Japanese',ko:'Korean',zh:'Chinese',ar:'Arabic',pt:'Portuguese',ru:'Russian',it:'Italian',ta:'Tamil',te:'Telugu',bn:'Bengali',mr:'Marathi' }[selectedLanguage]}</span>
+                  <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${vcLangOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {vcLangOpen && (
+                  <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden max-h-[280px] overflow-y-auto">
+                    {[{id:'en',n:'English'},{id:'hi',n:'Hindi'},{id:'gu',n:'Gujarati'},{id:'es',n:'Spanish'},{id:'fr',n:'French'},{id:'de',n:'German'},{id:'ja',n:'Japanese'},{id:'ko',n:'Korean'},{id:'zh',n:'Chinese'},{id:'ar',n:'Arabic'},{id:'pt',n:'Portuguese'},{id:'ru',n:'Russian'},{id:'it',n:'Italian'},{id:'ta',n:'Tamil'},{id:'te',n:'Telugu'},{id:'bn',n:'Bengali'},{id:'mr',n:'Marathi'}].map(l => (
+                      <button key={l.id} onClick={e => { e.stopPropagation(); setSelectedLanguage(l.id); setVcLangOpen(false); }}
+                        className={`w-full px-4 py-2.5 text-left text-[13px] font-semibold transition-colors duration-150 flex items-center gap-2.5 ${selectedLanguage === l.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                        {selectedLanguage === l.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                        <span className={selectedLanguage !== l.id ? 'ml-[21px]' : ''}>{l.n}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <textarea
                 value={previewText}
@@ -592,31 +635,26 @@ export default function VoiceCloningPage() {
                       <Globe size={11} />
                       Output Language
                     </label>
-                    <select
-                      value={selectedLanguage}
-                      onChange={e => setSelectedLanguage(e.target.value)}
-                      disabled={!cloneCompleted}
-                      className="w-full max-w-[240px] bg-slate-50/60 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3.5 py-2 text-[13px] text-slate-700 font-medium outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed appearance-none cursor-pointer"
-                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}
-                    >
-                      <option value="en">English</option>
-                      <option value="hi">Hindi</option>
-                      <option value="gu">Gujarati</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                      <option value="de">German</option>
-                      <option value="ja">Japanese</option>
-                      <option value="ko">Korean</option>
-                      <option value="zh">Chinese</option>
-                      <option value="ar">Arabic</option>
-                      <option value="pt">Portuguese</option>
-                      <option value="ru">Russian</option>
-                      <option value="it">Italian</option>
-                      <option value="ta">Tamil</option>
-                      <option value="te">Telugu</option>
-                      <option value="bn">Bengali</option>
-                      <option value="mr">Marathi</option>
-                    </select>
+                    <div className="relative max-w-[240px]">
+                      <button
+                        onClick={e => { e.stopPropagation(); cloneCompleted && setVcLangOpen(o => !o); }}
+                        className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-[13px] text-slate-800 font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 cursor-pointer flex items-center justify-between shadow-sm hover:border-slate-400 ${!cloneCompleted ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      >
+                        <span>{{ en:'English',hi:'Hindi',gu:'Gujarati',es:'Spanish',fr:'French',de:'German',ja:'Japanese',ko:'Korean',zh:'Chinese',ar:'Arabic',pt:'Portuguese',ru:'Russian',it:'Italian',ta:'Tamil',te:'Telugu',bn:'Bengali',mr:'Marathi' }[selectedLanguage]}</span>
+                        <ChevronDown size={16} className={`text-slate-500 transition-transform duration-200 ${vcLangOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {vcLangOpen && (
+                        <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden max-h-[280px] overflow-y-auto">
+                          {[{id:'en',n:'English'},{id:'hi',n:'Hindi'},{id:'gu',n:'Gujarati'},{id:'es',n:'Spanish'},{id:'fr',n:'French'},{id:'de',n:'German'},{id:'ja',n:'Japanese'},{id:'ko',n:'Korean'},{id:'zh',n:'Chinese'},{id:'ar',n:'Arabic'},{id:'pt',n:'Portuguese'},{id:'ru',n:'Russian'},{id:'it',n:'Italian'},{id:'ta',n:'Tamil'},{id:'te',n:'Telugu'},{id:'bn',n:'Bengali'},{id:'mr',n:'Marathi'}].map(l => (
+                            <button key={l.id} onClick={e => { e.stopPropagation(); setSelectedLanguage(l.id); setVcLangOpen(false); }}
+                              className={`w-full px-4 py-2.5 text-left text-[13px] font-semibold transition-colors duration-150 flex items-center gap-2.5 ${selectedLanguage === l.id ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                              {selectedLanguage === l.id && <Check size={13} className="text-blue-500" strokeWidth={3} />}
+                              <span className={selectedLanguage !== l.id ? 'ml-[21px]' : ''}>{l.n}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <textarea
                     value={previewText}
@@ -728,15 +766,36 @@ export default function VoiceCloningPage() {
                   </div>
                   <h2 className="text-[15px] font-bold text-slate-900">Generated Output</h2>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative" ref={exportBoxRef}>
-                  <button onClick={() => setShowExportSettings(!showExportSettings)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 rounded-xl shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                <div ref={exportBoxRef} className="relative flex items-center gap-2">
+                  <button
+                    onClick={() => setShowExportSettings(!showExportSettings)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                   >
-                    <Settings2 size={12} />
+                    <Download size={12} />
                     Export
+                    <ChevronDown size={10} className={`transition-transform duration-200 ${showExportSettings ? 'rotate-180' : ''}`} />
                   </button>
-                  </div>
+
+                  {showExportSettings && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-20 p-3.5 space-y-3">
+                      <div>
+                        <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Format</label>
+                        <div className="flex gap-1.5">
+                          {['WAV', 'MP3'].map(f => (
+                            <button key={f} onClick={() => setSelectedFormat(f)}
+                              className={`flex-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 ${selectedFormat === f ? 'bg-blue-500 text-white shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'}`}
+                            >{f}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={handleDownload}
+                        className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                      >
+                        <Download size={11} className="inline mr-1.5 -mt-0.5" />
+                        Download {selectedFormat}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="p-5">
@@ -778,40 +837,6 @@ export default function VoiceCloningPage() {
         </div>
       </div>
 
-      {/* Export Settings Modal */}
-      {showExportSettings && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={() => setShowExportSettings(false)}>
-          <div className="relative w-full max-w-[320px] bg-white rounded-2xl border border-slate-200/80 shadow-[0_32px_80px_rgba(0,0,0,0.12)] p-6" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowExportSettings(false)} className="absolute top-4 right-4 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-              <X size={16} />
-            </button>
-            <h3 className="text-[16px] font-bold text-slate-900 mb-5">Export Settings</h3>
-            <div className="mb-4">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Format</p>
-              <div className="grid grid-cols-2 gap-2">
-                {['MP3', 'WAV'].map(fmt => (
-                  <button key={fmt} onClick={() => setSelectedFormat(fmt)}
-                    className={`py-2.5 rounded-xl text-[12px] font-semibold border transition-all duration-200 ${selectedFormat === fmt ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
-                  >{fmt}</button>
-                ))}
-              </div>
-            </div>
-            <div className="mb-5">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Quality</p>
-              <div className="grid grid-cols-2 gap-2">
-                {['Low', 'High'].map(q => (
-                  <button key={q} onClick={() => setSelectedQuality(q)}
-                    className={`py-2.5 rounded-xl text-[12px] font-semibold border transition-all duration-200 ${selectedQuality === q ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
-                  >{q}</button>
-                ))}
-              </div>
-            </div>
-            <button onClick={() => { handleDownload(); setShowExportSettings(false); }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[13px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 transition-all duration-200"
-            >Download</button>
-          </div>
-        </div>
-      )}
 
       {/* Help Modal */}
       {showHelpModal && (
@@ -826,7 +851,7 @@ export default function VoiceCloningPage() {
             <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
               <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                 <p className="font-semibold text-slate-800 mb-1">1. Upload Audio</p>
-                <p>Upload a clear audio sample (1-10 min) of the voice you want to clone. MP3 or WAV format.</p>
+                <p>Upload a clear audio sample (max 2 min) of the voice you want to clone. MP3 or WAV format.</p>
               </div>
               <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                 <p className="font-semibold text-slate-800 mb-1">2. Clone Voice</p>
@@ -838,7 +863,7 @@ export default function VoiceCloningPage() {
               </div>
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
-                <p>Email: support@orynengine.com</p>
+                <p>Use the Suggestion Box on the landing page to reach us.</p>
               </div>
             </div>
           </div>
@@ -855,29 +880,40 @@ export default function VoiceCloningPage() {
                 <X size={18} />
               </button>
             </div>
-            <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience using Voice Cloning</p>
-            <div className="mb-5">
-              <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
-                    ★
-                  </button>
-                ))}
+            {feedbackSent ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircle2 size={24} className="text-green-500" />
+                </div>
+                <p className="text-lg font-semibold text-slate-900">Thanks for your feedback!</p>
               </div>
-            </div>
-            <div className="mb-5">
-              <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
-              <textarea
-                value={feedbackText}
-                onChange={e => setFeedbackText(e.target.value)}
-                placeholder="Tell us what you liked or what we can improve..."
-                className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
-              />
-            </div>
-            <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
-              Submit Feedback
-            </button>
+            ) : (
+              <>
+                <p className="text-[13px] text-slate-400 mb-5">Tell us about your experience using Voice Cloning</p>
+                <div className="mb-5">
+                  <p className="text-[13px] font-medium text-slate-600 mb-2">Rating</p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button key={star} onClick={() => setFeedbackRating(star)} className={`text-2xl transition-all duration-200 ${feedbackRating >= star ? 'text-yellow-400 scale-110' : 'text-slate-200'}`}>
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mb-5">
+                  <p className="text-[13px] font-medium text-slate-600 mb-2">Your Feedback</p>
+                  <textarea
+                    value={feedbackText}
+                    onChange={e => setFeedbackText(e.target.value)}
+                    placeholder="Tell us what you liked or what we can improve..."
+                    className="w-full h-28 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100/50 resize-none transition-all"
+                  />
+                </div>
+                <button onClick={handleSubmitFeedback} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[14px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200">
+                  Submit Feedback
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

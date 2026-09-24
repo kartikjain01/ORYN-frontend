@@ -7,8 +7,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'voxai-auth-token',
+    detectSessionInUrl: false,
+    storageKey: 'oryn-auth-token',
 
     // safer storage
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,

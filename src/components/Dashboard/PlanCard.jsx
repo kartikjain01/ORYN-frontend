@@ -6,7 +6,7 @@ export default function PlanCard() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    getUsageStats().then(setStats);
+    getUsageStats().then(setStats).catch(() => setStats({ voiceClone: 0, tts: 0, voiceEditor: 0, captions: 0, total: 0 }));
   }, []);
 
   const usage = stats ? [
