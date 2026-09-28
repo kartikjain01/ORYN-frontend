@@ -10,11 +10,11 @@ const FILTERS = ['All', 'Voice Clone', 'TTS', 'Voice Editor', 'Captions'];
 const SORT_OPTIONS = ['Recent', 'Oldest', 'A-Z', 'Z-A'];
 
 const TYPE_IMAGE_MAP = {
-  'Voice Clone': 'voiceclone.png',
-  'TTS': 'tts.png',
-  'Voice Editor': 'video.png',
-  'Captions': 'caption.png',
-  'Video': 'video.png',
+  'Voice Clone': 'voiceclone.webp',
+  'TTS': 'tts.webp',
+  'Voice Editor': 'video.webp',
+  'Captions': 'caption.webp',
+  'Video': 'video.webp',
 };
 
 export default function ProjectsPage() {
@@ -328,7 +328,7 @@ export default function ProjectsPage() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {projects.map(project => {
-            const imgFile = TYPE_IMAGE_MAP[project.tag] || 'video.png';
+            const imgFile = TYPE_IMAGE_MAP[project.tag] || 'video.webp';
             let image;
             try {
               image = project.thumbnailUrl || new URL(`../assets/images/${imgFile}`, import.meta.url).href;
@@ -422,7 +422,7 @@ export default function ProjectsPage() {
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
           {projects.map(project => {
-            const imgFile = TYPE_IMAGE_MAP[project.tag] || 'video.png';
+            const imgFile = TYPE_IMAGE_MAP[project.tag] || 'video.webp';
             let image;
             try {
               image = project.thumbnailUrl || new URL(`../assets/images/${imgFile}`, import.meta.url).href;
