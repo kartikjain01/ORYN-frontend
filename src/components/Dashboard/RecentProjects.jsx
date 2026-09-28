@@ -24,11 +24,11 @@ const QUICK_START = [
 ];
 
 const TYPE_IMAGE_MAP = {
-  'Voice Clone': 'voiceclone.png',
-  'TTS': 'tts.png',
-  'Voice Editor': 'video.png',
-  'Captions': 'caption.png',
-  'Video': 'video.png',
+  'Voice Clone': 'voiceclone.webp',
+  'TTS': 'tts.webp',
+  'Voice Editor': 'video.webp',
+  'Captions': 'caption.webp',
+  'Video': 'video.webp',
 };
 
 export default function RecentProjects() {
@@ -172,7 +172,7 @@ export default function RecentProjects() {
               const project = slot.project;
 
             if (slot.type === 'project') {
-              const imgFile = TYPE_IMAGE_MAP[project.tag] || 'video.png';
+              const imgFile = TYPE_IMAGE_MAP[project.tag] || 'video.webp';
               let image;
               try { image = project.thumbnailUrl || new URL(`../../assets/images/${imgFile}`, import.meta.url).href; } catch { image = placeholder; }
 

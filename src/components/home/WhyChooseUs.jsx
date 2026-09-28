@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
-import globe from '../../assets/images/why-choose-us-globe.png';
+import globe from '../../assets/images/why-choose-us-globe.webp';
 import GlobeVisual from './GlobeVisual';
 
 /* ============================================================

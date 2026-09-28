@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Globe2, Gauge, ShieldCheck, ArrowRight } from 'lucide-react';
-import earth from '../../assets/images/earth.png';
+import earth from '../../assets/images/earth.webp';
 
 const pills = [
   {
@@ -40,6 +40,8 @@ export default function CtaBanner() {
             src={earth}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 -z-10 h-full w-full object-cover object-right"
           />
 

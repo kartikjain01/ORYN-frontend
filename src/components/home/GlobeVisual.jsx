@@ -1,5 +1,5 @@
 import { Globe, Shield, Users, AudioLines } from 'lucide-react';
-import swirlImg from '../../assets/images/why-choose-swirl.png';
+import swirlImg from '../../assets/images/why-choose-swirl.webp';
 
 const stats = [
   { icon: Shield, value: '99.9%', label: 'Reliability', position: 'top-[8%] right-[4%]' },

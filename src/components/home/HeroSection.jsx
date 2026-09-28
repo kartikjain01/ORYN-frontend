@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import welcomeAudio from '../../assets/audio/welcome.mp3';
 import { attach, resume, getLevel } from '../../lib/audioAnalyser';
-import robotImg from '../../assets/images/hero-robot.png';
+import robotImg from '../../assets/images/hero-robot.webp';
 
 export default function HeroSection() {
   const audioRef = useRef(null);
@@ -38,10 +38,9 @@ export default function HeroSection() {
             <span
               className="block font-bold leading-[1.05] tracking-[-0.03em] text-[38px] sm:text-[48px] md:text-[56px] lg:text-[66px] text-white"
             >
-              The complete studio
+              One studio for
             </span>
             <span className="block font-bold leading-[1.05] tracking-[-0.03em] text-[38px] sm:text-[48px] md:text-[56px] lg:text-[66px]">
-              <span className="text-white">for the </span>
               <span
                 style={{
                   backgroundImage: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 50%, #38bdf8 100%)',
@@ -49,25 +48,27 @@ export default function HeroSection() {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                future of
+                voice, captions
               </span>
             </span>
-            <span
-              className="block font-bold leading-[1.05] tracking-[-0.03em] text-[38px] sm:text-[48px] md:text-[56px] lg:text-[66px]"
-              style={{
-                backgroundImage: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 50%, #38bdf8 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              voice
+            <span className="block font-bold leading-[1.05] tracking-[-0.03em] text-[38px] sm:text-[48px] md:text-[56px] lg:text-[66px]">
+              <span className="text-white">& </span>
+              <span
+                style={{
+                  backgroundImage: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 50%, #38bdf8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                content
+              </span>
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="mt-6 text-[15px] sm:text-[16px] leading-[1.8] text-white/50 font-light max-w-[480px] mx-auto md:mx-0">
-            Clone voices in seconds. Generate natural speech.
-            Edit audio with precision — all in one powerful studio.
+            Clone voices. Generate speech. Add captions to any video.
+            Everything creators need — in one powerful studio.
           </p>
 
           {/* CTA Buttons */}
@@ -142,11 +143,14 @@ export default function HeroSection() {
               {
                 icon: (
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    <rect x="1" y="4" width="22" height="16" rx="2" />
+                    <line x1="1" y1="16" x2="23" y2="16" />
+                    <line x1="6" y1="20" x2="18" y2="20" strokeWidth="0" />
+                    <text x="12" y="13" textAnchor="middle" fill="currentColor" stroke="none" fontSize="6" fontWeight="bold">CC</text>
                   </svg>
                 ),
-                title: 'Lightning Fast',
-                desc: 'Generate high-quality audio in seconds',
+                title: 'AI Captions',
+                desc: '7 styles, word-level sync, any language',
               },
             ].map((item, i) => (
               <div

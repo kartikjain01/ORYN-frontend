@@ -5,7 +5,7 @@
 /* ------------------------------------------------------------
    1 — VOICE CLONE
    ------------------------------------------------------------ */
-import voiceCloneHeroImg from '../../assets/images/voice-clone-hero.png';
+import voiceCloneHeroImg from '../../assets/images/voice-clone-hero.webp';
 
 export function VoiceCloneVisual() {
   return (
@@ -13,6 +13,8 @@ export function VoiceCloneVisual() {
       <img
         src={voiceCloneHeroImg}
         alt="AI neural network sphere with voice sample, AI analysis, and voice identity labels"
+        loading="lazy"
+        decoding="async"
         className="w-[150%] max-w-none h-auto object-contain -ml-[45%] -mr-[5%]"
       />
     </div>
@@ -22,7 +24,7 @@ export function VoiceCloneVisual() {
 /* ------------------------------------------------------------
    2 — TEXT TO SPEECH
    ------------------------------------------------------------ */
-import ttsInterfaceImg from '../../assets/images/tts-interface.png';
+import ttsInterfaceImg from '../../assets/images/tts-interface.webp';
 
 export function TextToSpeechVisual() {
   return (
@@ -30,6 +32,8 @@ export function TextToSpeechVisual() {
       <img
         src={ttsInterfaceImg}
         alt="Text-to-speech interface with voice, language and emotion selectors above an audio waveform player"
+        loading="lazy"
+        decoding="async"
         className="w-full max-w-none h-auto object-contain lg:scale-110 origin-center"
       />
     </div>
@@ -40,7 +44,7 @@ export function TextToSpeechVisual() {
    3 — VOICE EDITOR
    Waveform image with floating UI overlay cards.
    ------------------------------------------------------------ */
-import voiceEditorWavesImg from '../../assets/images/voice-editor-waves.png';
+import voiceEditorWavesImg from '../../assets/images/voice-editor-waves.webp';
 
 export function VoiceEditorVisual() {
   return (
@@ -92,6 +96,8 @@ export function VoiceEditorVisual() {
         <img
           src={voiceEditorWavesImg}
           alt="Before and after audio visualization — jagged peaks transforming into smooth blue waves"
+          loading="lazy"
+          decoding="async"
           className="w-full h-auto object-contain"
         />
       </div>
@@ -128,7 +134,7 @@ export function VoiceEditorVisual() {
 /* ------------------------------------------------------------
    4 — CAPTION GENERATOR
    ------------------------------------------------------------ */
-import captionCarouselImg from '../../assets/images/caption-carousel.png';
+import captionCarouselImg from '../../assets/images/caption-carousel.webp';
 
 export function CaptionGeneratorVisual() {
   return (
@@ -141,6 +147,8 @@ export function CaptionGeneratorVisual() {
         <img
           src={captionCarouselImg}
           alt="Multilingual caption cards orbiting around a central globe on a holographic platform"
+          loading="lazy"
+          decoding="async"
           className="w-full max-w-none h-auto object-contain lg:scale-[1.15] origin-center"
           style={{ animation: 'carouselTilt 6s ease-in-out infinite' }}
         />
@@ -153,7 +161,7 @@ export function CaptionGeneratorVisual() {
    5 — STORYBOARD
    Dark product frame on light page — standard SaaS showcase pattern.
    ------------------------------------------------------------ */
-import storyboardImg from '../../assets/images/storyboard.png';
+import storyboardImg from '../../assets/images/storyboard.webp';
 
 export function StoryboardVisual({ tone }) {
   return (
@@ -175,6 +183,8 @@ export function StoryboardVisual({ tone }) {
           <img
             src={storyboardImg}
             alt="A prompt card streaming light into a six-panel cinematic storyboard grid."
+            loading="lazy"
+            decoding="async"
             className="w-full h-auto object-contain"
           />
         </div>
@@ -190,7 +200,7 @@ export function StoryboardVisual({ tone }) {
    6 — VIDEO EDITOR
    Full-bleed cinematic image — no frame, no glow, just the art.
    ------------------------------------------------------------ */
-import videoEditorImg from '../../assets/images/videoeditor.png';
+import videoEditorImg from '../../assets/images/videoeditor.webp';
 
 export function VideoEditorVisual() {
   return (
@@ -198,6 +208,8 @@ export function VideoEditorVisual() {
       <img
         src={videoEditorImg}
         alt="A cinematic video editing interface with scene cards, timeline tracks, and blue neon glow effects."
+        loading="lazy"
+        decoding="async"
         className="w-[140%] max-w-none h-auto -ml-[28%]"
       />
     </div>
