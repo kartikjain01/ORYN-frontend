@@ -117,7 +117,7 @@ function ProductShowcase({ product, progress, index, last }) {
          box sits at the scrollport start for as long as it is pinned, so the
          browser would keep re-snapping to the slide you are trying to leave.
          The stack's snap stops are separate static markers instead (below). */
-      className={`relative flex min-h-screen w-full snap-start items-center overflow-hidden px-4 pt-24 pb-10 sm:px-8 lg:sticky lg:top-0 lg:h-screen lg:snap-align-none lg:px-14 ${t.section}`}
+      className={`relative flex min-h-screen w-full snap-start items-center overflow-hidden px-4 pt-24 pb-10 sm:px-8 lg:sticky lg:top-0 lg:h-screen lg:snap-align-none lg:px-14 will-change-transform ${t.section}`}
     >
       {/* Top blend for light slides coming after dark */}
       {product.tone === 'light' && index === 0 && (
@@ -129,7 +129,7 @@ function ProductShowcase({ product, progress, index, last }) {
       {/* ambient wash behind the visual */}
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute right-[-10%] top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full blur-[130px] ${t.glow}`}
+        className={`pointer-events-none absolute right-[-10%] top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full blur-[60px] ${t.glow}`}
       />
 
       <motion.div

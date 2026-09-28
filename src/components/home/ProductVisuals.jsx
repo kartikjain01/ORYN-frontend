@@ -51,26 +51,26 @@ export function VoiceEditorVisual() {
     <div className="relative w-full mx-auto">
       {/* AI Enhancing card — top center */}
       <div className="flex justify-center mb-5 relative z-20">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md px-5 py-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.08)]">
+        <div className="rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-2.5 mb-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 border border-slate-200/60 text-[11px] font-bold text-slate-700">AI</span>
-            <span contentEditable suppressContentEditableWarning className="text-[13px] font-semibold text-slate-800 outline-none">Enhancing Audio...</span>
+            <span className="text-[13px] font-semibold text-slate-800 outline-none">Enhancing Audio...</span>
           </div>
           <div className="flex items-center gap-2.5">
             <div className="h-[5px] w-[120px] rounded-full bg-slate-100 overflow-hidden">
               <div className="h-full w-[72%] rounded-full bg-brand-500" />
             </div>
-            <span contentEditable suppressContentEditableWarning className="text-[11px] font-semibold text-slate-600 outline-none">72%</span>
+            <span className="text-[11px] font-semibold text-slate-600 outline-none">72%</span>
           </div>
-          <p contentEditable suppressContentEditableWarning className="mt-1.5 text-[10.5px] text-slate-400 outline-none">Removing noise and improving clarity</p>
+          <p className="mt-1.5 text-[10.5px] text-slate-400 outline-none">Removing noise and improving clarity</p>
         </div>
       </div>
 
       {/* Before / After labels row */}
       <div className="flex justify-between px-2 mb-3 relative z-20">
-        <div className="rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-3 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.06)]">
-          <p contentEditable suppressContentEditableWarning className="text-[12px] font-semibold text-slate-800 outline-none">Before</p>
-          <p contentEditable suppressContentEditableWarning className="text-[10.5px] text-slate-400 mt-0.5 outline-none">Noisy Audio</p>
+        <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.06)]">
+          <p className="text-[12px] font-semibold text-slate-800">Before</p>
+          <p className="text-[10.5px] text-slate-400 mt-0.5">Noisy Audio</p>
           <div className="mt-2 flex items-center gap-[1.5px]">
             {Array.from({ length: 24 }, (_, i) => (
               <div key={i} className="w-[2px] rounded-full bg-slate-400"
@@ -79,9 +79,9 @@ export function VoiceEditorVisual() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-3 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.06)]">
-          <p contentEditable suppressContentEditableWarning className="text-[12px] font-semibold text-slate-800 outline-none">After</p>
-          <p contentEditable suppressContentEditableWarning className="text-[10.5px] text-slate-400 mt-0.5 outline-none">Enhanced Audio</p>
+        <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.06)]">
+          <p className="text-[12px] font-semibold text-slate-800">After</p>
+          <p className="text-[10.5px] text-slate-400 mt-0.5">Enhanced Audio</p>
           <div className="mt-2 flex items-center gap-[1.5px]">
             {Array.from({ length: 24 }, (_, i) => (
               <div key={i} className="w-[2px] rounded-full bg-brand-500"
@@ -104,7 +104,7 @@ export function VoiceEditorVisual() {
 
       {/* Metric pills — below image */}
       <div className="flex justify-center mt-5 relative z-20">
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md px-5 py-3.5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.08)]">
           {[
             { label: 'Noise Reduction', value: 80 },
             { label: 'Voice Clarity', value: 75 },
@@ -120,8 +120,8 @@ export function VoiceEditorVisual() {
                 </svg>
               </div>
               <div>
-                <p contentEditable suppressContentEditableWarning className="text-[10px] text-slate-400 leading-tight outline-none">{metric.label}</p>
-                <p contentEditable suppressContentEditableWarning className="text-[12px] font-semibold text-brand-600 outline-none">{metric.value}%</p>
+                <p className="text-[10px] text-slate-400 leading-tight outline-none">{metric.label}</p>
+                <p className="text-[12px] font-semibold text-brand-600 outline-none">{metric.value}%</p>
               </div>
             </div>
           ))}

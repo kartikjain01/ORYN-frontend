@@ -179,7 +179,7 @@ export default function HomePage() {
 
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-[-120px] top-[10%] h-[280px] w-[280px] rounded-full bg-blue-500/20 blur-[120px]"
+            className="pointer-events-none absolute left-[-120px] top-[10%] h-[280px] w-[280px] rounded-full bg-blue-500/20 blur-[60px]"
           />
 
           {/* Background handled by HeroSection's built-in waveform now */}

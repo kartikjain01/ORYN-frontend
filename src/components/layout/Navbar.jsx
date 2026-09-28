@@ -272,7 +272,7 @@ export default function Navbar({ user }) {
     <>
       <header className="fixed top-3 left-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl -translate-x-1/2 sm:top-4 sm:w-[calc(100%-2.5rem)]">
         <nav
-          className={`relative flex h-16 w-full items-center justify-between rounded-full border px-4 backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-500 ease-out sm:px-5 ${glassBarClass}`}
+          className={`relative flex h-16 w-full items-center justify-between rounded-full border px-4 backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-500 ease-out sm:px-5 ${glassBarClass}`}
         >
           {/* top specular highlight — the "liquid glass" sheen */}
           <div
@@ -435,7 +435,7 @@ export default function Navbar({ user }) {
             : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="mx-4 rounded-3xl border border-white/25 bg-white/70 shadow-[0_16px_50px_-10px_rgba(16,24,40,0.28),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-2xl backdrop-saturate-150 overflow-hidden">
+        <div className="mx-4 rounded-3xl border border-white/25 bg-white/70 shadow-[0_16px_50px_-10px_rgba(16,24,40,0.28),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-md overflow-hidden">
           <div className="flex flex-col p-4">
             {navItems.map(item => (
               <button

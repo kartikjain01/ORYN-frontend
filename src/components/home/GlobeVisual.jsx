@@ -24,13 +24,13 @@ export default function GlobeVisual() {
           key={stat.label}
           className={`absolute ${stat.position} z-10`}
         >
-          <div className="flex items-stretch rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/60 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] overflow-hidden">
+          <div className="flex items-stretch rounded-2xl bg-white border border-slate-200/60 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] overflow-hidden">
             <div className="w-[4px] bg-brand-600 shrink-0" />
             <div className="flex items-center gap-3 px-4 py-3">
               <stat.icon size={22} className="text-brand-600 shrink-0" strokeWidth={2} />
               <div>
-                <p contentEditable suppressContentEditableWarning className="text-[18px] font-bold text-brand-600 leading-tight outline-none">{stat.value}</p>
-                <p contentEditable suppressContentEditableWarning className="text-[12px] text-slate-500 font-medium outline-none">{stat.label}</p>
+                <p className="text-[18px] font-bold text-brand-600 leading-tight outline-none">{stat.value}</p>
+                <p className="text-[12px] text-slate-500 font-medium outline-none">{stat.label}</p>
               </div>
             </div>
           </div>

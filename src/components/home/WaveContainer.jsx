@@ -50,8 +50,6 @@ const purpleHeights = basePurple.map((h, i) => {
 
         bg-[linear-gradient(135deg,#31205F_0%,#24184E_45%,#1A123D_100%)]
 
-        backdrop-blur-xl
-        backdrop-saturate-150
 
         shadow-[0_12px_35px_rgba(0,0,0,.45)]
 

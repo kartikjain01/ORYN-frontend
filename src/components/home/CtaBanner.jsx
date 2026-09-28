@@ -129,8 +129,7 @@ export default function CtaBanner() {
                     key={title}
                     className="
                       flex items-center gap-3 rounded-2xl
-                      border border-white/12 bg-ink-950/55 px-4 py-3
-                      backdrop-blur-md
+                      border border-white/12 bg-ink-950/80 px-4 py-3
                     "
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/15 text-brand-500">

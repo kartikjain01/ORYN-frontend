@@ -70,46 +70,9 @@ export default function VoiceCards({
               <div className="absolute inset-0 bg-[#202024]" />
               <div className="absolute inset-0 bg-[#232326]" />
 
-              {/* Main Glow */}
+              {/* Ambient glow — single radial gradient instead of multiple blur layers */}
               <div
-                className="
-                  absolute
-                  left-1/2
-                  top-[55%]
-                  -translate-x-1/2
-                  w-[620px]
-                  h-[620px]
-                  rounded-full
-                  bg-white/[0.09]
-                  blur-[170px]
-                "
-              />
-
-              {/* Left Ambient */}
-              <div
-                className="
-                  absolute
-                  -left-24
-                  top-0
-                  w-[280px]
-                  h-full
-                  bg-[linear-gradient(to_right,rgba(255,255,255,0.018),transparent)]
-                  blur-[30px]
-                "
-              />
-
-              {/* Top Glow */}
-              <div
-                className="
-                  absolute
-                  -top-24
-                  -left-24
-                  w-[360px]
-                  h-[360px]
-                  rounded-full
-                  bg-white/[0.04]
-                  blur-[120px]
-                "
+                className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_60%,rgba(255,255,255,0.07),transparent_65%)]"
               />
 
               <div
@@ -144,7 +107,7 @@ export default function VoiceCards({
                     border
                     border-white/10
                     bg-white/5
-                    backdrop-blur-xl
+                    bg-white/8
                     flex
                     items-center
                   "
@@ -169,7 +132,7 @@ export default function VoiceCards({
       border
       border-white/30
       bg-white/10
-      backdrop-blur-md
+      bg-white/8
       flex
       items-center
       justify-center
@@ -270,19 +233,9 @@ export default function VoiceCards({
                 "
               />
 
-              {/* Bottom Glow */}
+              {/* Bottom glow — radial gradient instead of blur layer */}
               <div
-                className="
-                  absolute
-                  bottom-[-150px]
-                  left-1/2
-                  -translate-x-1/2
-                  w-[720px]
-                  h-[300px]
-                  rounded-full
-                  bg-[#4A00A8]/45
-                  blur-[150px]
-                "
+                className="absolute bottom-0 inset-x-0 h-[40%] bg-[radial-gradient(ellipse_at_50%_100%,rgba(74,0,168,0.3),transparent_70%)]"
               />
 
               {/* Top Overlay */}
@@ -309,18 +262,9 @@ export default function VoiceCards({
                 "
               />
 
-              {/* Top Glow */}
+              {/* Top glow — radial gradient */}
               <div
-                className="
-                  absolute
-                  -top-24
-                  right-[-70px]
-                  w-[420px]
-                  h-[420px]
-                  rounded-full
-                  bg-white/8
-                  blur-[120px]
-                "
+                className="absolute -top-24 right-0 w-full h-[60%] bg-[radial-gradient(ellipse_at_80%_0%,rgba(255,255,255,0.06),transparent_60%)]"
               />
 
               {/* Badge */}
@@ -333,7 +277,7 @@ export default function VoiceCards({
                     border
                     border-white/15
                     bg-white/8
-                    backdrop-blur-xl
+                    bg-white/8
                     flex
                     items-center
                   "
@@ -357,7 +301,7 @@ rounded-full
 border
 border-white/30
 bg-white/10
-backdrop-blur-md
+bg-white/8
 flex
 items-center
 justify-center
