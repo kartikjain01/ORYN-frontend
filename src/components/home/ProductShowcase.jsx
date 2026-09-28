@@ -241,10 +241,10 @@ export default function ProductShowcases() {
      and stays locked to the scroll, so nothing ever detaches from the
      finger — this adds flow without adding drift. */
   const flow = useSpring(scrollYProgress, {
-    stiffness: 110,
-    damping: 28,
-    mass: 0.35,
-    restDelta: 0.0004,
+    stiffness: 400,
+    damping: 40,
+    mass: 0.2,
+    restDelta: 0.001,
   });
 
   const last = products.length - 1;

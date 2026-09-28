@@ -64,7 +64,7 @@
    flush landing when you come to rest near a slide, but lets a deliberate
    scroll cross the seam at its own pace. */
 html {
-  scroll-snap-type: y proximity;
+  scroll-snap-type: none;
 }
 
 /* Base resets MUST live in @layer base.
