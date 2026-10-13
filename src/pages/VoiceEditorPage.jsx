@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Download, HelpCircle, MessageSquare, Upload, Mic, Settings2, AudioWaveform, Volume2, FolderOpen, MoreVertical, RotateCcw, Share, X, Scissors, ChevronDown, Check } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { createProject, getProjectsByType } from '../lib/db';
-import { authFetch, authUploadFetch, downloadName } from '../lib/api';
+import { downloadName, gradioCall, gradioUpload, gradioFileUrl } from '../lib/api';
 import WaveformTrimmer from '../components/WaveformTrimmer';
 
-const API_BASE = import.meta.env.VITE_API_VOICE_EDITOR || '';
-const WS_EDITOR = import.meta.env.VITE_WS_EDITOR || '';
+const HF_SPACE = import.meta.env.VITE_HF_ORYN_SPACE || 'https://kartikjain12345-oryn-voice-gen.hf.space';
 
 export default function VoiceEditorPage() {
   const navigate = useNavigate();
@@ -231,46 +230,34 @@ export default function VoiceEditorPage() {
       progressInterval = setInterval(() => { setProgress(prev => prev >= 95 ? prev : prev + 2); }, 500);
       setProcessedAudio(null);
 
-      const formData = new FormData();
-      if (mode === 'upload') { formData.append('file', file); }
-      else { formData.append('file', new File([recordedBlob], 'recording.webm', { type: 'audio/webm' })); }
-      if (enableNoiseRemoval) { formData.append('mode', processingMode); }
-      if (enableSmartTrim) { formData.append('smart_trim', 'true'); }
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
 
-      const response = await authUploadFetch(`${API_BASE}/api/upload-audio/full-enhance`, formData);
-      if (!response.ok) throw new Error(`Processing failed: ${response.status}`);
-      const data = await response.json();
+      const audioFile = mode === 'upload' ? file : new File([recordedBlob], 'recording.webm', { type: 'audio/webm' });
+      const uploadedPath = await gradioUpload(HF_SPACE, audioFile);
 
-      if (data.job_id) {
-        const poll = async () => {
-          while (true) {
-            await new Promise(r => setTimeout(r, 2000));
-            const statusRes = await authFetch(`${API_BASE}/api/upload-audio/status/${data.job_id}`);
-            if (!statusRes.ok) throw new Error('Status check failed');
-            const status = await statusRes.json();
-            if (status.status === 'done') return status;
-            if (status.status === 'failed') throw new Error(status.error || 'Processing failed');
-          }
-        };
-        const result = await poll();
-        clearInterval(progressInterval);
-        setProgress(100);
-        const url = result.supabase_url || `${API_BASE}${result.download_url}`;
-        setProcessedAudio(url);
-        setLastProjectUrl(url);
-        setSessionFiles(prev => [{ url, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval } }).catch(console.error);
-      } else {
-        clearInterval(progressInterval);
-        setProgress(100);
-        const url = data.supabase_url || `${API_BASE}${data.download_url}`;
-        setProcessedAudio(url);
-        setLastProjectUrl(url);
-        setSessionFiles(prev => [{ url, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval } }).catch(console.error);
-      }
+      const resultData = await gradioCall(HF_SPACE, 'editor_full_enhance', [
+        uploadedPath,
+        enableNoiseRemoval ? processingMode : 'basic',
+        enableSmartTrim,
+        userId,
+      ]);
+
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      const [audioFileData, jsonStr] = resultData;
+      const info = JSON.parse(jsonStr);
+
+      const url = info.supabase_url || gradioFileUrl(HF_SPACE, audioFileData);
+      if (!url) throw new Error('No output audio URL');
+
+      setProcessedAudio(url);
+      setLastProjectUrl(url);
+      setSessionFiles(prev => [{ url, name: fileName, duration: 0, timestamp: Date.now() }, ...prev]);
+      createProject({ title: fileName || 'Voice Editor Output', type: 'voice_editor', outputUrl: url, metadata: { mode: processingMode, noiseRemoval: enableNoiseRemoval } }).catch(console.error);
     } catch (error) {
-      console.error(error); showToast('Error processing audio');
+      console.error(error); showToast(error.message || 'Error processing audio');
     } finally { clearInterval(progressInterval); setLoading(false); }
   };
 

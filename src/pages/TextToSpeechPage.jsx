@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Download, HelpCircle, MessageSquare, Globe, Sparkles, Upload, Settings2, X, Maximize2, Minimize2, Volume2, Mic, FolderOpen, MoreVertical, RotateCcw, Share, ChevronDown, Check } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { createProject, getProjectsByType } from '../lib/db';
-import { authFetch, authJsonFetch, downloadName } from '../lib/api';
+import { downloadName, gradioCall, gradioFileUrl } from '../lib/api';
 
-const API_BASE = import.meta.env.VITE_API_VOICE_GENERATION;
+const HF_SPACE = import.meta.env.VITE_HF_ORYN_SPACE || 'https://kartikjain12345-oryn-voice-gen.hf.space';
 
 export default function TextToSpeechPage() {
   const navigate = useNavigate();
@@ -230,43 +230,28 @@ export default function TextToSpeechPage() {
     if (!text.trim()) { showToast('Please enter text first'); return; }
     setIsLoading(true);
     try {
-      const response = await authJsonFetch(`${API_BASE}/generate`, {
-          text: text.replace(/\n/g, ' '),
-          speed,
-          pitch,
-          voice: selectedVoice,
-          language: selectedLanguage,
-      });
-      if (!response.ok) throw new Error('Backend Error');
-      const data = await response.json();
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
 
-      if (data.job_id) {
-        const poll = async () => {
-          while (true) {
-            await new Promise(r => setTimeout(r, 2000));
-            const statusRes = await authFetch(`${API_BASE}/generate/status/${data.job_id}`);
-            if (!statusRes.ok) throw new Error('Status check failed');
-            const status = await statusRes.json();
-            if (status.status === 'done') return status.audio_url;
-            if (status.status === 'failed') throw new Error(status.error || 'Generation failed');
-          }
-        };
-        const audioUrl = await poll();
-        setAudioUrl(audioUrl);
-        setShowAudio(true);
-        setLastProjectUrl(audioUrl);
-        setSessionFiles(prev => [{ url: audioUrl, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: audioUrl, metadata: { voice: selectedVoice, language: selectedLanguage, speed, pitch } }).catch(err => console.error('createProject failed:', err));
-      } else {
-        setAudioUrl(data.audio_url);
-        setShowAudio(true);
-        setLastProjectUrl(data.audio_url);
-        setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
-        createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: data.audio_url, metadata: { voice: selectedVoice, language: selectedLanguage, speed, pitch } }).catch(err => console.error('createProject failed:', err));
-      }
+      const resultData = await gradioCall(HF_SPACE, 'generate_tts', [
+        text.replace(/\n/g, ' '), selectedVoice, userId, selectedLanguage,
+      ]);
+
+      const [audioFileData, jsonStr] = resultData;
+      const info = JSON.parse(jsonStr);
+      if (!info.success) throw new Error(info.error || 'Generation failed');
+
+      const finalUrl = info.audio_url || gradioFileUrl(HF_SPACE, audioFileData);
+      if (!finalUrl) throw new Error('No audio URL in response');
+
+      setAudioUrl(finalUrl);
+      setShowAudio(true);
+      setLastProjectUrl(finalUrl);
+      setSessionFiles(prev => [{ url: finalUrl, format: selectedFormat, quality: selectedQuality, text: text.slice(0, 40), voice: selectedVoice, duration: 0, timestamp: Date.now() }, ...prev]);
+      createProject({ title: text.slice(0, 60) || 'TTS Output', type: 'tts', outputUrl: finalUrl, metadata: { voice: selectedVoice, language: selectedLanguage, speed, pitch } }).catch(err => console.error('createProject failed:', err));
     } catch (error) {
-      console.error('Connection failed:', error);
-      showToast('Backend connection failed. Please try again.');
+      console.error('Generation failed:', error);
+      showToast(error.message || 'Backend connection failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

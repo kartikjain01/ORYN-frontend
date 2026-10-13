@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Mic, Upload, Play, Pause, Download, Settings2, CheckCircle2, AudioWaveform, Sparkles, Globe, HelpCircle, MessageSquare, X, RotateCcw, MoreVertical, FolderOpen, Maximize2, Minimize2, ChevronDown, Check } from 'lucide-react';
 import { createProject, createVoice, getProjectsByType } from '../lib/db';
 import { supabase } from '../supabaseClient';
-import { authFetch, authJsonFetch, authUploadFetch, downloadName } from '../lib/api';
+import { downloadName, gradioCall, gradioUpload, gradioFileUrl } from '../lib/api';
 
-const API_BASE = import.meta.env.VITE_API_VOICE_CLONE;
+const HF_SPACE = import.meta.env.VITE_HF_ORYN_SPACE || 'https://kartikjain12345-oryn-voice-gen.hf.space';
 
 export default function VoiceCloningPage() {
   const navigate = useNavigate();
@@ -201,79 +201,61 @@ export default function VoiceCloningPage() {
     if (!file) { showToast('Please upload an audio file first'); return; }
     try {
       setLoading(true); setStatusMsg('Uploading voice...');
-      const formData = new FormData(); formData.append('file', file);
-      const response = await authUploadFetch(`${API_BASE}/v1/voices`, formData);
-      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-      const data = await response.json();
-      if (!data.voice_id) throw new Error('voice_id missing');
-      setVoiceId(data.voice_id); setStatusMsg('Building voice profile...');
-      const buildResponse = await authJsonFetch(`${API_BASE}/v1/voices/${data.voice_id}/build`, { remove_noise: removeNoise });
-      if (!buildResponse.ok) throw new Error(`Build Failed: ${buildResponse.status}`);
+
+      const uploadedPath = await gradioUpload(HF_SPACE, file);
+
+      const uploadResult = await gradioCall(HF_SPACE, 'clone_upload_voice', [uploadedPath]);
+      const [vid, uploadInfoStr] = uploadResult;
+      const uploadInfo = JSON.parse(uploadInfoStr);
+      if (!uploadInfo.success || !vid) throw new Error('Upload failed');
+
+      setVoiceId(vid); setStatusMsg('Building voice profile...');
+
+      const buildResult = await gradioCall(HF_SPACE, 'clone_build_voice', [vid]);
+      const buildInfoStr = Array.isArray(buildResult) ? buildResult[0] : buildResult;
+      const buildInfo = JSON.parse(typeof buildInfoStr === 'string' ? buildInfoStr : JSON.stringify(buildInfoStr));
+      if (!buildInfo.success) throw new Error(buildInfo.error || 'Build failed');
+
       setCloneCompleted(true); setStatusMsg('Voice cloned successfully!');
-      createVoice({ name: fileName || 'Cloned Voice', type: 'voice_clone', voiceId: data.voice_id, durationSeconds: durationSec, metadata: { removeNoise } }).catch(console.error);
-    } catch (err) { console.error(err); setStatusMsg('Error cloning voice'); }
+      createVoice({ name: fileName || 'Cloned Voice', type: 'voice_clone', voiceId: vid, durationSeconds: durationSec, metadata: { removeNoise } }).catch(console.error);
+    } catch (err) { console.error(err); setStatusMsg(err.message || 'Error cloning voice'); }
     finally { setLoading(false); }
   };
 
   const generatePreview = async () => {
-    if (!voiceId) {
-      showToast('Clone voice first');
-      return;
-    }
-
-    if (!previewText) {
-      showToast('Enter text');
-      return;
-    }
+    if (!voiceId) { showToast('Clone voice first'); return; }
+    if (!previewText) { showToast('Enter text'); return; }
 
     try {
       setIsGenerating(true);
       setStatusMsg('Generating preview...');
 
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error('You must be logged in');
 
-      if (authError || !user) {
-        throw new Error('You must be logged in');
-      }
+      const resultData = await gradioCall(HF_SPACE, 'clone_generate', [
+        voiceId, previewText, user.id, selectedLanguage,
+      ]);
 
-      const response = await authJsonFetch(`${API_BASE}/v1/tts`, {
-        voice_id: voiceId,
-        text: previewText,
-        language: selectedLanguage,
-        output_format: 'wav',
-        user_id: user.id,
-      });
+      const [audioFileData, jsonStr] = resultData;
+      const info = JSON.parse(jsonStr);
+      if (!info.success) throw new Error(info.error || 'Generation failed');
 
-      if (!response.ok) {
-        throw new Error(`TTS Error: ${response.status}`);
-      }
+      const finalUrl = info.audio_url || gradioFileUrl(HF_SPACE, audioFileData);
+      if (!finalUrl) { setStatusMsg('No audio URL'); setIsGenerating(false); return; }
 
-      const data = await response.json();
-
-      if (!data.job_id) {
-        throw new Error('No job_id');
-      }
-
-      checkJobStatus(data.job_id);
+      setAudioUrl(finalUrl);
+      setGeneratedAudioReady(true);
+      setIsGenerating(false);
+      setStatusMsg('Preview ready!');
+      setLastProjectUrl(finalUrl);
+      setSessionFiles(prev => [{ url: finalUrl, format: selectedFormat, quality: selectedQuality, text: previewText.slice(0, 30), duration: 0, timestamp: Date.now() }, ...prev]);
+      createProject({ title: previewText.slice(0, 60) || 'Voice Clone Output', type: 'voice_clone', outputUrl: finalUrl, metadata: { voiceId, language: selectedLanguage } }).catch(console.error);
     } catch (err) {
       console.error(err);
       setStatusMsg(err.message || 'TTS failed');
       setIsGenerating(false);
     }
-  };
-
-  const checkJobStatus = async jobId => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await authFetch(`${API_BASE}/v1/tts/${jobId}`);
-        const data = await res.json();
-        if (data.status === 'done') { clearInterval(interval); if (!data.audio_url) { setStatusMsg('No audio URL'); setIsGenerating(false); return; } setAudioUrl(data.audio_url); setGeneratedAudioReady(true); setIsGenerating(false); setStatusMsg('Preview ready!'); setLastProjectUrl(data.audio_url); setSessionFiles(prev => [{ url: data.audio_url, format: selectedFormat, quality: selectedQuality, text: previewText.slice(0, 30), duration: 0, timestamp: Date.now() }, ...prev]); createProject({ title: previewText.slice(0, 60) || 'Voice Clone Output', type: 'voice_clone', outputUrl: data.audio_url, metadata: { voiceId, language: selectedLanguage } }).catch(console.error); }
-        if (data.status === 'failed') { clearInterval(interval); setStatusMsg('Generation failed'); setIsGenerating(false); }
-      } catch (err) { console.error(err); clearInterval(interval); setStatusMsg('Error checking status'); setIsGenerating(false); }
-    }, 2000);
   };
 
   const handleDownload = async () => {
