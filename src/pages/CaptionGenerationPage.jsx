@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Upload, AudioWaveform, FolderOpen, Download, MoreVertical, Check, Type, Palette, Languages, HelpCircle, MessageSquare, Plus, Share, ChevronDown, SkipBack, SkipForward, Volume2, Maximize2, X, RotateCw } from 'lucide-react';
+import { Play, Pause, Upload, AudioWaveform, FolderOpen, Download, MoreVertical, Check, Type, Palette, Languages, HelpCircle, MessageSquare, Plus, Share, ChevronDown, SkipBack, SkipForward, Volume2, Maximize2, X, RotateCw, Wrench } from 'lucide-react';
 import { createProject, getProjectsByType } from '../lib/db';
 import { supabase } from '../supabaseClient';
 import { downloadName } from '../lib/api';
 
 const HF_SPACE = import.meta.env.VITE_HF_CAPTION_SPACE || 'https://kartikjain12345-oryn-caption-engine.hf.space';
 const API_BASE = import.meta.env.VITE_API_CAPTIONS || '';
+const CAPTIONS_TEMPORARILY_UNAVAILABLE = true;
 
 const CAPTION_STYLES = [
   { id: 'capcut', name: 'CapCut', preview: 'Clean white text, cinematic feel', color: '#ffffff', demoVideo: '/demos/capcut-demo.mp4' },
@@ -708,6 +709,32 @@ export default function CaptionGenerationPage() {
   const maxWordsPercent = ((maxWords - 1) / (10 - 1)) * 100;
 
   const currentStep = !file ? 1 : !generatedCaptions ? (generating ? 3 : 2) : 4;
+
+  if (CAPTIONS_TEMPORARILY_UNAVAILABLE) {
+    return (
+      <main className="flex-1 overflow-y-auto bg-[linear-gradient(135deg,#f0f4ff_0%,#f8fafc_45%,#f5f0ff_100%)] p-6 lg:p-8">
+        <div className="flex min-h-full items-center justify-center">
+          <section
+            aria-labelledby="captions-service-heading"
+            className="w-full max-w-xl rounded-3xl border border-white/80 bg-white/80 p-8 text-center shadow-[0_12px_40px_rgba(37,99,235,0.08)] backdrop-blur-xl sm:p-12"
+          >
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <Wrench size={28} aria-hidden="true" />
+            </div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
+              Temporary service update
+            </p>
+            <h1 id="captions-service-heading" className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+              Captions is under maintenance
+            </h1>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-600 sm:text-base">
+              Sorry for the inconvenience. We’re working on the service and hope to have it back soon. Please check back later.
+            </p>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 overflow-y-auto">
