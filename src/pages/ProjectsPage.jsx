@@ -39,14 +39,25 @@ export default function ProjectsPage() {
   const rafRef = useRef(null);
   const videoModalRef = useRef(null);
   const highlightRef = useRef(null);
+  const activePlaybackRef = useRef(null);
+  const playbackPendingRef = useRef(false);
+  const playbackTokenRef = useRef(0);
 
   const stopPlayback = useCallback(() => {
+    playbackTokenRef.current++;
+    activePlaybackRef.current = null;
+    playbackPendingRef.current = false;
     if (mediaRef.current) {
-      mediaRef.current.pause();
-      mediaRef.current.src = '';
+      const media = mediaRef.current;
       mediaRef.current = null;
+      media.pause();
+      media.removeAttribute('src');
+      media.load();
     }
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     setPlayingId(null);
     setProgress(0);
   }, []);
@@ -104,13 +115,20 @@ export default function ProjectsPage() {
       if (videoModal?.id === project.id) { closeVideoModal(); return; }
       stopPlayback();
       setVideoModal(project);
+      activePlaybackRef.current = project.id;
       setPlayingId(project.id);
       setProgress(0);
       return;
     }
 
-    if (playingId === project.id) { stopPlayback(); return; }
+    if (activePlaybackRef.current === project.id) {
+      if (!playbackPendingRef.current) stopPlayback();
+      return;
+    }
     stopPlayback();
+    activePlaybackRef.current = project.id;
+    playbackPendingRef.current = true;
+    const playbackToken = playbackTokenRef.current;
     const el = new Audio();
     el.crossOrigin = 'anonymous';
     el.preload = 'auto';
@@ -119,23 +137,33 @@ export default function ProjectsPage() {
     setPlayingId(project.id);
     setProgress(0);
     const tick = () => {
+      if (mediaRef.current !== el) return;
       if (el.duration && isFinite(el.duration)) setProgress(el.currentTime / el.duration);
       if (!el.paused) rafRef.current = requestAnimationFrame(tick);
     };
-    el.addEventListener('play', tick);
+    el.addEventListener('play', () => {
+      if (playbackToken !== playbackTokenRef.current) return;
+      playbackPendingRef.current = false;
+      tick();
+    });
     el.addEventListener('ended', () => {
+      if (playbackToken !== playbackTokenRef.current) return;
       setProgress(1);
-      setTimeout(() => { setPlayingId(null); setProgress(0); }, 600);
+      setTimeout(() => {
+        if (playbackToken === playbackTokenRef.current) stopPlayback();
+      }, 600);
     });
     el.addEventListener('error', () => {
+      if (playbackToken !== playbackTokenRef.current || mediaRef.current !== el) return;
       stopPlayback();
       showToast('Could not play this file — the URL may have expired');
     });
     el.play().catch(() => {
+      if (playbackToken !== playbackTokenRef.current || mediaRef.current !== el) return;
       stopPlayback();
       showToast('Playback failed — file may no longer be available');
     });
-  }, [playingId, stopPlayback, videoModal, closeVideoModal]);
+  }, [stopPlayback, videoModal, closeVideoModal]);
 
   useEffect(() => () => stopPlayback(), [stopPlayback]);
 
@@ -154,7 +182,9 @@ export default function ProjectsPage() {
         el.addEventListener('loadedmetadata', () => {
           if (isFinite(el.duration) && el.duration > 0) {
             setProjects(prev => prev.map((proj, i) => i === idx ? { ...proj, duration: formatDuration(el.duration), durationSeconds: el.duration } : proj));
-            supabase.from('projects').update({ duration_seconds: el.duration }).eq('id', p.id).catch(console.error);
+            supabase.from('projects').update({ duration_seconds: el.duration }).eq('id', p.id)
+              .then(({ error }) => { if (error) console.error('Failed to update project duration:', error); })
+              .catch(console.error);
           }
         });
       }
@@ -358,9 +388,13 @@ export default function ProjectsPage() {
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${playingId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                       <button
                         onClick={(e) => { e.stopPropagation(); togglePlay(project); }}
+                        disabled={activePlaybackRef.current === project.id && playbackPendingRef.current}
+                        aria-label={activePlaybackRef.current === project.id && playbackPendingRef.current ? 'Loading audio' : playingId === project.id ? 'Pause audio' : 'Play audio'}
                         className="pointer-events-auto w-12 h-12 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/40 hover:scale-110 transition-transform cursor-pointer"
                       >
-                        {playingId === project.id
+                        {activePlaybackRef.current === project.id && playbackPendingRef.current
+                          ? <Loader2 size={16} className="text-white animate-spin" />
+                          : playingId === project.id
                           ? <Pause fill="white" size={16} className="text-white" />
                           : <Play fill="white" size={16} className="text-white ml-0.5" />}
                       </button>
@@ -440,9 +474,13 @@ export default function ProjectsPage() {
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all ${playingId === project.id ? 'bg-black/30 opacity-100' : 'bg-black/0 group-hover:bg-black/20 opacity-0 group-hover:opacity-100'}`}>
                       <button
                         onClick={(e) => { e.stopPropagation(); togglePlay(project); }}
+                        disabled={activePlaybackRef.current === project.id && playbackPendingRef.current}
+                        aria-label={activePlaybackRef.current === project.id && playbackPendingRef.current ? 'Loading audio' : playingId === project.id ? 'Pause audio' : 'Play audio'}
                         className="pointer-events-auto cursor-pointer"
                       >
-                        {playingId === project.id
+                        {activePlaybackRef.current === project.id && playbackPendingRef.current
+                          ? <Loader2 size={12} className="text-white animate-spin" />
+                          : playingId === project.id
                           ? <Pause fill="white" size={12} className="text-white" />
                           : <Play fill="white" size={12} className="text-white" />}
                       </button>

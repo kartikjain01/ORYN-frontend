@@ -67,7 +67,9 @@ export default function VoiceEditorPage() {
           a.addEventListener('loadedmetadata', () => {
             if (isFinite(a.duration) && a.duration > 0) {
               setSessionFiles(prev => prev.map((sf, i) => i === idx && sf.id === f.id ? { ...sf, duration: a.duration } : sf));
-              supabase.from('projects').update({ duration_seconds: a.duration }).eq('id', f.id).catch(console.error);
+              supabase.from('projects').update({ duration_seconds: a.duration }).eq('id', f.id)
+                .then(({ error }) => { if (error) console.error('Failed to update project duration:', error); })
+                .catch(console.error);
             }
           });
         }
@@ -664,7 +666,9 @@ export default function VoiceEditorPage() {
                       setGenDuration(dur);
                       if (lastProjectUrl === processedAudio) {
                         setSessionFiles(prev => prev.map((sf, i) => i === 0 && sf.url === processedAudio && !sf.duration ? { ...sf, duration: dur } : sf));
-                        supabase.from('projects').update({ duration_seconds: dur }).eq('output_url', processedAudio).then(() => {}).catch(console.error);
+                        supabase.from('projects').update({ duration_seconds: dur }).eq('output_url', processedAudio)
+                          .then(({ error }) => { if (error) console.error('Failed to update project duration:', error); })
+                          .catch(console.error);
                         setLastProjectUrl(null);
                       }
                     }

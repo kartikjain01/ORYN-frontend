@@ -87,7 +87,9 @@ export default function RecentProjects() {
         el.addEventListener('loadedmetadata', () => {
           if (isFinite(el.duration) && el.duration > 0) {
             setProjects(prev => prev.map((proj, i) => i === idx ? { ...proj, duration: formatDuration(el.duration), durationSeconds: el.duration } : proj));
-            supabase.from('projects').update({ duration_seconds: el.duration }).eq('id', p.id).catch(console.error);
+            supabase.from('projects').update({ duration_seconds: el.duration }).eq('id', p.id)
+              .then(({ error }) => { if (error) console.error('Failed to update project duration:', error); })
+              .catch(console.error);
           }
         });
       }

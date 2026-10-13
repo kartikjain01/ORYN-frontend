@@ -287,7 +287,9 @@ export default function CaptionGenerationPage() {
           v.addEventListener('loadedmetadata', () => {
             if (isFinite(v.duration) && v.duration > 0) {
               setSessionFiles(prev => prev.map((sf, i) => i === idx && sf.id === f.id ? { ...sf, duration: v.duration } : sf));
-              supabase.from('projects').update({ duration_seconds: v.duration }).eq('id', f.id).catch(console.error);
+              supabase.from('projects').update({ duration_seconds: v.duration }).eq('id', f.id)
+                .then(({ error }) => { if (error) console.error('Failed to update project duration:', error); })
+                .catch(console.error);
             }
           });
         }
