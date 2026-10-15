@@ -5,7 +5,7 @@
 /* ------------------------------------------------------------
    1 — VOICE CLONE
    ------------------------------------------------------------ */
-import voiceCloneHeroImg from '../../assets/images/voice-clone-hero.webp';
+import voiceCloneHeroImg from '../../assets/images/voice-clone-hero-optimized.webp';
 
 export function VoiceCloneVisual() {
   return (
@@ -13,6 +13,8 @@ export function VoiceCloneVisual() {
       <img
         src={voiceCloneHeroImg}
         alt="AI neural network sphere with voice sample, AI analysis, and voice identity labels"
+        width={1200}
+        height={800}
         loading="lazy"
         decoding="async"
         className="w-[150%] max-w-none h-auto object-contain -ml-[45%] -mr-[5%]"
@@ -24,7 +26,7 @@ export function VoiceCloneVisual() {
 /* ------------------------------------------------------------
    2 — TEXT TO SPEECH
    ------------------------------------------------------------ */
-import ttsInterfaceImg from '../../assets/images/tts-interface.webp';
+import ttsInterfaceImg from '../../assets/images/tts-interface-optimized.webp';
 
 export function TextToSpeechVisual() {
   return (
@@ -32,6 +34,8 @@ export function TextToSpeechVisual() {
       <img
         src={ttsInterfaceImg}
         alt="Text-to-speech interface with voice, language and emotion selectors above an audio waveform player"
+        width={1200}
+        height={800}
         loading="lazy"
         decoding="async"
         className="w-full max-w-none h-auto object-contain lg:scale-110 origin-center"
@@ -44,7 +48,7 @@ export function TextToSpeechVisual() {
    3 — VOICE EDITOR
    Waveform image with floating UI overlay cards.
    ------------------------------------------------------------ */
-import voiceEditorWavesImg from '../../assets/images/voice-editor-waves.webp';
+import voiceEditorWavesImg from '../../assets/images/voice-editor-waves-optimized.webp';
 
 export function VoiceEditorVisual() {
   return (
@@ -62,7 +66,7 @@ export function VoiceEditorVisual() {
             </div>
             <span className="text-[11px] font-semibold text-slate-600 outline-none">72%</span>
           </div>
-          <p className="mt-1.5 text-[10.5px] text-slate-400 outline-none">Removing noise and improving clarity</p>
+          <p className="mt-1.5 text-[10.5px] text-slate-600 outline-none">Removing noise and improving clarity</p>
         </div>
       </div>
 
@@ -70,7 +74,7 @@ export function VoiceEditorVisual() {
       <div className="flex justify-between px-2 mb-3 relative z-20">
         <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.06)]">
           <p className="text-[12px] font-semibold text-slate-800">Before</p>
-          <p className="text-[10.5px] text-slate-400 mt-0.5">Noisy Audio</p>
+          <p className="text-[10.5px] text-slate-600 mt-0.5">Noisy Audio</p>
           <div className="mt-2 flex items-center gap-[1.5px]">
             {Array.from({ length: 24 }, (_, i) => (
               <div key={i} className="w-[2px] rounded-full bg-slate-400"
@@ -81,7 +85,7 @@ export function VoiceEditorVisual() {
 
         <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.06)]">
           <p className="text-[12px] font-semibold text-slate-800">After</p>
-          <p className="text-[10.5px] text-slate-400 mt-0.5">Enhanced Audio</p>
+          <p className="text-[10.5px] text-slate-600 mt-0.5">Enhanced Audio</p>
           <div className="mt-2 flex items-center gap-[1.5px]">
             {Array.from({ length: 24 }, (_, i) => (
               <div key={i} className="w-[2px] rounded-full bg-brand-500"
@@ -96,6 +100,8 @@ export function VoiceEditorVisual() {
         <img
           src={voiceEditorWavesImg}
           alt="Before and after audio visualization — jagged peaks transforming into smooth blue waves"
+          width={1200}
+          height={518}
           loading="lazy"
           decoding="async"
           className="w-full h-auto object-contain"
@@ -120,7 +126,7 @@ export function VoiceEditorVisual() {
                 </svg>
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 leading-tight outline-none">{metric.label}</p>
+                <p className="text-[10px] text-slate-600 leading-tight outline-none">{metric.label}</p>
                 <p className="text-[12px] font-semibold text-brand-600 outline-none">{metric.value}%</p>
               </div>
             </div>
@@ -134,7 +140,7 @@ export function VoiceEditorVisual() {
 /* ------------------------------------------------------------
    4 — CAPTION GENERATOR
    ------------------------------------------------------------ */
-import captionCarouselImg from '../../assets/images/caption-carousel.webp';
+import captionCarouselImg from '../../assets/images/caption-carousel-optimized.webp';
 
 export function CaptionGeneratorVisual() {
   return (
@@ -147,6 +153,8 @@ export function CaptionGeneratorVisual() {
         <img
           src={captionCarouselImg}
           alt="Multilingual caption cards orbiting around a central globe on a holographic platform"
+          width={1200}
+          height={800}
           loading="lazy"
           decoding="async"
           className="w-full max-w-none h-auto object-contain lg:scale-[1.15] origin-center"
@@ -183,6 +191,8 @@ export function StoryboardVisual({ tone }) {
           <img
             src={storyboardImg}
             alt="A prompt card streaming light into a six-panel cinematic storyboard grid."
+            width={1448}
+            height={1086}
             loading="lazy"
             decoding="async"
             className="w-full h-auto object-contain"
@@ -208,6 +218,8 @@ export function VideoEditorVisual() {
       <img
         src={videoEditorImg}
         alt="A cinematic video editing interface with scene cards, timeline tracks, and blue neon glow effects."
+        width={1536}
+        height={1024}
         loading="lazy"
         decoding="async"
         className="w-[140%] max-w-none h-auto -ml-[28%]"

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import welcomeAudio from '../../assets/audio/welcome.mp3';
 import { attach, resume, getLevel } from '../../lib/audioAnalyser';
-import robotImg from '../../assets/images/hero-robot.webp';
+import robotImg from '../../assets/images/hero-robot-optimized.webp';
 
 export default function HeroSection() {
   const audioRef = useRef(null);
@@ -66,7 +66,7 @@ export default function HeroSection() {
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-6 text-[15px] sm:text-[16px] leading-[1.8] text-white/50 font-light max-w-[480px] mx-auto md:mx-0">
+          <p className="mt-6 text-[15px] sm:text-[16px] leading-[1.8] text-white/70 font-light max-w-[480px] mx-auto md:mx-0">
             Clone voices. Generate speech. Add captions to any video.
             Everything creators need — in one powerful studio.
           </p>
@@ -160,8 +160,8 @@ export default function HeroSection() {
                 <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-400">
                   {item.icon}
                 </div>
-                <h3 className="text-[13px] font-semibold text-white">{item.title}</h3>
-                <p className="text-[11px] text-white/40 leading-relaxed">{item.desc}</p>
+                <h2 className="text-[13px] font-semibold text-white">{item.title}</h2>
+                <p className="text-[11px] text-white/70 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -169,8 +169,8 @@ export default function HeroSection() {
 
         {/* Scroll Indicator */}
         <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 animate-bounce">
-          <span className="text-[10px] tracking-[0.15em] uppercase text-white/25">Scroll</span>
-          <svg className="w-4 h-4 text-white/25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <span className="text-[10px] tracking-[0.15em] uppercase text-white/70">Scroll</span>
+          <svg className="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
           </svg>
         </div>
@@ -180,6 +180,8 @@ export default function HeroSection() {
           <img
             src={robotImg}
             alt="AI Voice Robot"
+            width={1200}
+            height={676}
             fetchpriority="high"
             loading="eager"
             className="w-full h-full object-cover object-left scale-[1.4] origin-center"

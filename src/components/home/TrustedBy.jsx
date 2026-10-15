@@ -66,7 +66,7 @@ export default function TrustedBy() {
   return (
     <section className="relative px-4 pt-16 pb-8 sm:px-8 lg:px-14">
       <div className="mx-auto max-w-6xl">
-        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-500">
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-600">
           FAQ
         </p>
         <h2 className="mt-3 text-center text-[28px] font-bold tracking-[-0.02em] text-fg sm:text-[34px]">

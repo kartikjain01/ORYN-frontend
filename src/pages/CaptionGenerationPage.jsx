@@ -7,7 +7,7 @@ import { downloadName } from '../lib/api';
 
 const HF_SPACE = import.meta.env.VITE_HF_CAPTION_SPACE || 'https://kartikjain12345-oryn-caption-engine.hf.space';
 const API_BASE = import.meta.env.VITE_API_CAPTIONS || '';
-const CAPTIONS_TEMPORARILY_UNAVAILABLE = true;
+const CAPTIONS_TEMPORARILY_UNAVAILABLE = false;
 
 const CAPTION_STYLES = [
   { id: 'capcut', name: 'CapCut', preview: 'Clean white text, cinematic feel', color: '#ffffff', demoVideo: '/demos/capcut-demo.mp4' },
@@ -490,10 +490,10 @@ export default function CaptionGenerationPage() {
           done(() => reject(new Error(msg)));
         });
         es.addEventListener('progress', () => {
-          setProgress(prev => Math.min(prev + 5, 85));
+          setProgress(prev => Math.min(prev + 3, 92));
         });
         es.addEventListener('heartbeat', () => {
-          setProgress(prev => Math.min(prev + 1, 85));
+          setProgress(prev => prev < 60 ? prev + 2 : Math.min(prev + 0.5, 92));
         });
         es.onerror = () => {
           done(() => reject(new Error('Connection to caption server lost')));

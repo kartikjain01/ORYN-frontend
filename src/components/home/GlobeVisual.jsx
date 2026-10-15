@@ -14,6 +14,8 @@ export default function GlobeVisual() {
       <img
         src={swirlImg}
         alt="Abstract blue light swirl representing speed and innovation"
+        width={1536}
+        height={1024}
         loading="lazy"
         decoding="async"
         className="w-[130%] max-w-none h-auto object-contain -mr-[15%]"

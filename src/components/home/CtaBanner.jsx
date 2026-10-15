@@ -40,6 +40,8 @@ export default function CtaBanner() {
             src={earth}
             alt=""
             aria-hidden="true"
+            width={2172}
+            height={724}
             loading="lazy"
             decoding="async"
             className="absolute inset-0 -z-10 h-full w-full object-cover object-right"

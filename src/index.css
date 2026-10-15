@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 /* ============================================================
@@ -26,7 +25,7 @@
 
   /* Text on light */
   --color-fg: #0f172a;
-  --color-fg-muted: #64748b;
+  --color-fg-muted: #475569;
 
   /* Text on dark */
   --color-fg-invert: #ffffff;
