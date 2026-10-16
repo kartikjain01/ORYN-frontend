@@ -233,15 +233,15 @@ export async function deleteProject(projectId) {
     .select('output_url,thumbnail_url')
     .eq('id', projectId)
     .single();
-  if (data) {
-    await Promise.all([
-      removeStorageFile(data.output_url),
-      removeStorageFile(data.thumbnail_url),
-    ]);
-  }
   const { error } = await supabase.from('projects').delete().eq('id', projectId);
   if (error) throw error;
   clearCache();
+  if (data) {
+    Promise.all([
+      removeStorageFile(data.output_url),
+      removeStorageFile(data.thumbnail_url),
+    ]).catch(() => {});
+  }
 }
 
 // ── Voices ──────────────────────────────────────────────────

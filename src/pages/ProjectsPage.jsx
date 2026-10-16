@@ -73,8 +73,10 @@ export default function ProjectsPage() {
   }, []);
 
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [deletingIds, setDeletingIds] = useState(new Set());
   const [toast, setToast] = useState('');
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
+  const [toastLoading, setToastLoading] = useState(false);
+  const showToast = (msg, loading = false) => { setToast(msg); setToastLoading(loading); if (!loading) setTimeout(() => setToast(''), 4000); };
 
   const toggleSelect = (id) => {
     setSelectedIds(prev => {
@@ -93,18 +95,17 @@ export default function ProjectsPage() {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
     if (!window.confirm(`Delete ${count} project${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
-    let deleted = 0;
-    for (const id of selectedIds) {
-      try {
-        await deleteProject(id);
-        deleted++;
-      } catch (err) {
-        console.error('Failed to delete project:', id, err);
-      }
-    }
-    setProjects(prev => prev.filter(p => !selectedIds.has(p.id)));
+    const idsToDelete = new Set(selectedIds);
+    setDeletingIds(prev => new Set([...prev, ...idsToDelete]));
     setSelectedIds(new Set());
-    showToast(deleted === count ? `Deleted ${count} project${count > 1 ? 's' : ''}` : `Deleted ${deleted}/${count} projects`);
+    showToast(`Deleting ${count} project${count > 1 ? 's' : ''}...`, true);
+    const results = await Promise.allSettled(
+      [...idsToDelete].map(id => deleteProject(id))
+    );
+    setDeletingIds(prev => { const next = new Set(prev); idsToDelete.forEach(id => next.delete(id)); return next; });
+    setProjects(prev => prev.filter(p => !idsToDelete.has(p.id)));
+    const failed = results.filter(r => r.status === 'rejected').length;
+    showToast(failed ? `Deleted ${count - failed}/${count} projects` : `Deleted ${count} project${count > 1 ? 's' : ''}`);
   };
 
   const togglePlay = useCallback((project) => {
@@ -235,9 +236,17 @@ export default function ProjectsPage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this project? This cannot be undone.')) return;
-    await deleteProject(id);
-    setProjects(prev => prev.filter(p => p.id !== id));
     setOpenMenu(null);
+    setDeletingIds(prev => new Set([...prev, id]));
+    showToast('Deleting project...', true);
+    try {
+      await deleteProject(id);
+    } catch (err) {
+      console.error('Failed to delete project:', id, err);
+    }
+    setDeletingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+    setProjects(prev => prev.filter(p => p.id !== id));
+    showToast('Project deleted');
   };
 
   const handleRenameStart = (project) => {
@@ -366,7 +375,8 @@ export default function ProjectsPage() {
               image = placeholder;
             }
             return (
-              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`group cursor-pointer bg-white rounded-2xl border hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-500 relative ${selectedIds.has(project.id) ? 'border-blue-400 ring-2 ring-blue-200' : highlightId === project.id ? 'border-blue-400 ring-2 ring-blue-200 shadow-[0_0_20px_rgba(59,130,246,0.25)]' : 'border-slate-200'}`}>
+              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`group cursor-pointer bg-white rounded-2xl border hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-500 relative ${deletingIds.has(project.id) ? 'opacity-50 pointer-events-none' : ''} ${selectedIds.has(project.id) ? 'border-blue-400 ring-2 ring-blue-200' : highlightId === project.id ? 'border-blue-400 ring-2 ring-blue-200 shadow-[0_0_20px_rgba(59,130,246,0.25)]' : 'border-slate-200'}`}>
+                {deletingIds.has(project.id) && <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/60"><Loader2 size={24} className="animate-spin text-slate-400" /></div>}
                 <div className="relative h-[160px] overflow-hidden rounded-t-2xl">
                   <img
                     src={image}
@@ -464,7 +474,8 @@ export default function ProjectsPage() {
               image = placeholder;
             }
             return (
-              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`flex items-center gap-4 px-5 py-4 hover:bg-slate-50/50 transition-all duration-500 cursor-pointer group ${selectedIds.has(project.id) ? 'bg-blue-50/60' : highlightId === project.id ? 'bg-blue-50/60 ring-1 ring-blue-200' : ''}`}>
+              <div key={project.id} ref={highlightId === project.id ? highlightRef : null} className={`flex items-center gap-4 px-5 py-4 hover:bg-slate-50/50 transition-all duration-500 cursor-pointer group relative ${deletingIds.has(project.id) ? 'opacity-50 pointer-events-none' : ''} ${selectedIds.has(project.id) ? 'bg-blue-50/60' : highlightId === project.id ? 'bg-blue-50/60 ring-1 ring-blue-200' : ''}`}>
+                {deletingIds.has(project.id) && <div className="absolute right-5 top-1/2 -translate-y-1/2 z-10"><Loader2 size={18} className="animate-spin text-slate-400" /></div>}
                 <button onClick={(e) => { e.stopPropagation(); toggleSelect(project.id); }} className={`shrink-0 w-5 h-5 rounded flex items-center justify-center transition ${selectedIds.has(project.id) ? 'text-blue-500' : 'text-slate-300 hover:text-slate-500'}`}>
                   {selectedIds.has(project.id) ? <CheckSquare size={16} /> : <Square size={16} />}
                 </button>
@@ -537,7 +548,8 @@ export default function ProjectsPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 bg-slate-900 text-white text-[13px] font-medium rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] animate-[fadeIn_0.2s_ease-out]">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 bg-slate-900 text-white text-[13px] font-medium rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] animate-[fadeIn_0.2s_ease-out] flex items-center gap-2">
+          {toastLoading && <Loader2 size={14} className="animate-spin" />}
           {toast}
         </div>
       )}
