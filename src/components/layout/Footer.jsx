@@ -11,10 +11,10 @@ const columns = [
   {
     heading: 'Product',
     links: [
-      { label: 'Voice Clone', to: '/voice-clone' },
-      { label: 'Text to Speech', to: '/text-to-speech' },
-      { label: 'Voice Editor', to: '/voice-editor' },
-      { label: 'Settings', to: '/settings' },
+      { label: 'AI Voice Cloning', to: '/voice-clone' },
+      { label: 'AI Text to Speech', to: '/text-to-speech' },
+      { label: 'AI Voice Editor', to: '/voice-editor' },
+      { label: 'AI Caption Generator', to: '/caption-generation' },
     ],
   },
   {

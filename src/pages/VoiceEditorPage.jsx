@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Download, HelpCircle, MessageSquare, Upload, Mic, Settings2, AudioWaveform, Volume2, FolderOpen, MoreVertical, RotateCcw, Share, X, Scissors, ChevronDown, Check } from 'lucide-react';
 import { supabase } from '../supabaseClient';
@@ -267,6 +268,11 @@ export default function VoiceEditorPage() {
 
   return (
     <main className="flex-1 overflow-y-auto">
+      <Helmet>
+        <title>AI Voice Editor & Audio Enhancer | ORYN Engine</title>
+        <meta name="description" content="Enhance voice recordings with ORYN Engine. Remove background noise, trim audio, and polish recordings with AI-powered processing." />
+        <link rel="canonical" href="https://www.orynengine.com/voice-editor" />
+      </Helmet>
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl bg-slate-900 text-white text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease]">
           {toast}
@@ -280,7 +286,7 @@ export default function VoiceEditorPage() {
 
         {/* Page heading */}
         <div className="flex items-center justify-between">
-          <h1 className="text-[22px] font-bold text-slate-800 tracking-tight">Voice Editor</h1>
+          <h1 className="text-[22px] font-bold text-slate-800 tracking-tight">AI Voice Editor</h1>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowHelpModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
               <HelpCircle size={14} />

@@ -22,6 +22,11 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const ProfilePanel = lazy(() => import('./components/layout/ProfilePanel'));
 
+const VoiceCloningLanding = lazy(() => import("./pages/landing/VoiceCloningLanding"));
+const TextToSpeechLanding = lazy(() => import("./pages/landing/TextToSpeechLanding"));
+const VoiceEditorLanding = lazy(() => import("./pages/landing/VoiceEditorLanding"));
+const CaptionGenerationLanding = lazy(() => import("./pages/landing/CaptionGenerationLanding"));
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -155,6 +160,15 @@ function App() {
           <Route path="/forgot-password" element={<ForgetPassword />} />
 
           <Route path="/reset-password" element={<ForgetPassword />} />
+
+          {!session && (
+            <>
+              <Route path="/voice-clone" element={<VoiceCloningLanding />} />
+              <Route path="/text-to-speech" element={<TextToSpeechLanding />} />
+              <Route path="/voice-editor" element={<VoiceEditorLanding />} />
+              <Route path="/caption-generation" element={<CaptionGenerationLanding />} />
+            </>
+          )}
 
           <Route
             element={

@@ -2,6 +2,7 @@
 import LegalModal from '../components/LegalModal';
 
 import { useEffect, useRef, useState } from "react";
+import { Helmet } from 'react-helmet-async';
 import { motion, useScroll, useTransform } from "framer-motion";
 import { supabase } from "../supabaseClient";
 
@@ -145,8 +146,31 @@ export default function HomePage() {
      scrolls, i.e. never pin at all. `clip` still trims horizontal bleed but
      creates no scrollport, so the product stack keeps sticking to the
      viewport. */
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "ORYN Engine",
+        "url": "https://www.orynengine.com",
+        "description": "AI-powered voice studio for creators and teams. Voice cloning, text-to-speech, audio editing, and video captioning."
+      },
+      {
+        "@type": "WebSite",
+        "name": "ORYN Engine",
+        "url": "https://www.orynengine.com"
+      }
+    ]
+  };
+
   return (
     <div className="relative min-h-screen overflow-x-clip bg-page text-fg">
+      <Helmet>
+        <title>ORYN Engine — AI Voice Studio</title>
+        <meta name="description" content="Clone voices, generate speech, edit audio, and add captions — all powered by AI. The complete voice studio for creators and teams." />
+        <link rel="canonical" href="https://www.orynengine.com/" />
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      </Helmet>
       {/* ✅ NAVBAR */}
       <Navbar user={user} />
 

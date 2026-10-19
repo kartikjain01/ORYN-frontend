@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /projects
+Disallow: /analytics
+Disallow: /notifications
+Disallow: /upgrade
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-success
 
 Sitemap: https://www.orynengine.com/sitemap.xml

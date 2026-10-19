@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from "react-router-dom" // This is what's missing!
+import { BrowserRouter } from "react-router-dom"
+import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.jsx'
 import { ProfileProvider } from "./context/ProfileContext";
@@ -8,12 +9,14 @@ import { NotificationProvider } from "./context/NotificationContext";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <ProfileProvider>
-        <NotificationProvider>
-          <App />
-        </NotificationProvider>
-      </ProfileProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <ProfileProvider>
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
+        </ProfileProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   </StrictMode>
 )

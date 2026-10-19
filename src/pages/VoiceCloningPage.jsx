@@ -4,6 +4,7 @@ import { Mic, Upload, Play, Pause, Download, Settings2, CheckCircle2, AudioWavef
 import { createProject, createVoice, getProjectsByType } from '../lib/db';
 import { supabase } from '../supabaseClient';
 import { downloadName, gradioCall, gradioUpload, gradioFileUrl } from '../lib/api';
+import { Helmet } from "react-helmet-async";
 
 const HF_SPACE = import.meta.env.VITE_HF_ORYN_SPACE || 'https://kartikjain12345-oryn-voice-gen.hf.space';
 
@@ -289,6 +290,11 @@ export default function VoiceCloningPage() {
   };
 
   const currentStep = !file ? 1 : !cloneCompleted ? 2 : !previewText ? 3 : !generatedAudioReady ? 3 : 4;
+      <Helmet>
+        <title>AI Voice Cloning Online | ORYN Engine</title>
+        <meta name="description" content="Create natural-sounding AI voice clones with ORYN Engine. Upload audio or record your voice, then generate speech in 17+ languages." />
+        <link rel="canonical" href="https://www.orynengine.com/voice-clone" />
+      </Helmet>
 
   return (
     <main className="flex-1 overflow-y-auto">
