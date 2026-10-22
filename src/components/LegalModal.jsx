@@ -8,7 +8,7 @@ function TermsContent() {
       <h3 className="mb-4 text-2xl font-bold text-black">
         Terms of Service
       </h3>
-      <p className="text-sm text-gray-500 mb-6">Last updated: August 2026</p>
+      <p className="text-sm text-gray-500 mb-6">Last updated: October 2026</p>
 
       <p>
         Welcome to ORYN Engine ("Platform", "Service", "we", "us"). By creating an account or using any part of our platform, you agree to be bound by these Terms of Service. If you do not agree, do not use the Service.
@@ -145,14 +145,14 @@ function TermsContent() {
         12. Governing Law
       </h4>
       <p>
-        These Terms are governed by applicable laws. Any disputes shall be resolved through good-faith negotiation before pursuing legal remedies.
+        These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms or your use of the Service shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
       </p>
 
       <h4 className="mt-8 text-xl font-semibold text-black">
         13. Contact
       </h4>
       <p>
-        For questions about these Terms, contact us at <strong>the Suggestion Box on our website</strong>.
+        For questions about these Terms, contact us at <strong>orynengine@gmail.com</strong>.
       </p>
     </>
   );
@@ -164,7 +164,7 @@ function PrivacyContent() {
       <h3 className="mb-4 text-2xl font-bold text-black">
         Privacy Policy
       </h3>
-      <p className="text-sm text-gray-500 mb-6">Last updated: August 2026</p>
+      <p className="text-sm text-gray-500 mb-6">Last updated: October 2026</p>
 
       <p>
         ORYN Engine ("we", "us", "our") respects your privacy. This Privacy Policy explains what information we collect, how we use it, and how we protect it when you use our platform.
@@ -273,7 +273,7 @@ function PrivacyContent() {
         <li><strong>Withdraw Consent:</strong> Revoke consent for optional data processing at any time</li>
       </ul>
       <p className="mt-3">
-        To exercise any of these rights, contact us at <strong>the Suggestion Box on our website</strong> or use the account settings page.
+        To exercise any of these rights, contact us at <strong>orynengine@gmail.com</strong> or use the account settings page.
       </p>
 
       <h4 className="mt-8 text-xl font-semibold text-black">
@@ -311,7 +311,7 @@ function PrivacyContent() {
         For privacy-related questions, data requests, or concerns:
       </p>
       <ul className="ml-6 mt-3 list-disc space-y-1">
-        <li>Email: <strong>the Suggestion Box on our website</strong></li>
+        <li>Email: <strong>orynengine@gmail.com</strong></li>
         <li>Platform: Use the Contact Support panel in the navigation</li>
       </ul>
     </>

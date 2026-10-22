@@ -44,7 +44,7 @@ const socials = [
   { Icon: Instagram, label: 'Instagram' },
 ];
 
-export default function Footer({ onTerms, onPrivacy }) {
+export default function Footer() {
   return (
     <footer className="relative mt-12 border-t border-line bg-card px-4 sm:px-8 lg:px-14">
       <div className="mx-auto max-w-7xl py-10">
@@ -118,23 +118,26 @@ export default function Footer({ onTerms, onPrivacy }) {
           </p>
 
           <div className="flex flex-wrap items-center gap-6">
-            <button
-              onClick={onPrivacy}
-              className="cursor-pointer text-[12px] text-fg-muted transition-colors duration-200 hover:text-fg"
+            <Link
+              to="/privacy"
+              className="text-[12px] text-fg-muted transition-colors duration-200 hover:text-fg"
             >
               Privacy Policy
-            </button>
+            </Link>
 
-            <button
-              onClick={onTerms}
-              className="cursor-pointer text-[12px] text-fg-muted transition-colors duration-200 hover:text-fg"
+            <Link
+              to="/terms"
+              className="text-[12px] text-fg-muted transition-colors duration-200 hover:text-fg"
             >
               Terms of Service
-            </button>
+            </Link>
 
-            <button className="cursor-pointer text-[12px] text-fg-muted transition-colors duration-200 hover:text-fg">
+            <Link
+              to="/cookies"
+              className="text-[12px] text-fg-muted transition-colors duration-200 hover:text-fg"
+            >
               Cookies
-            </button>
+            </Link>
           </div>
         </div>
       </div>

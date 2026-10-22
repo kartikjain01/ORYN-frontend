@@ -493,7 +493,7 @@ export async function resetAccount() {
   const user = await getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // 1. Delete all project storage files
+  // 1. Delete storage files while still authenticated
   const { data: projects } = await supabase
     .from('projects')
     .select('output_url,thumbnail_url')
@@ -504,7 +504,6 @@ export async function resetAccount() {
     );
   }
 
-  // 2. Delete all voice storage files
   const { data: voices } = await supabase
     .from('voices')
     .select('audio_url')
@@ -513,31 +512,16 @@ export async function resetAccount() {
     await Promise.all(voices.map(v => removeStorageFile(v.audio_url)));
   }
 
-  // 3. Delete avatar files from storage
   const { data: avatarFiles } = await supabase.storage.from('avatars').list(user.id);
   if (avatarFiles && avatarFiles.length > 0) {
     await supabase.storage.from('avatars').remove(avatarFiles.map(f => `${user.id}/${f.name}`));
   }
 
-  // 4. Delete all data rows
-  await Promise.all([
-    supabase.from('projects').delete().eq('user_id', user.id),
-    supabase.from('voices').delete().eq('user_id', user.id),
-    supabase.from('notifications').delete().eq('user_id', user.id),
-  ]);
+  // 2. Delete all DB rows + auth user in one transaction (also logs email to deleted_accounts)
+  const { error: rpcError } = await supabase.rpc('delete_own_account');
+  if (rpcError) throw rpcError;
 
-  // 5. Mark profile as deleted (keep row as ghost record for tracking)
-  await supabase.from('profiles').update({
-    full_name: 'Deleted User',
-    avatar_url: null,
-    age: null,
-    gender: null,
-    mobile: null,
-    birthday: null,
-    deleted_at: new Date().toISOString(),
-  }).eq('id', user.id);
-
-  // 6. Clear cache and sign out all sessions
+  // 3. Clear cache and sign out
   clearCache();
   await supabase.auth.signOut({ scope: 'global' });
 }

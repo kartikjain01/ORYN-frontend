@@ -13,6 +13,8 @@ import {
   Lock,
   AlertTriangle,
   Loader2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -151,6 +153,7 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteAuthError, setDeleteAuthError] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [usageStats, setUsageStats] = useState(null);
 
@@ -1077,14 +1080,23 @@ export default function SettingsPage() {
                     <label className="text-[12px] font-medium text-slate-500 mb-1.5 block">
                       Enter your password to confirm
                     </label>
-                    <input
-                      type="password"
-                      value={deletePassword}
-                      onChange={e => { setDeletePassword(e.target.value); setDeleteAuthError(''); }}
-                      disabled={isDeleting}
-                      placeholder="Your password"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-[14px] text-slate-700 bg-slate-50 focus:border-red-400 focus:ring-2 focus:ring-red-400/10 outline-none transition placeholder:text-slate-300"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showDeletePassword ? 'text' : 'password'}
+                        value={deletePassword}
+                        onChange={e => { setDeletePassword(e.target.value); setDeleteAuthError(''); }}
+                        disabled={isDeleting}
+                        placeholder="Your password"
+                        className="w-full border border-slate-200 rounded-xl px-4 py-3 pr-11 text-[14px] text-slate-700 bg-slate-50 focus:border-red-400 focus:ring-2 focus:ring-red-400/10 outline-none transition placeholder:text-slate-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDeletePassword(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                      >
+                        {showDeletePassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                     {deleteAuthError && (
                       <p className="mt-1.5 text-[12px] text-red-500">{deleteAuthError}</p>
                     )}
@@ -1098,6 +1110,7 @@ export default function SettingsPage() {
                       setDeleteConfirmText('');
                       setDeletePassword('');
                       setDeleteAuthError('');
+                      setShowDeletePassword(false);
                     }}
                     disabled={isDeleting}
                     className="flex-1 h-[42px] rounded-xl border border-slate-200 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"

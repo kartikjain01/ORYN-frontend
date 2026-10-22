@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import { useProfile } from "./context/ProfileContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -21,6 +21,17 @@ const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const ProfilePanel = lazy(() => import('./components/layout/ProfilePanel'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
+const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
+const AiVoiceCloningGuide = lazy(() => import('./pages/blog/AiVoiceCloningGuide'));
+const TextToSpeechCreators = lazy(() => import('./pages/blog/TextToSpeechCreators'));
+const AiCaptionsVideo = lazy(() => import('./pages/blog/AiCaptionsVideo'));
+const VoiceEditorGuide = lazy(() => import('./pages/blog/VoiceEditorGuide'));
+
+import CookieConsent from './components/CookieConsent';
 
 const VoiceCloningLanding = lazy(() => import("./pages/landing/VoiceCloningLanding"));
 const TextToSpeechLanding = lazy(() => import("./pages/landing/TextToSpeechLanding"));
@@ -100,6 +111,14 @@ function VerifySuccess() {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -117,6 +136,16 @@ function App() {
           const { data, error } = await supabase.auth.exchangeCodeForSession(urlCode);
           window.history.replaceState({}, '', window.location.pathname);
           if (!error && data?.session) {
+            const termsAccepted = sessionStorage.getItem('terms_accepted_at');
+            sessionStorage.removeItem('terms_accepted_at');
+            if (termsAccepted) {
+              supabase.auth.updateUser({
+                data: {
+                  terms_accepted_at: termsAccepted,
+                  privacy_accepted_at: termsAccepted,
+                },
+              });
+            }
             setSession(data.session);
             setLoading(false);
             return;
@@ -144,6 +173,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
@@ -156,6 +186,18 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           <Route path="/verify-success" element={<VerifySuccess />} />
+
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+
+          <Route path="/terms" element={<TermsOfUse />} />
+
+          <Route path="/cookies" element={<CookiePolicy />} />
+
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/ai-voice-cloning-guide" element={<AiVoiceCloningGuide />} />
+          <Route path="/blog/text-to-speech-creators" element={<TextToSpeechCreators />} />
+          <Route path="/blog/ai-captions-video" element={<AiCaptionsVideo />} />
+          <Route path="/blog/ai-voice-editor-guide" element={<VoiceEditorGuide />} />
 
           <Route path="/forgot-password" element={<ForgetPassword />} />
 
@@ -199,10 +241,11 @@ function App() {
             <Route path="/upgrade" element={<UpgradePage />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
 
         {showProfile && <ProfilePanel user={session?.user} />}
+        <CookieConsent />
       </Suspense>
     </ErrorBoundary>
   );

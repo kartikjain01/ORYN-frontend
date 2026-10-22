@@ -1,0 +1,198 @@
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import SEO from '../components/SEO';
+
+export default function CookiePolicy() {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <SEO
+        title="Cookie Policy"
+        description="How ORYN Engine uses cookies, local storage, and similar technologies on our platform."
+        path="/cookies"
+      />
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <Link
+          to="/"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-900"
+        >
+          <ArrowLeft size={16} />
+          Back to Home
+        </Link>
+
+        <h1 className="text-4xl font-bold text-slate-900">Cookie Policy</h1>
+        <p className="mt-2 text-sm text-slate-500">Last updated: October 2026</p>
+
+        <div className="mt-10 space-y-8 text-[15px] leading-7 text-slate-700">
+          <p>
+            This Cookie Policy explains how ORYN Engine (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) uses cookies and similar technologies when you visit{' '}
+            <a href="https://www.orynengine.com" className="text-blue-600 hover:underline">
+              www.orynengine.com
+            </a>.
+          </p>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">1. What Are Cookies?</h2>
+            <p className="mt-3">
+              Cookies are small text files stored on your device when you visit a website. They help the site remember your preferences, keep you logged in, and understand how you use the platform.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">2. Cookies We Use</h2>
+
+            <h3 className="mt-4 font-medium text-slate-900">Essential Cookies (Required)</h3>
+            <p className="mt-2">These cookies are necessary for the platform to function and cannot be disabled.</p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left">
+                    <th className="pb-2 pr-4 font-medium text-slate-900">Cookie</th>
+                    <th className="pb-2 pr-4 font-medium text-slate-900">Purpose</th>
+                    <th className="pb-2 font-medium text-slate-900">Duration</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-xs">sb-*-auth-token</td>
+                    <td className="py-2 pr-4">Supabase authentication session</td>
+                    <td className="py-2">Session / 7 days</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-xs">sb-*-auth-token-code-verifier</td>
+                    <td className="py-2 pr-4">OAuth PKCE verification</td>
+                    <td className="py-2">Session</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 className="mt-6 font-medium text-slate-900">Functional Cookies</h3>
+            <p className="mt-2">These cookies remember your preferences and settings for a better experience.</p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left">
+                    <th className="pb-2 pr-4 font-medium text-slate-900">Cookie</th>
+                    <th className="pb-2 pr-4 font-medium text-slate-900">Purpose</th>
+                    <th className="pb-2 font-medium text-slate-900">Duration</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-xs">theme</td>
+                    <td className="py-2 pr-4">Remembers light/dark mode preference</td>
+                    <td className="py-2">1 year</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-xs">oauth_redirect</td>
+                    <td className="py-2 pr-4">Tracks OAuth login flow</td>
+                    <td className="py-2">Session</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 className="mt-6 font-medium text-slate-900">Advertising Cookies</h3>
+            <p className="mt-2">
+              We use Google AdSense to display ads. Google may set cookies to serve ads based on your browsing history. These cookies are managed by Google and subject to their{' '}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Privacy Policy
+              </a>.
+            </p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left">
+                    <th className="pb-2 pr-4 font-medium text-slate-900">Cookie</th>
+                    <th className="pb-2 pr-4 font-medium text-slate-900">Purpose</th>
+                    <th className="pb-2 font-medium text-slate-900">Provider</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-xs">__gads, __gpi</td>
+                    <td className="py-2 pr-4">Ad serving and frequency capping</td>
+                    <td className="py-2">Google AdSense</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-xs">NID, IDE</td>
+                    <td className="py-2 pr-4">Ad personalization</td>
+                    <td className="py-2">Google</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">3. Local Storage</h2>
+            <p className="mt-3">
+              In addition to cookies, we use browser local storage and session storage for:
+            </p>
+            <ul className="ml-6 mt-3 list-disc space-y-1">
+              <li>Authentication tokens and refresh tokens</li>
+              <li>Scroll position and navigation state</li>
+              <li>Temporary form data during active sessions</li>
+            </ul>
+            <p className="mt-3">
+              Local storage data persists until you clear your browser data or log out.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">4. Managing Cookies</h2>
+            <p className="mt-3">
+              You can control cookies through your browser settings. Most browsers allow you to:
+            </p>
+            <ul className="ml-6 mt-3 list-disc space-y-1">
+              <li>View and delete existing cookies</li>
+              <li>Block all or third-party cookies</li>
+              <li>Set preferences for specific websites</li>
+              <li>Get notified when a cookie is set</li>
+            </ul>
+            <p className="mt-3">
+              Disabling essential cookies will prevent you from logging in and using the platform. Disabling advertising cookies will not affect platform functionality but may result in less relevant ads.
+            </p>
+            <p className="mt-3">
+              To opt out of personalized advertising by Google, visit{' '}
+              <a
+                href="https://adssettings.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Google Ad Settings
+              </a>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">5. Changes to This Policy</h2>
+            <p className="mt-3">
+              We may update this Cookie Policy to reflect changes in the cookies we use or for regulatory reasons. We encourage you to revisit this page periodically for the latest information.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">6. Contact Us</h2>
+            <p className="mt-3">
+              If you have questions about our use of cookies, contact us at{' '}
+              <a href="mailto:orynengine@gmail.com" className="text-blue-600 hover:underline">
+                orynengine@gmail.com
+              </a>.
+            </p>
+          </section>
+        </div>
+
+        <div className="mt-16 border-t border-slate-200 pt-6 text-center text-xs text-slate-400">
+          &copy; {new Date().getFullYear()} ORYN Engine. All rights reserved.
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { User } from 'lucide-react';
 import LegalModal from '../components/LegalModal';
+import SEO from '../components/SEO';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function AuthPage() {
     setFullName('');
     setShowPassword(false);
     setAgreedToTerms(false);
+    setFormError('');
   };
 
   // 🔥 REGISTER
@@ -116,6 +118,11 @@ export default function AuthPage() {
       });
 
       if (error) {
+        const { data: delCheck } = await supabase.rpc('check_deleted_email', { check_email: cleanEmail });
+        if (delCheck?.deleted) {
+          setFormError('No account found with this email. Please create a new account.');
+          return;
+        }
         setFormError(error.message);
         return;
       }
@@ -131,8 +138,16 @@ export default function AuthPage() {
 
   // 🔥 SOCIAL LOGIN
   const handleSocialLogin = async provider => {
+    if (!isLogin && !agreedToTerms) {
+      setFormError('Please agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
     try {
       sessionStorage.setItem('oauth_redirect', 'true');
+      if (!isLogin) {
+        sessionStorage.setItem('terms_accepted_at', new Date().toISOString());
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -224,6 +239,12 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-3 sm:p-6 bg-gray-50 overflow-hidden">
+      <SEO
+        title={isLogin ? 'Sign In' : 'Create Account'}
+        description="Sign in or create your ORYN Engine account to access AI voice cloning, text-to-speech, and audio editing tools."
+        path="/register"
+        noindex
+      />
       {/* PREMIUM BACKGROUND */}
       <div className="absolute inset-0">
         <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
@@ -247,7 +268,7 @@ export default function AuthPage() {
             }`}
         >
           <div className="mb-8">
-            <div className="text-blue-600 text-xl mb-4 relative top-[-80px]">
+            <div className="text-blue-600 text-xl mb-4">
               ORYNEngine
             </div>
 
@@ -362,7 +383,7 @@ export default function AuthPage() {
           `}
         >
           <div className="mb-8">
-            <div className="text-blue-600 text-xl mb-4 relative top-[-80px]">
+            <div className="text-blue-600 text-xl mb-4">
               ORYNEngine
             </div>
 

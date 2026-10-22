@@ -1,10 +1,9 @@
 // src/pages/HomePage.jsx
-import LegalModal from '../components/LegalModal';
-
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from 'react-helmet-async';
 import { motion, useScroll, useTransform } from "framer-motion";
 import { supabase } from "../supabaseClient";
+import SEO from "../components/SEO";
 
 // Layout & Sections
 import Navbar from "../components/layout/Navbar";
@@ -14,6 +13,7 @@ import ProductShowcases from "../components/home/ProductShowcase";
 import CtaBanner from "../components/home/CtaBanner";
 import TrustedBy from "../components/home/TrustedBy";
 import Footer from "../components/layout/Footer";
+import AdUnit from "../components/AdUnit";
 
 
 /* Entrance animation for each slide.
@@ -38,7 +38,6 @@ const slideClass =
 
 export default function HomePage() {
   const [user, setUser] = useState(null);
-  const [legalModal, setLegalModal] = useState(null);
 
   /* Hero parallax. Tracked from the band's own top edge to the point where it
      has fully left the viewport, so the handoff is tied to the seam rather than
@@ -165,10 +164,8 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-page text-fg">
+      <SEO path="/" />
       <Helmet>
-        <title>ORYN Engine — AI Voice Studio</title>
-        <meta name="description" content="Clone voices, generate speech, edit audio, and add captions — all powered by AI. The complete voice studio for creators and teams." />
-        <link rel="canonical" href="https://www.orynengine.com/" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
       {/* ✅ NAVBAR */}
@@ -227,6 +224,11 @@ export default function HomePage() {
             that the navbar and the closing CTA scroll to. */}
         <ProductShowcases />
 
+        {/* AD BETWEEN SECTIONS */}
+        <div className="mx-auto max-w-5xl px-6 py-8">
+          <AdUnit format="responsive" />
+        </div>
+
         {/* WHY CHOOSE US */}
         <section data-nav-tone="light" className={`${slideClass} relative`}>
           <div
@@ -255,17 +257,14 @@ export default function HomePage() {
             <TrustedBy />
           </motion.div>
 
-          <Footer
-            onTerms={() => setLegalModal('terms')}
-            onPrivacy={() => setLegalModal('privacy')}
-          />
+          {/* AD ABOVE FOOTER */}
+          <div className="mx-auto max-w-5xl px-6 py-8">
+            <AdUnit format="responsive" />
+          </div>
+
+          <Footer />
         </section>
       </main>
-      <LegalModal
-        open={legalModal !== null}
-        type={legalModal}
-        onClose={() => setLegalModal(null)}
-      />
     </div>
   );
 }

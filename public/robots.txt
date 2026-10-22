@@ -1,14 +1,24 @@
 User-agent: *
 Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /register
+Allow: /blog
+Allow: /blog/
+
 Disallow: /dashboard
+Disallow: /voice-clone
+Disallow: /text-to-speech
+Disallow: /voice-editor
+Disallow: /caption-generation
 Disallow: /settings
 Disallow: /projects
 Disallow: /analytics
 Disallow: /notifications
 Disallow: /upgrade
-Disallow: /register
+Disallow: /verify-success
 Disallow: /forgot-password
 Disallow: /reset-password
-Disallow: /verify-success
 
 Sitemap: https://www.orynengine.com/sitemap.xml

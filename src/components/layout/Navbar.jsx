@@ -15,9 +15,9 @@ import { useProfile } from "../../context/ProfileContext";
 import ContactSupportSection from "../home/ContactSupportSection";
 
 const navItems = [
-  { name: 'About', type: 'about' },
   { name: 'Features', sectionId: 'features', type: 'scroll' },
-  { name: 'Pricing', type: 'pricing' },
+  { name: 'Blog', type: 'link', to: '/blog' },
+  { name: 'About', type: 'about' },
   { name: 'Contact', type: 'contact' },
 ];
 
@@ -217,16 +217,19 @@ export default function Navbar({ user }) {
   const onLight = (reading?.tone ?? (path === '/' ? 'dark' : 'light')) === 'light';
 
   /* The pill follows hover when there is one, otherwise it rests on the
-     section currently under the bar. */
+     section currently under the bar — or on a link-type item whose route
+     matches the current path. */
   const activeNavName =
-    navItems.find(item => item.sectionId === reading?.section)?.name ?? null;
+    (reading?.section && navItems.find(item => item.sectionId === reading.section)?.name)
+    || navItems.find(item => item.type === 'link' && path.startsWith(item.to))?.name
+    || null;
   const pillTarget = activeNavName;
 
 
   const navLinkClass = itemName => {
     const isLit = pillTarget === itemName;
 
-    return `relative z-10 rounded-full px-4 py-2 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${
+    return `relative z-10 inline-block rounded-full px-5 py-2 text-center transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${
       onLight
         ? isLit
           ? 'text-fg'
@@ -317,7 +320,7 @@ export default function Navbar({ user }) {
                       }
                       className={`absolute inset-0 -z-0 rounded-full border backdrop-blur-md ${
                         onLight
-                          ? 'border-black/[0.06] bg-white/90 shadow-[0_2px_10px_rgba(16,24,40,0.12),inset_0_1px_0_rgba(255,255,255,0.9)]'
+                          ? 'border-black/[0.12] bg-white shadow-[0_2px_12px_rgba(16,24,40,0.16),inset_0_1px_0_rgba(255,255,255,0.9)]'
                           : 'border-white/25 bg-white/20 shadow-[0_2px_10px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.4)]'
                       }`}
                     />
@@ -350,6 +353,13 @@ export default function Navbar({ user }) {
                     >
                       {item.name}
                     </button>
+                  ) : item.type === 'link' ? (
+                    <Link
+                      to={item.to}
+                      className={navLinkClass(item.name)}
+                    >
+                      {item.name}
+                    </Link>
                   ) : (
                     <button
                       onClick={() => handleSectionNavigation(item.sectionId)}
@@ -451,6 +461,8 @@ export default function Navbar({ user }) {
                     setShowAbout(false);
                   } else if (item.type === 'pricing') {
                     navigate('/upgrade');
+                  } else if (item.type === 'link') {
+                    navigate(item.to);
                   } else {
                     handleSectionNavigation(item.sectionId);
                   }
