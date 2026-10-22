@@ -4,7 +4,8 @@ const meta = {
   slug: 'ai-captions-video',
   title: 'How to Add AI Captions to Any Video — 7 Styles, Any Language',
   description: 'Boost engagement by 80% with word-level synced captions. Learn how ORYN Engine makes captioning effortless.',
-  date: 'October 5, 2025',
+  date: 'October 5, 2026',
+  dateISO: '2026-10-05',
   readTime: '5 min read',
   category: 'Captions',
 };

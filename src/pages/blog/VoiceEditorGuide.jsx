@@ -4,7 +4,8 @@ const meta = {
   slug: 'ai-voice-editor-guide',
   title: 'AI Voice Editor: Polish Your Audio Like a Pro Without the Studio',
   description: 'Learn how to use AI-powered voice editing tools to trim, adjust pitch, speed, and emotion in your audio — no DAW experience needed.',
-  date: 'October 1, 2025',
+  date: 'October 1, 2026',
+  dateISO: '2026-10-01',
   readTime: '6 min read',
   category: 'Voice Editor',
 };

@@ -1,13 +1,28 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import AdUnit from '../../components/AdUnit';
 
 export default function BlogPost({ meta, children }) {
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: meta.title,
+    description: meta.description,
+    datePublished: meta.dateISO || meta.date,
+    author: { '@type': 'Organization', name: 'ORYN Engine', url: 'https://www.orynengine.com' },
+    publisher: { '@type': 'Organization', name: 'ORYN Engine', url: 'https://www.orynengine.com' },
+    mainEntityOfPage: `https://www.orynengine.com/blog/${meta.slug}`,
+  };
+
   return (
     <div className="min-h-screen bg-page text-fg">
-      <SEO title={meta.title} description={meta.description} path={`/blog/${meta.slug}`} />
+      <SEO title={meta.title} description={meta.description} path={`/blog/${meta.slug}`} type="article" />
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
+      </Helmet>
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-6 pt-32 pb-20">

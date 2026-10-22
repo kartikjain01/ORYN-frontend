@@ -2,9 +2,10 @@ import BlogPost from './BlogPost';
 
 const meta = {
   slug: 'ai-voice-cloning-guide',
-  title: 'AI Voice Cloning: The Complete Guide for Creators in 2025',
+  title: 'AI Voice Cloning: The Complete Guide for Creators in 2026',
   description: 'Learn how AI voice cloning works, its creative applications, and how to clone your own voice in minutes with ORYN Engine.',
-  date: 'October 15, 2025',
+  date: 'October 15, 2026',
+  dateISO: '2026-10-15',
   readTime: '8 min read',
   category: 'Voice Cloning',
 };

@@ -8,10 +8,6 @@ Allow: /blog
 Allow: /blog/
 
 Disallow: /dashboard
-Disallow: /voice-clone
-Disallow: /text-to-speech
-Disallow: /voice-editor
-Disallow: /caption-generation
 Disallow: /settings
 Disallow: /projects
 Disallow: /analytics

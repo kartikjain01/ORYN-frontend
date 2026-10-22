@@ -346,13 +346,6 @@ export default function Navbar({ user }) {
                     >
                       {item.name}
                     </button>
-                  ) : item.type === 'pricing' ? (
-                    <button
-                      onClick={() => navigate('/upgrade')}
-                      className={navLinkClass(item.name)}
-                    >
-                      {item.name}
-                    </button>
                   ) : item.type === 'link' ? (
                     <Link
                       to={item.to}
@@ -459,8 +452,6 @@ export default function Navbar({ user }) {
                   } else if (item.type === 'contact') {
                     setShowContact(true);
                     setShowAbout(false);
-                  } else if (item.type === 'pricing') {
-                    navigate('/upgrade');
                   } else if (item.type === 'link') {
                     navigate(item.to);
                   } else {
@@ -478,6 +469,7 @@ export default function Navbar({ user }) {
 
       {/* ABOUT PANEL — slides from right */}
       <div
+        inert={!showAbout}
         className={`fixed inset-0 z-[60] transition-all duration-300 ${
           showAbout
             ? 'pointer-events-auto opacity-100'
@@ -689,6 +681,7 @@ export default function Navbar({ user }) {
 
       {/* CONTACT PANEL — slides from right */}
       <div
+        inert={!showContact}
         className={`fixed inset-0 z-[60] transition-all duration-300 ${
           showContact
             ? 'pointer-events-auto opacity-100'

@@ -20,19 +20,18 @@ const columns = [
   {
     heading: 'Resources',
     links: [
+      { label: 'Blog', to: '/blog' },
       { label: 'Documentation', to: '#' },
-      { label: 'Guides', to: '#' },
       { label: 'Help Center', to: '#' },
-      { label: 'Community', to: '#' },
     ],
   },
   {
     heading: 'Company',
     links: [
       { label: 'About Us', to: '#' },
-      { label: 'Careers', to: '#' },
-      { label: 'Pricing', to: '#' },
       { label: 'Contact Us', to: '#' },
+      { label: 'Privacy Policy', to: '/privacy' },
+      { label: 'Terms of Service', to: '/terms' },
     ],
   },
 ];

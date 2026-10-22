@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
@@ -9,6 +10,7 @@ export default function CookieConsent() {
       setVisible(true);
     } else if (consent === 'accepted') {
       loadAdSense();
+      loadGoogleAnalytics();
     }
   }, []);
 
@@ -16,6 +18,7 @@ export default function CookieConsent() {
     localStorage.setItem('cookie-consent', 'accepted');
     setVisible(false);
     loadAdSense();
+    loadGoogleAnalytics();
   };
 
   const handleDecline = () => {
@@ -31,9 +34,9 @@ export default function CookieConsent() {
         <div className="flex-1 text-[13px] leading-relaxed text-white/70">
           We use cookies and similar technologies to show personalized ads, analyze
           traffic, and improve your experience.{' '}
-          <a href="/cookies" className="underline text-brand-500 hover:text-brand-600">
+          <Link to="/cookies" className="underline text-brand-500 hover:text-brand-600">
             Learn more
-          </a>
+          </Link>
         </div>
         <div className="flex shrink-0 gap-3">
           <button
@@ -61,4 +64,21 @@ function loadAdSense() {
   s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5987892460338515';
   s.crossOrigin = 'anonymous';
   document.head.appendChild(s);
+}
+
+const GA_ID = 'G-F1T4532GML';
+
+function loadGoogleAnalytics() {
+  if (document.querySelector(`script[src*="${GA_ID}"]`)) return;
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  document.head.appendChild(s);
+  s.onload = () => {
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', GA_ID, { anonymize_ip: true });
+  };
 }

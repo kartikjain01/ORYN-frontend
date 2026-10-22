@@ -225,8 +225,10 @@ export default function HomePage() {
         <ProductShowcases />
 
         {/* AD BETWEEN SECTIONS */}
-        <div className="mx-auto max-w-5xl px-6 py-8">
-          <AdUnit format="responsive" />
+        <div className="bg-ink-950">
+          <div className="mx-auto max-w-5xl px-6 py-8">
+            <AdUnit format="responsive" />
+          </div>
         </div>
 
         {/* WHY CHOOSE US */}

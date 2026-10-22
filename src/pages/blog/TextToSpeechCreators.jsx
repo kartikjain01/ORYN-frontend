@@ -4,7 +4,8 @@ const meta = {
   slug: 'text-to-speech-creators',
   title: 'Text to Speech for Content Creators: Turn Scripts into Voiceovers',
   description: 'Discover how AI-powered text-to-speech is revolutionizing content creation — from YouTube videos to podcasts and audiobooks.',
-  date: 'October 10, 2025',
+  date: 'October 10, 2026',
+  dateISO: '2026-10-10',
   readTime: '6 min read',
   category: 'Text to Speech',
 };
