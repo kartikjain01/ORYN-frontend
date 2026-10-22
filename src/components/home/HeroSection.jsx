@@ -182,7 +182,7 @@ export default function HeroSection() {
             alt="AI Voice Robot"
             width={1200}
             height={676}
-            fetchpriority="high"
+            fetchPriority="high"
             loading="eager"
             className="w-full h-full object-cover object-left scale-[1.4] origin-center"
             style={{
