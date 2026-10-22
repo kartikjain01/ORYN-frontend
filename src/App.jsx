@@ -32,6 +32,7 @@ const AiCaptionsVideo = lazy(() => import('./pages/blog/AiCaptionsVideo'));
 const VoiceEditorGuide = lazy(() => import('./pages/blog/VoiceEditorGuide'));
 
 import CookieConsent from './components/CookieConsent';
+import { startKeepAlive, stopKeepAlive } from './lib/keepAlive';
 
 const VoiceCloningLanding = lazy(() => import("./pages/landing/VoiceCloningLanding"));
 const TextToSpeechLanding = lazy(() => import("./pages/landing/TextToSpeechLanding"));
@@ -168,6 +169,12 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (session) startKeepAlive();
+    else stopKeepAlive();
+    return () => stopKeepAlive();
+  }, [session]);
 
   if (loading) return null;
 
