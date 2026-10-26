@@ -24,12 +24,19 @@ const ProfilePanel = lazy(() => import('./components/layout/ProfilePanel'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiVoiceCloningGuide = lazy(() => import('./pages/blog/AiVoiceCloningGuide'));
 const TextToSpeechCreators = lazy(() => import('./pages/blog/TextToSpeechCreators'));
 const AiCaptionsVideo = lazy(() => import('./pages/blog/AiCaptionsVideo'));
 const VoiceEditorGuide = lazy(() => import('./pages/blog/VoiceEditorGuide'));
+const HowAiVoiceCloningWorks = lazy(() => import('./pages/blog/HowAiVoiceCloningWorks'));
+const BestFreeTtsTools2026 = lazy(() => import('./pages/blog/BestFreeTtsTools2026'));
+const AiAudioEnhancement = lazy(() => import('./pages/blog/AiAudioEnhancement'));
+const PodcastWithAi = lazy(() => import('./pages/blog/PodcastWithAi'));
+const VoiceCloningEthics = lazy(() => import('./pages/blog/VoiceCloningEthics'));
+const AiToolsYoutubers = lazy(() => import('./pages/blog/AiToolsYoutubers'));
 
 import CookieConsent from './components/CookieConsent';
 import { startKeepAlive, stopKeepAlive } from './lib/keepAlive';
@@ -194,6 +201,8 @@ function App() {
 
           <Route path="/verify-success" element={<VerifySuccess />} />
 
+          <Route path="/about" element={<AboutPage />} />
+
           <Route path="/privacy" element={<PrivacyPolicy />} />
 
           <Route path="/terms" element={<TermsOfUse />} />
@@ -205,6 +214,12 @@ function App() {
           <Route path="/blog/text-to-speech-creators" element={<TextToSpeechCreators />} />
           <Route path="/blog/ai-captions-video" element={<AiCaptionsVideo />} />
           <Route path="/blog/ai-voice-editor-guide" element={<VoiceEditorGuide />} />
+          <Route path="/blog/how-ai-voice-cloning-works" element={<HowAiVoiceCloningWorks />} />
+          <Route path="/blog/best-free-tts-tools-2026" element={<BestFreeTtsTools2026 />} />
+          <Route path="/blog/ai-audio-enhancement-guide" element={<AiAudioEnhancement />} />
+          <Route path="/blog/start-podcast-with-ai-tools" element={<PodcastWithAi />} />
+          <Route path="/blog/voice-cloning-ethics-legal-guide" element={<VoiceCloningEthics />} />
+          <Route path="/blog/ai-tools-for-youtubers-2026" element={<AiToolsYoutubers />} />
 
           <Route path="/forgot-password" element={<ForgetPassword />} />
 

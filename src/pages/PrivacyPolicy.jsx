@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
         description="Learn how ORYN Engine collects, uses, and protects your personal data and voice recordings."
         path="/privacy"
       />
-      <div className="mx-auto max-w-3xl px-6 py-16">
+      <div className="mx-auto max-w-4xl px-6 py-16">
         <Link
           to="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-900"

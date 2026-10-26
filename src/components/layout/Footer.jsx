@@ -1,10 +1,4 @@
 import { Link } from 'react-router-dom';
-import {
-  Twitter,
-  Linkedin,
-  Youtube,
-  Instagram,
-} from 'lucide-react';
 import Wordmark from './Wordmark';
 
 const columns = [
@@ -21,26 +15,16 @@ const columns = [
     heading: 'Resources',
     links: [
       { label: 'Blog', to: '/blog' },
-      { label: 'Documentation', to: '#' },
-      { label: 'Help Center', to: '#' },
     ],
   },
   {
     heading: 'Company',
     links: [
-      { label: 'About Us', to: '#' },
-      { label: 'Contact Us', to: '#' },
+      { label: 'About Us', to: '/about' },
       { label: 'Privacy Policy', to: '/privacy' },
       { label: 'Terms of Service', to: '/terms' },
     ],
   },
-];
-
-const socials = [
-  { Icon: Twitter, label: 'Twitter' },
-  { Icon: Linkedin, label: 'LinkedIn' },
-  { Icon: Youtube, label: 'YouTube' },
-  { Icon: Instagram, label: 'Instagram' },
 ];
 
 export default function Footer() {
@@ -59,26 +43,6 @@ export default function Footer() {
               audio refinement.
             </p>
 
-            <ul className="mt-6 flex items-center gap-2">
-              {socials.map(({ Icon, label }) => (
-                <li key={label}>
-                  <a
-                    href="#"
-                    aria-label={label}
-                    className="
-                      flex h-11 w-11 items-center justify-center rounded-xl
-                      border border-line text-fg-muted
-                      transition duration-200
-                      hover:border-line hover:bg-page hover:text-fg
-                      focus-visible:outline-2 focus-visible:outline-offset-2
-                      focus-visible:outline-brand-500
-                    "
-                  >
-                    <Icon size={17} strokeWidth={1.8} />
-                  </a>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* ---------- LINK COLUMNS ---------- */}

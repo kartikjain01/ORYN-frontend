@@ -11,6 +11,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.orynengine.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.orynengine.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
@@ -47,6 +52,36 @@
   </url>
   <url>
     <loc>https://www.orynengine.com/blog/ai-voice-editor-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.orynengine.com/blog/how-ai-voice-cloning-works</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.orynengine.com/blog/best-free-tts-tools-2026</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.orynengine.com/blog/ai-audio-enhancement-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.orynengine.com/blog/start-podcast-with-ai-tools</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.orynengine.com/blog/voice-cloning-ethics-legal-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.orynengine.com/blog/ai-tools-for-youtubers-2026</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

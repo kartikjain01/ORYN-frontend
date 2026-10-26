@@ -25,7 +25,7 @@ export default function BlogPost({ meta, children }) {
       </Helmet>
       <Navbar />
 
-      <main className="mx-auto max-w-3xl px-6 pt-32 pb-20">
+      <main className="mx-auto max-w-4xl px-6 pt-32 pb-20">
         <div className="flex items-center gap-4">
           <Link
             to="/"

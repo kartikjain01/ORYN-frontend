@@ -10,7 +10,7 @@ export default function TermsOfUse() {
         description="Terms and conditions for using ORYN Engine's AI voice cloning, text-to-speech, and audio editing tools."
         path="/terms"
       />
-      <div className="mx-auto max-w-3xl px-6 py-16">
+      <div className="mx-auto max-w-4xl px-6 py-16">
         <Link
           to="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-900"
