@@ -159,26 +159,53 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">9. Children&rsquo;s Privacy</h2>
             <p className="mt-3">
-              ORYN Engine is not intended for children under 13. We do not knowingly collect information from children. If we discover that a child under 13 has created an account, we will delete it promptly.
+              ORYN Engine is not intended for children under 18. We do not knowingly collect personal data from minors. If we discover that a person under 18 has created an account without verifiable parental consent, we will delete the account and associated data promptly. If you believe a minor has provided us with personal data, please contact us at{' '}
+              <a href="mailto:orynengine@gmail.com" className="text-blue-600 hover:underline">
+                orynengine@gmail.com
+              </a>.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900">10. International Users</h2>
             <p className="mt-3">
-              Our servers are located in India (AWS Mumbai region). By using ORYN Engine, you consent to the transfer and processing of your data in this jurisdiction. We take appropriate measures to protect data regardless of where it is processed.
+              ORYN Engine uses cloud infrastructure providers located outside India, including Supabase (United States), Vercel (United States), and Hugging Face (United States/European Union) for hosting, authentication, storage, and AI processing. By using our platform, you consent to the transfer and processing of your personal data in these jurisdictions. We ensure that all service providers maintain appropriate security and data protection standards. Your data is protected by encryption in transit (HTTPS/TLS) and at rest regardless of where it is processed.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">11. Changes to This Policy</h2>
+            <h2 className="text-xl font-semibold text-slate-900">11. Data Breach Notification</h2>
+            <p className="mt-3">
+              In the event of a data breach that compromises your personal data, we will notify affected users via email within 72 hours of becoming aware of the breach. We will also report the breach to the relevant authorities, including the Data Protection Board of India, as required under the Digital Personal Data Protection Act, 2023. The notification will include the nature of the breach, the data affected, and the steps we are taking to address it.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">12. Consent</h2>
+            <p className="mt-3">
+              By creating an account and using ORYN Engine, you consent to the collection and processing of your personal data as described in this Privacy Policy. Consent is obtained at the time of account registration. You may withdraw your consent at any time by deleting your account through the Settings page or by contacting us at{' '}
+              <a href="mailto:orynengine@gmail.com" className="text-blue-600 hover:underline">
+                orynengine@gmail.com
+              </a>. Withdrawal of consent will result in deletion of your account and all associated personal data within 30 days. Please note that withdrawing consent does not affect the lawfulness of processing carried out before the withdrawal.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">13. Governing Law</h2>
+            <p className="mt-3">
+              This Privacy Policy is governed by and compliant with the Digital Personal Data Protection Act, 2023 (India) and the Information Technology Act, 2000. Any disputes arising from this policy shall be subject to the jurisdiction of courts in Jaipur, Rajasthan, India.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900">14. Changes to This Policy</h2>
             <p className="mt-3">
               We may update this Privacy Policy to reflect changes in our practices or legal requirements. We will notify you of significant changes via email or an in-app notification. Continued use after changes constitutes acceptance.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">12. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-slate-900">15. Contact Us</h2>
             <p className="mt-3">For privacy-related questions, data requests, or concerns:</p>
             <ul className="ml-6 mt-3 list-disc space-y-1">
               <li>

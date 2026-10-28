@@ -50,7 +50,7 @@ export default function TermsOfUse() {
               <li>Notifying us immediately of any unauthorized access</li>
             </ul>
             <p className="mt-3">
-              You must be at least 13 years old to create an account. If you are under 18, you must have parental or guardian consent.
+              You must be at least 18 years old to create an account, in accordance with the Digital Personal Data Protection Act, 2023 (India).
             </p>
           </section>
 
@@ -149,7 +149,7 @@ export default function TermsOfUse() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">12. Governing Law</h2>
             <p className="mt-3">
-              These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms or your use of the Service shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
+              These Terms shall be governed by and construed in accordance with the laws of India, including the Digital Personal Data Protection Act, 2023 and the Information Technology Act, 2000. Any disputes arising from these Terms or your use of the Service shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
             </p>
           </section>
 
