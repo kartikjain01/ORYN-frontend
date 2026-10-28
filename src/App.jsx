@@ -183,7 +183,38 @@ function App() {
     return () => stopKeepAlive();
   }, [session]);
 
-  if (loading) return null;
+  if (loading) return (
+    <ErrorBoundary>
+      <ScrollToTop />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfUse />} />
+          <Route path="/cookies" element={<CookiePolicy />} />
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/ai-voice-cloning-guide" element={<AiVoiceCloningGuide />} />
+          <Route path="/blog/text-to-speech-creators" element={<TextToSpeechCreators />} />
+          <Route path="/blog/ai-captions-video" element={<AiCaptionsVideo />} />
+          <Route path="/blog/ai-voice-editor-guide" element={<VoiceEditorGuide />} />
+          <Route path="/blog/how-ai-voice-cloning-works" element={<HowAiVoiceCloningWorks />} />
+          <Route path="/blog/best-free-tts-tools-2026" element={<BestFreeTtsTools2026 />} />
+          <Route path="/blog/ai-audio-enhancement-guide" element={<AiAudioEnhancement />} />
+          <Route path="/blog/start-podcast-with-ai-tools" element={<PodcastWithAi />} />
+          <Route path="/blog/voice-cloning-ethics-legal-guide" element={<VoiceCloningEthics />} />
+          <Route path="/blog/ai-tools-for-youtubers-2026" element={<AiToolsYoutubers />} />
+          <Route path="/voice-clone" element={<VoiceCloningLanding />} />
+          <Route path="/text-to-speech" element={<TextToSpeechLanding />} />
+          <Route path="/voice-editor" element={<VoiceEditorLanding />} />
+          <Route path="/caption-generation" element={<CaptionGenerationLanding />} />
+          <Route path="*" element={<PageLoader />} />
+        </Routes>
+        <CookieConsent />
+      </Suspense>
+    </ErrorBoundary>
+  );
 
   return (
     <ErrorBoundary>
