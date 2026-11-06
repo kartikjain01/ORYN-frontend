@@ -69,7 +69,7 @@ export default function ProfilePanel() {
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="fixed top-5 right-6 w-[320px] bg-[#0b0616] p-5 z-50 rounded-2xl shadow-xl border border-white/10"
+            className="fixed top-5 right-4 left-4 sm:left-auto sm:right-6 sm:w-[320px] bg-[#0b0616] p-5 z-50 rounded-2xl shadow-xl border border-white/10"
           >
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">

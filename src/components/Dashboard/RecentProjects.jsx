@@ -152,9 +152,9 @@ export default function RecentProjects() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-4 gap-5">
+        <div className="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-4 sm:gap-5">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="animate-pulse">
+            <div key={i} className="animate-pulse shrink-0 w-[160px] sm:w-auto snap-start">
               <div className="rounded-2xl aspect-square bg-slate-100" />
               <div className="mt-3 h-4 bg-slate-100 rounded w-3/4" />
               <div className="mt-2 h-3 bg-slate-100 rounded w-1/2" />
@@ -162,7 +162,7 @@ export default function RecentProjects() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-5">
+        <div className="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-4 sm:gap-5">
           {(() => {
             const TYPE_KEY_MAP = { 'Voice Clone': 'voice_clone', 'Text to Speech': 'tts', 'Voice Editor': 'voice_editor', 'Captions': 'captions' };
             const usedTypes = new Set();
@@ -179,7 +179,7 @@ export default function RecentProjects() {
               try { image = project.thumbnailUrl || new URL(`../../assets/images/${imgFile}`, import.meta.url).href; } catch { image = placeholder; }
 
               return (
-                <div key={project.id} onClick={() => navigate(`/projects?highlight=${project.id}`)} className="group cursor-pointer rounded-2xl bg-white border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 aspect-square flex flex-col overflow-hidden">
+                <div key={project.id} onClick={() => navigate(`/projects?highlight=${project.id}`)} className="group cursor-pointer rounded-2xl bg-white border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 aspect-square flex flex-col overflow-hidden shrink-0 w-[160px] sm:w-auto snap-start">
                   <div className="relative overflow-hidden rounded-t-2xl flex-1 min-h-0">
                     <img src={image} alt={project.title} onError={(e) => { e.currentTarget.src = placeholder; }} className="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
@@ -240,7 +240,7 @@ export default function RecentProjects() {
             }
 
             return (
-              <div key={`empty-${tool.label}`} className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50" />
+              <div key={`empty-${tool.label}`} className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 shrink-0 w-[160px] sm:w-auto snap-start" />
             );
           });
           })()}

@@ -118,11 +118,11 @@ export default function AuthPage() {
       });
 
       if (error) {
-        const { data: delCheck } = await supabase.rpc('check_deleted_email', { check_email: cleanEmail });
-        if (delCheck?.deleted) {
-          setFormError('No account found with this email. Please create a new account.');
+        if (error.message === 'Invalid login credentials') {
+          setFormError('Incorrect password. If you signed up with Google, use the "Continue with Google" button below, or click "Forgot password?" to set a password for email login.');
           return;
         }
+
         setFormError(error.message);
         return;
       }
@@ -251,7 +251,7 @@ export default function AuthPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-200/40 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative w-full min-h-screen md:min-h-[95vh] max-w-7xl mx-auto grid md:grid-cols-2 bg-white border border-gray-200 rounded-[28px] shadow-xl overflow-hidden">
+      <div className="relative w-full min-h-screen md:min-h-[95vh] max-w-7xl mx-auto grid md:grid-cols-2 bg-white border border-gray-200 rounded-none sm:rounded-[28px] shadow-xl overflow-hidden">
         {/* LEFT - LOGIN */}
         <div
           className={`
@@ -328,7 +328,7 @@ export default function AuthPage() {
             </div>
 
             {formError && isLogin && (
-              <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">{formError}</p>
+              <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5 break-words">{formError}</p>
             )}
 
             {/* Button */}
@@ -482,7 +482,7 @@ export default function AuthPage() {
             </label>
 
             {formError && !isLogin && (
-              <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">{formError}</p>
+              <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5 break-words">{formError}</p>
             )}
 
             {/* Button */}

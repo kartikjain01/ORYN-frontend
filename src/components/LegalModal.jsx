@@ -345,7 +345,7 @@ export default function LegalModal({ open, type, onClose, requireAccept = false 
           className="relative flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 px-8 py-5">
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 sm:px-8 py-5">
             <h2 className="text-3xl font-bold text-black">
               {type === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
             </h2>
@@ -359,7 +359,7 @@ export default function LegalModal({ open, type, onClose, requireAccept = false 
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-8 py-8 text-gray-700 leading-8">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-8 text-gray-700 leading-8">
             {type === 'terms' ? <TermsContent /> : <PrivacyContent />}
 
             {requireAccept && (
@@ -387,7 +387,7 @@ export default function LegalModal({ open, type, onClose, requireAccept = false 
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end border-t border-gray-200 bg-white px-8 py-5">
+          <div className="flex justify-end border-t border-gray-200 bg-white px-4 sm:px-8 py-5">
             {requireAccept ? (
               <button
                 disabled={!accepted}

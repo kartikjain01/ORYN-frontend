@@ -533,7 +533,7 @@ export default function Navbar({ user }) {
               </div>
 
               {/* STATS */}
-              <div className="mb-8 grid grid-cols-4 gap-3">
+              <div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { value: '4', label: 'AI Tools' },
                   { value: '50+', label: 'Voice Models' },

@@ -327,10 +327,18 @@ export default function SettingsPage() {
   const scrollToSection = id => {
     setActiveSection(id);
 
-    document.getElementById(`section-${id}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    const el = document.getElementById(`section-${id}`);
+    if (!el) return;
+    const container = el.closest('main');
+    if (id === 'profile' && container) {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (container) {
+      const elTop = el.offsetTop;
+      const offset = elTop - container.clientHeight * 0.15;
+      container.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const handleDeleteAccount = async () => {

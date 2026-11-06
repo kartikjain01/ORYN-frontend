@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Folder, Search, Grid3X3, List, Play, Pause, MoreHorizontal, Download, Pencil, Trash2, Loader2, X, SkipBack, SkipForward, Volume2, Maximize2, CheckSquare, Square } from "lucide-react";
+import { Folder, Search, Grid3X3, List, Play, Pause, MoreHorizontal, Download, Pencil, Trash2, Loader2, X, SkipBack, SkipForward, Volume2, Maximize2, CheckSquare, Square, ChevronDown, Check } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getProjects, deleteProject, renameProject, formatDuration } from "../lib/db";
 import { supabase } from "../supabaseClient";
@@ -24,6 +24,8 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('Recent');
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -223,6 +225,13 @@ export default function ProjectsPage() {
   }, [openMenu]);
 
   useEffect(() => {
+    if (!sortOpen) return;
+    const handle = (e) => { if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false); };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [sortOpen]);
+
+  useEffect(() => {
     const id = searchParams.get('highlight');
     if (id && !loading && projects.length > 0) {
       setHighlightId(id);
@@ -268,7 +277,7 @@ export default function ProjectsPage() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-8 space-y-6">
+    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[26px] font-bold text-slate-900 tracking-tight">All Projects</h1>
@@ -280,50 +289,69 @@ export default function ProjectsPage() {
         <div />
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2 flex-wrap flex-1">
-          {FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`px-4 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200 ${
-                activeFilter === f
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)]'
-                  : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
+        {/* Row 1 on mobile: Search bar full width */}
+        <div className="relative sm:order-2 sm:flex-none">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search projects..."
+            className="h-[36px] w-full sm:w-[180px] rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-[12px] text-slate-700 placeholder:text-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/50 transition"
+          />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search projects..."
-              className="h-[36px] w-[180px] rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-[12px] text-slate-700 placeholder:text-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/50 transition"
-            />
+        {/* Row 2 on mobile: Filters + view/sort controls */}
+        <div className="flex items-center justify-between gap-2 sm:flex-1 sm:order-1">
+          <div className="hidden sm:flex items-center gap-2 flex-wrap flex-1">
+            {FILTERS.map(f => (
+              <button
+                key={f}
+                onClick={() => setActiveFilter(f)}
+                className={`px-4 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200 ${
+                  activeFilter === f
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)]'
+                    : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
           </div>
-          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
-            <button onClick={() => setViewMode('grid')} className={`w-8 h-8 flex items-center justify-center transition ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-              <Grid3X3 size={14} />
-            </button>
-            <button onClick={() => setViewMode('list')} className={`w-8 h-8 flex items-center justify-center transition ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-              <List size={14} />
-            </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:shrink-0">
+            <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+              <button onClick={() => setViewMode('grid')} className={`w-8 h-8 flex items-center justify-center transition ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <Grid3X3 size={14} />
+              </button>
+              <button onClick={() => setViewMode('list')} className={`w-8 h-8 flex items-center justify-center transition ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <List size={14} />
+              </button>
+            </div>
+            <div className="relative flex-1 sm:flex-none" ref={sortRef}>
+              <button
+                onClick={() => setSortOpen(!sortOpen)}
+                className="h-[36px] w-full sm:w-auto px-3 pr-7 rounded-lg border border-slate-200 bg-slate-50 text-[12px] text-slate-600 font-medium outline-none hover:border-slate-300 transition cursor-pointer text-left flex items-center gap-1.5"
+              >
+                {sortBy}
+                <ChevronDown size={12} className={`absolute right-2.5 text-slate-400 transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {sortOpen && (
+                <div className="absolute top-[40px] right-0 left-0 sm:left-auto sm:w-[120px] bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 py-1 z-50">
+                  {SORT_OPTIONS.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => { setSortBy(s); setSortOpen(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition ${sortBy === s ? 'text-blue-600 font-semibold bg-blue-50' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {sortBy === s && <Check size={12} />}
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="h-[36px] px-3 rounded-lg border border-slate-200 bg-slate-50 text-[12px] text-slate-600 font-medium outline-none focus:border-blue-400 transition appearance-none cursor-pointer pr-7"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
-          >
-            {SORT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
         </div>
       </div>
 

@@ -751,7 +751,7 @@ export default function CaptionGenerationPage() {
           {toast}
         </div>
       )}
-      <div className="relative min-h-full p-6 lg:p-8 space-y-5 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
+      <div className="relative min-h-full p-4 sm:p-6 lg:p-8 space-y-5 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
         <div className="pointer-events-none absolute top-[60%] -left-32 w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-blue-200/25 to-indigo-200/15 blur-[70px] animate-breathe" style={{ animationDelay: '1.2s' }} />
@@ -773,7 +773,7 @@ export default function CaptionGenerationPage() {
         </div>
 
         {/* Progress Stepper */}
-        <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_0_0_1px_rgba(255,255,255,0.6)_inset] px-6 py-4 overflow-hidden">
+        <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_0_0_1px_rgba(255,255,255,0.6)_inset] px-3 sm:px-6 py-3 sm:py-4 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #3b82f6 0.5px, transparent 0)', backgroundSize: '20px 20px' }} />
           <div className="flex items-center justify-between flex-1">
             {[
@@ -796,7 +796,7 @@ export default function CaptionGenerationPage() {
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       ) : step.n}
                     </div>
-                    <span className={`text-[13px] font-medium whitespace-nowrap transition-colors ${isDone ? 'text-emerald-700' : isCurrent ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</span>
+                    <span className={`text-[13px] font-medium whitespace-nowrap transition-colors hidden sm:inline ${isDone ? 'text-emerald-700' : isCurrent ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</span>
                   </div>
                   {idx < 3 && <div className={`flex-1 h-[2px] rounded-full mx-3 transition-colors duration-500 ${isDone ? 'bg-emerald-300' : 'bg-slate-200/60'}`} />}
                 </div>
@@ -934,7 +934,7 @@ export default function CaptionGenerationPage() {
                   <VideoPreview src={generatedCaptions ? generatedCaptions.videoUrl : audioPreviewUrl} rotation={generatedCaptions ? 0 : rotation} />
 
                   {generatedCaptions && (
-                    <div className="mt-3 flex items-center justify-center gap-2">
+                    <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
                       {[
                         { label: 'Language', value: generatedCaptions.language?.toUpperCase() },
                         { label: 'Words', value: generatedCaptions.words },

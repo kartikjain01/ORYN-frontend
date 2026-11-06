@@ -44,7 +44,7 @@ export default function CtaBanner() {
             height={724}
             loading="lazy"
             decoding="async"
-            className="absolute inset-0 -z-10 h-full w-full object-cover object-right"
+            className="absolute inset-0 -z-10 h-full w-full object-cover object-center sm:object-right"
           />
 
           {/* Scrim: keeps the headline readable over the image.
@@ -53,7 +53,8 @@ export default function CtaBanner() {
             aria-hidden="true"
             className="
               pointer-events-none absolute inset-0 -z-10
-              bg-gradient-to-r from-ink-950 via-ink-950/85 to-transparent
+              bg-gradient-to-b from-ink-950/90 via-ink-950/70 to-ink-950/50
+              sm:bg-gradient-to-r sm:from-ink-950 sm:via-ink-950/85 sm:to-transparent
             "
           />
 

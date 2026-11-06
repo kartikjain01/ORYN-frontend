@@ -80,7 +80,7 @@ export default function DashboardHeader() {
 
   return (
     <>
-      <header className="h-[72px] bg-white border-b border-slate-200 flex items-center px-8 gap-4">
+      <header className="h-[72px] bg-white border-b border-slate-200 flex items-center pl-14 pr-4 sm:pl-6 sm:pr-6 md:pl-6 lg:px-8 gap-3 sm:gap-4">
         {/* Search */}
         <div className="flex-1 flex justify-center">
           <div className="relative w-full max-w-[520px]">
@@ -113,7 +113,7 @@ export default function DashboardHeader() {
 
             {/* Floating notification panel */}
             {showNotifs && (
-              <div className="absolute right-0 top-[54px] w-[380px] bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 z-50 overflow-hidden">
+              <div className="fixed left-4 right-4 top-[72px] sm:absolute sm:left-auto sm:right-0 sm:top-[54px] sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 z-50 overflow-hidden">
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="text-[15px] font-semibold text-slate-800">Notifications</h3>
                   <div className="flex items-center gap-2">
@@ -178,10 +178,10 @@ export default function DashboardHeader() {
 
           <button
             onClick={() => setShowNewProject(true)}
-            className="h-[44px] px-6 rounded-xl bg-gradient-to-r from-[#2563eb] to-[#4f46e5] text-white text-[14px] font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+            className="h-[44px] px-3 sm:px-6 rounded-xl bg-gradient-to-r from-[#2563eb] to-[#4f46e5] text-white text-[14px] font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer"
           >
             <Plus size={16} />
-            New Project
+            <span className="hidden sm:inline">New Project</span>
           </button>
         </div>
       </header>

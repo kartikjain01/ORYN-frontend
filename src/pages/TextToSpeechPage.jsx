@@ -35,6 +35,7 @@ export default function TextToSpeechPage() {
   const [lastProjectUrl, setLastProjectUrl] = useState(null);
   const exportBoxRef = useRef(null);
   const sfMenuRef = useRef(null);
+  const outputRef = useRef(null);
 
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedVoice, setSelectedVoice] = useState('michael');
@@ -102,6 +103,14 @@ export default function TextToSpeechPage() {
       });
     }).catch(() => setLoadingSf(false));
   }, []);
+
+  useEffect(() => {
+    if (showAudio && outputRef.current) {
+      setTimeout(() => {
+        outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [showAudio]);
 
   useEffect(() => {
     const handleOutsideClick = event => {
@@ -291,7 +300,7 @@ export default function TextToSpeechPage() {
           {toast}
         </div>
       )}
-      <div className="relative min-h-full p-6 lg:p-8 space-y-5" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
+      <div className="relative min-h-full p-4 sm:p-6 lg:p-8 space-y-5 overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Decorative floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
         <div className="pointer-events-none absolute top-[60%] -left-32 w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-blue-200/25 to-indigo-200/15 blur-[70px] animate-breathe" style={{ animationDelay: '1.2s' }} />
@@ -313,7 +322,7 @@ export default function TextToSpeechPage() {
         </div>
 
         {/* Workflow Steps — Glass bar */}
-        <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_0_0_1px_rgba(255,255,255,0.6)_inset] px-6 py-4 overflow-hidden">
+        <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_0_0_1px_rgba(255,255,255,0.6)_inset] px-3 sm:px-6 py-3 sm:py-4 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #3b82f6 0.5px, transparent 0)', backgroundSize: '20px 20px' }} />
           <div className="flex items-center justify-between flex-1">
             {[
@@ -341,7 +350,7 @@ export default function TextToSpeechPage() {
                         </svg>
                       ) : step.n}
                     </div>
-                    <span className={`text-[13px] font-medium whitespace-nowrap transition-colors ${
+                    <span className={`text-[13px] font-medium whitespace-nowrap transition-colors hidden sm:inline ${
                       isDone ? 'text-emerald-700' : isCurrent ? 'text-slate-900' : 'text-slate-400'
                     }`}>{step.label}</span>
                   </div>
@@ -592,7 +601,7 @@ export default function TextToSpeechPage() {
 
           {/* Generated Output */}
           {showAudio && (
-            <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300">
+            <div ref={outputRef} className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 animate-[slideUp_0.4s_ease-out]">
               <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
               <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center justify-between">
                 <div className="flex items-center gap-3">

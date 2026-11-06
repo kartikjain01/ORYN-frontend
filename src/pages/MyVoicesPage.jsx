@@ -68,7 +68,7 @@ export default function MyVoicesPage() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-8 space-y-6">
+    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
         <h1 className="text-[26px] font-bold text-slate-900 tracking-tight">My Voices</h1>
         <p className="text-[14px] text-slate-500 mt-1">{voices.length} voices</p>

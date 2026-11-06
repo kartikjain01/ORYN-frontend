@@ -32,7 +32,7 @@ export default function NotificationsPage() {
   const { notifications, unreadCount, loading, markRead, markAllRead, dismiss } = useNotifications();
 
   return (
-    <main className="flex-1 overflow-y-auto p-8 space-y-6">
+    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -65,7 +65,7 @@ export default function NotificationsPage() {
       {loading ? (
         <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="flex items-start gap-4 px-6 py-5 animate-pulse">
+            <div key={i} className="flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 animate-pulse">
               <div className="w-10 h-10 rounded-xl bg-slate-100 shrink-0" />
               <div className="flex-1">
                 <div className="h-3.5 bg-slate-100 rounded w-1/3" />
@@ -94,7 +94,7 @@ export default function NotificationsPage() {
             return (
               <div
                 key={n.id}
-                className={`flex items-start gap-4 px-6 py-5 transition group ${
+                className={`flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 transition group ${
                   !n.isRead ? 'bg-blue-50/20' : 'hover:bg-slate-50/50'
                 }`}
               >
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0">
                   {!n.isRead && (
                     <button
                       onClick={() => markRead(n.id)}

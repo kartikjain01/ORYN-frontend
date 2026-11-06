@@ -17,7 +17,7 @@ export function VoiceCloneVisual() {
         height={800}
         loading="lazy"
         decoding="async"
-        className="w-[150%] max-w-none h-auto object-contain -ml-[45%] -mr-[5%]"
+        className="w-[130%] -ml-[28%] sm:w-[150%] sm:-ml-[45%] sm:-mr-[5%] max-w-none h-auto object-contain"
       />
     </div>
   );
@@ -38,7 +38,7 @@ export function TextToSpeechVisual() {
         height={800}
         loading="lazy"
         decoding="async"
-        className="w-full max-w-none h-auto object-contain lg:scale-110 origin-center"
+        className="w-full max-w-none h-auto object-contain sm:scale-105 lg:scale-110 origin-center"
       />
     </div>
   );
@@ -96,7 +96,7 @@ export function VoiceEditorVisual() {
       </div>
 
       {/* Main image — full width, large */}
-      <div className="relative w-[130%] -ml-[15%] z-10">
+      <div className="relative w-full sm:w-[130%] sm:-ml-[15%] z-0 -mt-4 sm:mt-0">
         <img
           src={voiceEditorWavesImg}
           alt="Before and after audio visualization — jagged peaks transforming into smooth blue waves"
@@ -110,7 +110,7 @@ export function VoiceEditorVisual() {
 
       {/* Metric pills — below image */}
       <div className="flex justify-center mt-5 relative z-20">
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.08)]">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 rounded-2xl border border-slate-200/80 bg-white px-4 sm:px-5 py-3 sm:py-3.5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.08)]">
           {[
             { label: 'Noise Reduction', value: 80 },
             { label: 'Voice Clarity', value: 75 },
@@ -214,7 +214,7 @@ import videoEditorImg from '../../assets/images/videoeditor.webp';
 
 export function VideoEditorVisual() {
   return (
-    <div className="relative -mt-14 -mb-16 overflow-visible">
+    <div className="relative mt-4 sm:-mt-14 sm:-mb-16 overflow-visible">
       <img
         src={videoEditorImg}
         alt="A cinematic video editing interface with scene cards, timeline tracks, and blue neon glow effects."
@@ -222,7 +222,7 @@ export function VideoEditorVisual() {
         height={1024}
         loading="lazy"
         decoding="async"
-        className="w-[140%] max-w-none h-auto -ml-[28%]"
+        className="w-full sm:w-[140%] sm:-ml-[28%] max-w-none h-auto"
       />
     </div>
   );

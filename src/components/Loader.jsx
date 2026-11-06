@@ -70,7 +70,7 @@ export default function Loader() {
           className="
             mt-12
             relative
-            w-[430px]
+            w-full max-w-[430px]
             h-[10px]
             rounded-full
             overflow-hidden

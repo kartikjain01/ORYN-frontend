@@ -51,6 +51,7 @@ export default function VoiceCloningPage() {
   const [loadingSf, setLoadingSf] = useState(true);
   const [lastProjectUrl, setLastProjectUrl] = useState(null);
   const sfMenuRef = useRef(null);
+  const outputRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [toast, setToast] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -84,6 +85,14 @@ export default function VoiceCloningPage() {
       });
     }).catch(() => setLoadingSf(false));
   }, []);
+
+  useEffect(() => {
+    if (generatedAudioReady && outputRef.current) {
+      setTimeout(() => {
+        outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [generatedAudioReady]);
 
   const inputRef = useRef(null);
   const uploadAudioRef = useRef(null);
@@ -304,7 +313,7 @@ export default function VoiceCloningPage() {
         </div>
       )}
       {/* Gradient background with floating orbs */}
-      <div className="relative min-h-full p-6 lg:p-8 space-y-5" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
+      <div className="relative min-h-full p-4 sm:p-6 lg:p-8 space-y-5 overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #f5f0ff 100%)' }}>
         {/* Decorative floating orbs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-200/30 to-indigo-300/20 blur-[80px] animate-breathe" />
         <div className="pointer-events-none absolute top-[60%] -left-32 w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-blue-200/25 to-indigo-200/15 blur-[70px] animate-breathe" style={{ animationDelay: '1.2s' }} />
@@ -326,7 +335,7 @@ export default function VoiceCloningPage() {
         </div>
 
         {/* Workflow Steps — Glass bar */}
-        <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_0_0_1px_rgba(255,255,255,0.6)_inset] px-6 py-4 overflow-hidden">
+        <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.04),0_0_0_1px_rgba(255,255,255,0.6)_inset] px-3 sm:px-6 py-3 sm:py-4 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #3b82f6 0.5px, transparent 0)', backgroundSize: '20px 20px' }} />
           <div className="flex items-center justify-between flex-1">
             {[
@@ -356,7 +365,7 @@ export default function VoiceCloningPage() {
                       </svg>
                     ) : step.n}
                   </div>
-                  <span className={`text-[13px] font-medium whitespace-nowrap transition-colors ${
+                  <span className={`text-[13px] font-medium whitespace-nowrap transition-colors hidden sm:inline ${
                     isFailed ? 'text-red-600' : currentStep > step.n ? 'text-emerald-700' : currentStep === step.n ? 'text-slate-900' : 'text-slate-400'
                   }`}>{step.label}</span>
                 </div>
@@ -747,7 +756,7 @@ export default function VoiceCloningPage() {
 
           {/* Generated Output — only after generation, bottom-right */}
           {generatedAudioReady && (
-            <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
+            <div ref={outputRef} className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] animate-[slideUp_0.4s_ease-out]">
               <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
               <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center justify-between">
                 <div className="flex items-center gap-3">

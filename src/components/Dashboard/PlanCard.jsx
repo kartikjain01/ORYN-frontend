@@ -38,7 +38,7 @@ export default function PlanCard() {
         <Sparkles size={18} className="text-slate-300" />
       </div>
 
-      <div className="flex items-center justify-between mt-7">
+      <div className="flex items-center justify-center gap-8 lg:justify-between lg:gap-0 mt-7">
         <div className="relative w-[120px] h-[120px]">
           <svg viewBox="1 1 120 120" className="w-full h-full">
             <circle cx="60" cy="60" r="46" stroke="#e2e8f0" strokeWidth="10" fill="none" />

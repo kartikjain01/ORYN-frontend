@@ -140,10 +140,10 @@ function App() {
         const isOAuth = sessionStorage.getItem('oauth_redirect');
         sessionStorage.removeItem('oauth_redirect');
 
-        if (isOAuth) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(urlCode);
-          window.history.replaceState({}, '', window.location.pathname);
-          if (!error && data?.session) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(urlCode);
+        if (!error && data?.session) {
+          window.history.replaceState({}, '', '/dashboard');
+          if (isOAuth) {
             const termsAccepted = sessionStorage.getItem('terms_accepted_at');
             sessionStorage.removeItem('terms_accepted_at');
             if (termsAccepted) {
@@ -154,11 +154,12 @@ function App() {
                 },
               });
             }
-            setSession(data.session);
-            setLoading(false);
-            return;
           }
+          setSession(data.session);
+          setLoading(false);
+          return;
         }
+        window.history.replaceState({}, '', window.location.pathname);
       }
 
       const { data: { session } } = await supabase.auth.getSession();

@@ -144,28 +144,32 @@ export default function WelcomeSection() {
         </p>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pt-2 pb-2 scrollbar-hide snap-x snap-mandatory">
+      <div className="grid grid-cols-2 sm:flex gap-3 sm:gap-4 sm:overflow-x-auto pt-2 pb-2 scrollbar-hide sm:snap-x sm:snap-mandatory">
         {features.map((item) => (
           <div
             key={item.title}
             onClick={() => navigate(item.path)}
-            className={`group ${item.cardBg} rounded-2xl border border-slate-100 px-5 pt-4 pb-4 shadow-[0_4px_24px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.09),0_2px_4px_rgba(0,0,0,0.04)] transition-all duration-300 cursor-pointer snap-start shrink-0 w-[calc(25%-12px)] min-w-[200px]`}
+            className={`group ${item.cardBg} rounded-2xl border border-slate-100 px-4 sm:px-5 pt-3 sm:pt-4 pb-3 sm:pb-4 shadow-[0_4px_24px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.09),0_2px_4px_rgba(0,0,0,0.04)] transition-all duration-300 cursor-pointer aspect-square sm:aspect-auto sm:snap-start sm:shrink-0 sm:w-[calc(25%-12px)] sm:min-w-[200px] flex flex-col justify-between sm:block`}
           >
-            <div className="h-[80px] flex items-center">
-              <Icon3D type={item.icon} />
+            <div className="h-[56px] sm:h-[80px] flex items-center">
+              <div className="scale-75 sm:scale-100 origin-left">
+                <Icon3D type={item.icon} />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-bold text-slate-900">
-                {item.title}
-              </h3>
-              {item.badge && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">{item.badge}</span>}
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13px] sm:text-[15px] font-bold text-slate-900">
+                  {item.title}
+                </h3>
+                {item.badge && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">{item.badge}</span>}
+              </div>
+              <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-[12px] leading-[16px] sm:leading-[18px] text-slate-500 line-clamp-2">
+                {item.description}
+              </p>
             </div>
-            <p className="mt-1 text-[12px] leading-[18px] text-slate-500 line-clamp-2">
-              {item.description}
-            </p>
-            <button className={`mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[12px] font-semibold transition ${item.btnColor}`}>
+            <button className={`mt-2 sm:mt-3 inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border text-[11px] sm:text-[12px] font-semibold transition ${item.btnColor}`}>
               Get Started
-              <ArrowRight size={13} />
+              <ArrowRight size={12} className="sm:w-[13px] sm:h-[13px]" />
             </button>
           </div>
         ))}

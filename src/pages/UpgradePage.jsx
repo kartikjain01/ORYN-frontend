@@ -21,7 +21,7 @@ const plans = [
 
 export default function UpgradePage() {
   return (
-    <main className="flex-1 p-8 overflow-y-auto">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
       <div className="flex items-center gap-3 mb-2">
         <Crown size={24} className="text-blue-600" />
         <h1 className="text-[28px] font-bold text-slate-900">Upgrade Plan</h1>
