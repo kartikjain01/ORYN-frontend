@@ -307,14 +307,14 @@ export default function TextToSpeechPage() {
         <div className="pointer-events-none absolute bottom-0 right-[20%] w-[250px] h-[250px] rounded-full bg-gradient-to-t from-blue-100/20 to-indigo-100/10 blur-[60px] animate-breathe" style={{ animationDelay: '2.5s' }} />
 
         {/* Page heading */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h1 className="text-[22px] font-bold text-slate-800 tracking-tight">AI Text to Speech</h1>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowHelpModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+            <button onClick={() => setShowHelpModal(true)} className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
               <HelpCircle size={14} />
               Help
             </button>
-            <button onClick={() => setShowFeedbackModal(true)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+            <button onClick={() => setShowFeedbackModal(true)} className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[12px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
               <MessageSquare size={14} />
               Feedback
             </button>
@@ -355,8 +355,8 @@ export default function TextToSpeechPage() {
                     }`}>{step.label}</span>
                   </div>
                   {idx < 3 && (
-                    <div className={`flex-1 h-[2px] rounded-full mx-3 transition-colors duration-500 ${
-                      isDone ? 'bg-emerald-300' : 'bg-slate-200/60'
+                    <div className={`flex-1 h-[2px] rounded-full mx-1.5 sm:mx-3 transition-colors duration-500 ${
+                      isDone ? 'bg-emerald-300' : 'bg-slate-300'
                     }`} />
                   )}
                 </div>
@@ -377,40 +377,53 @@ export default function TextToSpeechPage() {
                 </div>
                 <h2 className="text-[15px] font-bold text-slate-900">Script</h2>
               </div>
-              <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-2">
                 {showAudio && (
-                  <button onClick={() => { setText(''); setShowAudio(false); setAudioUrl(''); setProgress(0); setCurrentTime(0); setDuration(0); }} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+                  <button onClick={() => { setText(''); setShowAudio(false); setAudioUrl(''); setProgress(0); setCurrentTime(0); setDuration(0); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 -mt-1 sm:mt-0">
                     <RotateCcw size={12} />
                     New TTS
                   </button>
                 )}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsFullscreen(true)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all"
-                  >
-                    <Maximize2 size={14} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsFullscreen(true)}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/60 transition-all"
+                >
+                  <Maximize2 size={14} />
+                </button>
               </div>
             </div>
 
-            <div className="p-5 flex-1 flex flex-col min-h-[320px]">
-              <input type="file" accept=".txt" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-              <textarea
-                value={text}
-                onChange={e => setText(e.target.value)}
-                maxLength={MAX_TEXT_LENGTH}
-                placeholder={selectedLanguage === 'hi' ? 'हिंदी में लिखें...' : 'Type or paste your text here...'}
-                className="flex-1 w-full resize-none bg-transparent text-[14px] text-slate-700 outline-none placeholder:text-slate-300 leading-relaxed"
-              />
+            <input type="file" accept=".txt" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+            {/* Upload & Clear — right below Script header on mobile */}
+            <div className="flex items-center gap-2 px-5 -mt-1 sm:hidden">
+                <button onClick={handleFileUploadClick} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-bold text-blue-600 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200 shadow-[0_3px_0_0_#bfdbfe,0_4px_8px_rgba(37,99,235,0.12)] hover:shadow-[0_2px_0_0_#bfdbfe,0_3px_6px_rgba(37,99,235,0.1)] hover:translate-y-[1px] active:shadow-[0_0px_0_0_#bfdbfe] active:translate-y-[3px] transition-all duration-100">
+                  <Upload size={12} />
+                  Upload .txt
+                </button>
+                <button onClick={() => setText('')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-slate-600 bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-[0_3px_0_0_#cbd5e1,0_4px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_0_0_#cbd5e1,0_3px_6px_rgba(0,0,0,0.05)] hover:translate-y-[1px] active:shadow-[0_0px_0_0_#cbd5e1] active:translate-y-[3px] hover:text-red-500 transition-all duration-100">
+                  <X size={11} />
+                  Clear
+                </button>
+            </div>
+
+            <div className="px-5 pt-3 sm:pt-5 pb-5 flex-1 flex flex-col min-h-[180px] sm:min-h-[320px]">
+              <div className="flex-1 rounded-xl border border-slate-200 sm:border-transparent p-3 sm:p-0 bg-white/50 sm:bg-transparent">
+                <textarea
+                  value={text}
+                  onChange={e => setText(e.target.value)}
+                  maxLength={MAX_TEXT_LENGTH}
+                  placeholder={selectedLanguage === 'hi' ? 'हिंदी में लिखें...' : 'Type or paste your text here...'}
+                  className="w-full h-full resize-none bg-transparent text-[14px] text-slate-700 outline-none placeholder:text-slate-400 leading-relaxed min-h-[120px] sm:min-h-0"
+                />
+              </div>
 
               {/* Bottom bar */}
-              <div className="mt-2 mb-1">
+              <div className="hidden sm:block mt-2 mb-1">
                 <span className={`text-[11px] font-medium ${text.length >= MAX_TEXT_LENGTH ? 'text-red-500' : text.length >= MAX_TEXT_LENGTH * 0.9 ? 'text-amber-500' : 'text-slate-400'}`}>{text.length.toLocaleString()} / {MAX_TEXT_LENGTH.toLocaleString()} characters</span>
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100/60">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100/60">
+                <span className={`text-[11px] font-medium whitespace-nowrap sm:hidden ${text.length >= MAX_TEXT_LENGTH ? 'text-red-500' : text.length >= MAX_TEXT_LENGTH * 0.9 ? 'text-amber-500' : 'text-slate-400'}`}>{text.length} / 2k chars</span>
+                <div className="hidden sm:flex items-center gap-2">
                   <button onClick={handleFileUploadClick} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 shadow-[0_2px_8px_rgba(37,99,235,0.1)] hover:bg-blue-100 hover:border-blue-300 hover:shadow-[0_4px_14px_rgba(37,99,235,0.15)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
                     <Upload size={13} />
                     Upload .txt
@@ -423,10 +436,10 @@ export default function TextToSpeechPage() {
                 <button
                   onClick={handleGenerate}
                   disabled={isLoading || !text.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed transition-all duration-200"
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[11px] sm:text-[12px] font-semibold shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed transition-all duration-200 shrink-0"
                 >
                   {isLoading ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center justify-center gap-2">
                       <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
                       Generating...
                     </span>
@@ -446,7 +459,7 @@ export default function TextToSpeechPage() {
               <h2 className="text-[15px] font-bold text-slate-900">Voice Settings</h2>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
               {/* Language */}
               <div className="relative">
                 <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -601,7 +614,7 @@ export default function TextToSpeechPage() {
 
           {/* Generated Output */}
           {showAudio && (
-            <div ref={outputRef} className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 animate-[slideUp_0.4s_ease-out]">
+            <div ref={outputRef} className="relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 animate-[slideUp_0.4s_ease-out] overflow-visible">
               <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
               <div className="px-5 pt-5 pb-3 border-b border-slate-100/60 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -621,7 +634,7 @@ export default function TextToSpeechPage() {
                   </button>
 
                   {showExportSettings && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-20 p-3.5 space-y-3">
+                    <div className="absolute right-0 bottom-full mb-2 sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2 w-52 bg-white backdrop-blur-xl rounded-xl border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.15)] z-50 p-3.5 space-y-3">
                       <div>
                         <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Format</label>
                         <div className="flex gap-1.5">
@@ -746,27 +759,27 @@ export default function TextToSpeechPage() {
         {/* Help Modal */}
         {showHelpModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowHelpModal(false)}>
-            <div onClick={e => e.stopPropagation()} className="w-[92%] sm:w-[520px] bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Help & Guide</h2>
+            <div onClick={e => e.stopPropagation()} className="w-[92%] sm:w-[520px] max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-5 sm:p-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">Help & Guide</h2>
                 <button onClick={() => setShowHelpModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                   <X size={18} />
                 </button>
               </div>
-              <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
-                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+              <div className="space-y-3 sm:space-y-4 text-[13px] sm:text-[14px] text-slate-600 leading-relaxed">
+                <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">1. Enter Text</p>
                   <p>Type your text or upload a .txt file (max 2,000 characters). Choose your preferred language and voice.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+                <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">2. Configure Settings</p>
                   <p>Adjust speed to match your desired output. Audio is exported as high-quality WAV.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+                <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">3. Generate & Export</p>
                   <p>Click "Generate Speech" and wait for processing. Preview and download the generated audio.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
                   <p>Use the Suggestion Box on the landing page to reach us.</p>
                 </div>

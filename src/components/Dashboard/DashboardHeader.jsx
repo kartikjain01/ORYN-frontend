@@ -117,6 +117,12 @@ export default function DashboardHeader() {
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="text-[15px] font-semibold text-slate-800">Notifications</h3>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowNotifs(false)}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors sm:hidden"
+                    >
+                      <X size={16} />
+                    </button>
                     {unreadCount > 0 && (
                       <>
                         <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">

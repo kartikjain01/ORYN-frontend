@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../../supabaseClient";
 import {
@@ -39,7 +39,9 @@ const bottomMenu = [
 
 export default function DashboardSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,10 +50,39 @@ export default function DashboardSidebar() {
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) setUser(session.user);
+      if (session?.user) {
+        setUser(session.user);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+      }
     };
     getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('avatar_url, full_name').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+        else setAvatarUrl(null);
+      });
+  }, [location.pathname, user]);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -161,8 +192,8 @@ export default function DashboardSidebar() {
               <div className="border border-slate-200 rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
-                      {userName.charAt(0).toUpperCase()}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
+                      {avatarUrl ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" /> : userName.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-slate-800 text-[14px] truncate">{userName}</h3>
@@ -305,8 +336,8 @@ export default function DashboardSidebar() {
             className={`border border-slate-200 rounded-2xl ${collapsed ? 'p-2 justify-center' : 'p-4 justify-between'} flex items-center cursor-pointer hover:bg-slate-50 transition-all duration-200`}
           >
             <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
-                {userName.charAt(0).toUpperCase()}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm shrink-0 overflow-hidden">
+                {avatarUrl ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" /> : userName.charAt(0).toUpperCase()}
               </div>
               {!collapsed && (
                 <div>

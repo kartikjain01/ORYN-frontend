@@ -223,6 +223,8 @@ export default function SettingsPage() {
   };
 
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const avatarInputRef = useRef(null);
 
   const handleAvatarUpload = file => {
     if (!file) return;
@@ -239,7 +241,8 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || saving) return;
+    setSaving(true);
 
     let avatarUrl = preview;
 
@@ -267,6 +270,7 @@ export default function SettingsPage() {
 
         if (uploadError) {
           showToast('Avatar upload failed', 'error');
+          setSaving(false);
           return;
         }
 
@@ -279,6 +283,7 @@ export default function SettingsPage() {
         setPendingAvatarFile(null);
       } catch {
         showToast('Avatar upload failed', 'error');
+        setSaving(false);
         return;
       }
     } else if (preview === null && initialValues.avatar) {
@@ -307,11 +312,12 @@ export default function SettingsPage() {
       })
       .eq('id', user.id);
 
-    if (error) return showToast('Error saving', 'error');
+    if (error) { setSaving(false); return showToast('Error saving', 'error'); }
 
     await fetchProfile(user.id);
 
     showToast('Profile updated');
+    setSaving(false);
   };
 
   const handleDiscard = () => {
@@ -499,9 +505,14 @@ export default function SettingsPage() {
 
               <button
                 onClick={handleSave}
-                className="h-[30px] px-5 rounded-full bg-white text-[12px] font-semibold text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                disabled={saving}
+                className={`h-[30px] px-5 rounded-full text-[12px] font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                  saving
+                    ? 'bg-white/70 text-slate-500'
+                    : 'bg-white text-slate-900 hover:bg-slate-100 active:scale-95'
+                }`}
               >
-                Save
+                {saving ? <><Loader2 size={12} className="animate-spin" /> Saving...</> : 'Save'}
               </button>
             </div>
           </div>
@@ -515,7 +526,10 @@ export default function SettingsPage() {
               description="Your personal information and avatar"
             >
               <div className="flex items-center gap-4 mb-6">
-                <label className="cursor-pointer group">
+                <div
+                  className="cursor-pointer group"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden ring-2 ring-slate-100 group-hover:ring-blue-200 transition">
                     {preview ? (
                       <img
@@ -529,12 +543,13 @@ export default function SettingsPage() {
                   </div>
 
                   <input
+                    ref={avatarInputRef}
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={e => handleAvatarUpload(e.target.files[0])}
+                    onChange={e => { handleAvatarUpload(e.target.files[0]); e.target.value = ''; }}
                   />
-                </label>
+                </div>
 
                 <div>
                   <p className="text-[14px] font-medium text-slate-700">

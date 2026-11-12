@@ -100,7 +100,7 @@ export default function VoiceCloningPage() {
   const exportBoxRef = useRef(null);
 
   const accepted = useMemo(() => '.mp3,.wav,audio/mpeg,audio/wav', []);
-  const [waveHeights] = useState(() => Array.from({ length: 120 }, () => Math.random() * 20 + 6));
+  const [waveHeights] = useState(() => Array.from({ length: 60 }, () => Math.random() * 20 + 6));
 
   const MAX_FILE_SIZE = 25 * 1024 * 1024;
   const MAX_DURATION = 120;
@@ -370,8 +370,8 @@ export default function VoiceCloningPage() {
                   }`}>{step.label}</span>
                 </div>
                 {idx < 3 && (
-                  <div className={`flex-1 h-[2px] rounded-full mx-3 transition-colors duration-500 ${
-                    currentStep > step.n ? 'bg-emerald-300' : 'bg-slate-200/60'
+                  <div className={`flex-1 h-[2px] rounded-full mx-1.5 sm:mx-3 transition-colors duration-500 ${
+                    currentStep > step.n ? 'bg-emerald-300' : 'bg-slate-300'
                   }`} />
                 )}
               </div>
@@ -396,18 +396,18 @@ export default function VoiceCloningPage() {
           <div className={`relative bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(37,99,235,0.08)] transition-all duration-300 ${!generatedAudioReady ? 'min-h-[380px]' : ''}`}>
             <div className="absolute top-0 left-6 right-6 h-[3px] rounded-b-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 opacity-80" />
             <div className="px-5 pt-5 pb-0">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center">
+              <div className="flex items-center justify-between mb-4 gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/40 flex items-center justify-center shrink-0">
                     <AudioWaveform size={15} className="text-blue-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="text-[15px] font-bold text-slate-900">Voice Source</h2>
-                    {cloneCompleted && <p className="text-[11px] text-blue-500 font-medium">{fileName} · {audioDuration}</p>}
+                    {cloneCompleted && <p className="text-[11px] text-blue-500 font-medium truncate">{fileName} · {audioDuration}</p>}
                   </div>
                 </div>
                 {cloneCompleted && (
-                  <button onClick={() => { setFile(null); setFileName(''); setAudioPreviewUrl(null); setPreviewText(''); resetAllStates(); }} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+                  <button onClick={() => { setFile(null); setFileName(''); setAudioPreviewUrl(null); setPreviewText(''); resetAllStates(); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-blue-600 bg-white/80 backdrop-blur-sm border border-white/90 shadow-[0_2px_8px_rgba(37,99,235,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_12px_rgba(37,99,235,0.15),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 whitespace-nowrap shrink-0">
                     <RotateCcw size={12} />
                     New Clone
                   </button>
@@ -483,8 +483,8 @@ export default function VoiceCloningPage() {
                       const hue = 210 + (i / waveHeights.length) * 50;
                       return (
                         <div key={i} onClick={e => { e.stopPropagation(); if (!uploadAudioRef.current) return; uploadAudioRef.current.currentTime = (i / waveHeights.length) * durationSec; setSourceCurrentTime((i / waveHeights.length) * durationSec); }}
-                          className={`rounded-full cursor-pointer transition-all duration-150 ${active ? '' : 'bg-slate-300/60'}`}
-                          style={{ width: '2px', height: `${h * 0.85}px`, ...(active ? { background: `hsl(${hue}, 65%, 52%)`, boxShadow: `0 0 4px hsla(${hue}, 65%, 52%, 0.3)` } : {}) }}
+                          className={`rounded-full cursor-pointer transition-all duration-150 ${active ? '' : 'bg-slate-300'}`}
+                          style={{ width: '2.5px', height: `${h * 0.85}px`, ...(active ? { background: `hsl(${hue}, 65%, 52%)`, boxShadow: `0 0 4px hsla(${hue}, 65%, 52%, 0.3)` } : {}) }}
                         />
                       );
                     })}
@@ -776,7 +776,7 @@ export default function VoiceCloningPage() {
                   </button>
 
                   {showExportSettings && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-20 p-3.5 space-y-3">
+                    <div className="absolute right-0 bottom-full mb-2 sm:bottom-auto sm:top-full sm:mt-2 sm:mb-0 w-56 bg-white/95 backdrop-blur-xl rounded-xl border border-slate-200/60 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-20 p-3.5 space-y-3">
                       <div>
                         <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Format</label>
                         <div className="flex gap-1.5">
@@ -809,7 +809,7 @@ export default function VoiceCloningPage() {
                       {waveHeights.map((h, i) => {
                         const progress = duration ? Math.min(currentTime / duration, 1) : 0;
                         const active = i / waveHeights.length < progress;
-                        return <div key={i} onClick={e => { e.stopPropagation(); if (!generatedAudioRef.current || !duration) return; generatedAudioRef.current.currentTime = (i / waveHeights.length) * duration; setCurrentTime((i / waveHeights.length) * duration); }} className={`rounded-full cursor-pointer transition-all duration-150 ${active ? 'bg-blue-500' : 'bg-slate-200/60'}`} style={{ width: '2px', height: `${h * 0.85}px` }} />;
+                        return <div key={i} onClick={e => { e.stopPropagation(); if (!generatedAudioRef.current || !duration) return; generatedAudioRef.current.currentTime = (i / waveHeights.length) * duration; setCurrentTime((i / waveHeights.length) * duration); }} className={`rounded-full cursor-pointer transition-all duration-150 ${active ? 'bg-blue-500' : 'bg-slate-300'}`} style={{ width: '2.5px', height: `${h * 0.85}px` }} />;
                       })}
                     </div>
                   </div>
@@ -842,27 +842,27 @@ export default function VoiceCloningPage() {
       {/* Help Modal */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowHelpModal(false)}>
-          <div onClick={e => e.stopPropagation()} className="w-[92%] sm:w-[520px] bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-6 sm:p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Help & Guide</h2>
+          <div onClick={e => e.stopPropagation()} className="w-[92%] sm:w-[520px] max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-5 sm:p-8">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Help & Guide</h2>
               <button onClick={() => setShowHelpModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                 <X size={18} />
               </button>
             </div>
-            <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
-              <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+            <div className="space-y-3 sm:space-y-4 text-[13px] sm:text-[14px] text-slate-600 leading-relaxed">
+              <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                 <p className="font-semibold text-slate-800 mb-1">1. Upload Audio</p>
                 <p>Upload a clear audio sample (max 2 min) of the voice you want to clone. MP3 or WAV format.</p>
               </div>
-              <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+              <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                 <p className="font-semibold text-slate-800 mb-1">2. Clone Voice</p>
                 <p>Click "Clone Voice" to process and build a voice profile. Enable noise removal for cleaner results.</p>
               </div>
-              <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+              <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                 <p className="font-semibold text-slate-800 mb-1">3. Generate Speech</p>
                 <p>Type any text and select your output language. Click Generate to create speech in the cloned voice.</p>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
                 <p>Use the Suggestion Box on the landing page to reach us.</p>
               </div>

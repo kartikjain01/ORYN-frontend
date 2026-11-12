@@ -798,7 +798,7 @@ export default function CaptionGenerationPage() {
                     </div>
                     <span className={`text-[13px] font-medium whitespace-nowrap transition-colors hidden sm:inline ${isDone ? 'text-emerald-700' : isCurrent ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</span>
                   </div>
-                  {idx < 3 && <div className={`flex-1 h-[2px] rounded-full mx-3 transition-colors duration-500 ${isDone ? 'bg-emerald-300' : 'bg-slate-200/60'}`} />}
+                  {idx < 3 && <div className={`flex-1 h-[2px] rounded-full mx-1.5 sm:mx-3 transition-colors duration-500 ${isDone ? 'bg-emerald-300' : 'bg-slate-300'}`} />}
                 </div>
               );
             })}
@@ -1364,27 +1364,27 @@ export default function CaptionGenerationPage() {
         {/* Help Modal */}
         {showHelpModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowHelpModal(false)}>
-            <div onClick={e => e.stopPropagation()} className="w-[92%] sm:w-[520px] bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Help & Guide</h2>
+            <div onClick={e => e.stopPropagation()} className="w-[92%] sm:w-[520px] max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-5 sm:p-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">Help & Guide</h2>
                 <button onClick={() => setShowHelpModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                   <X size={18} />
                 </button>
               </div>
-              <div className="space-y-4 text-[14px] text-slate-600 leading-relaxed">
-                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+              <div className="space-y-3 sm:space-y-4 text-[13px] sm:text-[14px] text-slate-600 leading-relaxed">
+                <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">1. Upload Video</p>
                   <p>Upload your video file (MP4, WebM, MOV — max 2 min, 200 MB). The audio will be extracted for captioning.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+                <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">2. Configure Style</p>
                   <p>Choose a caption style, set language, font size, max words per line, and position.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
+                <div className="p-3 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-100/60">
                   <p className="font-semibold text-slate-800 mb-1">3. Generate & Export</p>
                   <p>Click "Generate Captions" and wait for processing. Export as MP4 with burned-in captions or ASS subtitle file.</p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-800 mb-1">Need More Help?</p>
                   <p>Use the Suggestion Box on the landing page to reach us.</p>
                 </div>
