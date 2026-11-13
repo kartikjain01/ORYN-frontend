@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteerCore from 'puppeteer-core';
 import { createServer } from 'http';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { resolve, dirname, join } from 'path';
@@ -14,12 +14,10 @@ const ROUTES = [
   '/terms',
   '/cookies',
   '/about',
-  // Tool landing pages
   '/voice-clone',
   '/text-to-speech',
   '/voice-editor',
   '/caption-generation',
-  // Blog
   '/blog',
   '/blog/ai-voice-cloning-guide',
   '/blog/text-to-speech-creators',
@@ -53,11 +51,7 @@ function serve(dir) {
       const url = req.url.split('?')[0];
       const ext = url.includes('.') ? '.' + url.split('.').pop() : '';
       let file = join(dir, url);
-
-      if (!ext || !existsSync(file)) {
-        file = join(dir, 'index.html');
-      }
-
+      if (!ext || !existsSync(file)) file = join(dir, 'index.html');
       try {
         const data = readFileSync(file);
         resp.writeHead(200, { 'Content-Type': mime[ext] || 'text/html' });
@@ -71,32 +65,49 @@ function serve(dir) {
   });
 }
 
+async function getBrowser() {
+  try {
+    const chromium = await import('@sparticuz/chromium');
+    const execPath = await chromium.default.executablePath();
+    console.log('Using @sparticuz/chromium');
+    return puppeteerCore.launch({
+      executablePath: execPath,
+      headless: true,
+      args: chromium.default.args,
+    });
+  } catch {
+    // Fallback: try local puppeteer (has bundled Chromium)
+    try {
+      const puppeteer = await import('puppeteer');
+      console.log('Using local puppeteer');
+      return puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      });
+    } catch {
+      throw new Error('No browser available for prerendering');
+    }
+  }
+}
+
 async function prerender() {
   console.log(`Starting prerender for ${ROUTES.length} routes...`);
   const server = await serve(DIST);
   const port = server.address().port;
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  });
-
+  const browser = await getBrowser();
   let success = 0;
   let failed = 0;
 
   for (const route of ROUTES) {
     const page = await browser.newPage();
-
     try {
       await page.goto(`http://localhost:${port}${route}`, {
         waitUntil: 'networkidle0',
         timeout: 20000,
       });
-
       await page.evaluate(() => new Promise((r) => setTimeout(r, 800)));
-
       const html = await page.content();
-
       const outDir = join(DIST, route === '/' ? '' : route);
       mkdirSync(outDir, { recursive: true });
       writeFileSync(join(outDir, 'index.html'), html);
@@ -106,7 +117,6 @@ async function prerender() {
       console.warn(`  ✗ ${route}: ${err.message}`);
       failed++;
     }
-
     await page.close();
   }
 
