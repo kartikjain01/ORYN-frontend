@@ -59,6 +59,15 @@ export default function TextToSpeechLanding() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="AI Text to Speech Generator | ORYN Engine" />
         <meta name="twitter:description" content="Turn text into natural-sounding speech with ORYN Engine." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": FAQS.map(f => ({
+            "@type": "Question",
+            "name": f.q,
+            "acceptedAnswer": { "@type": "Answer", "text": f.a }
+          }))
+        })}</script>
       </Helmet>
 
       {/* Hero */}

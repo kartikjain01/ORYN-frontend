@@ -72,6 +72,15 @@ export default function VoiceEditorLanding() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="AI Voice Editor & Audio Enhancer | ORYN Engine" />
         <meta name="twitter:description" content="Enhance voice recordings with ORYN Engine." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": faqs.map(f => ({
+            "@type": "Question",
+            "name": f.q,
+            "acceptedAnswer": { "@type": "Answer", "text": f.a }
+          }))
+        })}</script>
       </Helmet>
 
       {/* Hero */}

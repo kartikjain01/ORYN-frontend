@@ -65,6 +65,15 @@ export default function CaptionGenerationLanding() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="AI Caption Generator for Videos | ORYN Engine" />
         <meta name="twitter:description" content="Add styled captions to your videos with ORYN Engine." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": FAQS.map(f => ({
+            "@type": "Question",
+            "name": f.q,
+            "acceptedAnswer": { "@type": "Answer", "text": f.a }
+          }))
+        })}</script>
       </Helmet>
 
       {/* Hero */}

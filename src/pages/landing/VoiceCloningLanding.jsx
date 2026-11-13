@@ -59,6 +59,15 @@ export default function VoiceCloningLanding() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="AI Voice Cloning Online | ORYN Engine" />
         <meta name="twitter:description" content="Create natural-sounding AI voice clones with ORYN Engine." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": FAQS.map(f => ({
+            "@type": "Question",
+            "name": f.q,
+            "acceptedAnswer": { "@type": "Answer", "text": f.a }
+          }))
+        })}</script>
       </Helmet>
 
       {/* Hero */}
