@@ -1,5 +1,10 @@
 User-agent: *
 Allow: /
+Allow: /voice-clone
+Allow: /text-to-speech
+Allow: /voice-editor
+Allow: /caption-generation
+Allow: /about
 Allow: /privacy
 Allow: /terms
 Allow: /cookies
@@ -13,6 +18,7 @@ Disallow: /projects
 Disallow: /analytics
 Disallow: /notifications
 Disallow: /upgrade
+Disallow: /my-voices
 Disallow: /verify-success
 Disallow: /forgot-password
 Disallow: /reset-password

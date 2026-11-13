@@ -38,3 +38,5 @@ pnpm-debug.log*
 # OS / system files
 Thumbs.db
 .claude/
+
+.cache
